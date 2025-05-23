@@ -1,0 +1,22 @@
+pcs_ensemble/pcs_ensemble_combined.pkl
+folder_structure.txt
+# /results
+.Rproj.user
+src/archive/juro-raw/juro-raw.Rproj
+src/archive/juro-raw/juro-raw.Rproj
+# Ignore the pycache everywhere
+pcs_ensemble/__pycache__/*
+pcs_ensemble/scripts/__pycache__/*
+src/clear/__pycache__/*
+.vscode/settings.json
+/paper/tex_tbls_org
+/results/pcs
+/old_results
+/results/pcs_calibrated_no_gamma
+/results/pcs_raw
+/data/results
+/results/pcs_raw_qrf_qxgb
+/PCS_UQ/pcs_uq.egg-info/
+/models
+/temp/old_results
+/temp/pcs_ensemble

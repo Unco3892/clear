@@ -1,0 +1,26 @@
+# scipy==1.13.1
+scipy==1.11.4
+# numpy==2.2.5
+numpy==1.26.4
+joblib==1.4.2
+matplotlib==3.10.0
+pandas==2.2.3
+plotly==6.0.0
+pygam==0.9.1
+# quantile_forest==1.4.0
+quantile-forest==1.4.0
+scikit_learn==1.6.1
+scikit_lego==0.9.4
+seaborn==0.13.2
+setuptools==75.8.0
+torch==2.6.0
+tqdm==4.67.1
+ucimlrepo==0.0.7
+xgboost==2.1.4
+pytest==8.3.5
+lightgbm==4.6.0
+catboost==1.2.8
+openml==0.15.0
+celer
+tcl
+matplotlib-inline

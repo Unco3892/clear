@@ -1,0 +1,1 @@
+Case study and code for the Ames Housing dataset taken from the supplementary material of the "Veridical Data Science" book: https://github.com/Yu-Group/vds-book-supplementary/tree/main/python/ames_houses/dslc_documentation
