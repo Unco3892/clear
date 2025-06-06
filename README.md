@@ -1,5 +1,15 @@
 # CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk
-Abstract: Accurate uncertainty quantification is critical for reliable predictive modeling, especially in regression tasks. Existing methods typically address either aleatoric uncertainty from measurement noise or epistemic uncertainty from limited data, but not necessarily both in a balanced way. We propose CLEAR, a calibration process with two distinct parameters, $\gamma_1$ and $\gamma_2$, to combine the two uncertainty components for improved conditional coverage. CLEAR is compatible with any pair of aleatoric and epistemic estimators; we show how it can be used with (i) quantile regression for aleatoric uncertainty and (ii) ensembles drawn from the Predictability–Computability–Stability (PCS) framework for epistemic uncertainty. Across 17 diverse real-world datasets, CLEAR achieves an average improvement of 28.2\% and 17.4\% in the interval width compared to the two individually calibrated baselines while maintaining nominal coverage. This improvement can be particularly evident in scenarios dominated by either high epistemic or high aleatoric uncertainty.
+
+Ilia Azizi<sup>1</sup>, Juraj Bodik<sup>1,2</sup>, Jakob Heiss<sup>2*</sup>, Bin Yu<sup>2,3</sup>**
+
+<sup>1</sup>Department of Operations, HEC, University of Lausanne, Switzerland
+<sup>2</sup>Department of Statistics, University of California, Berkeley, USA
+<sup>3</sup>Department of Electrical Engineering and Computer Sciences, University of California, Berkeley, USA
+<sup>*</sup>Equal contribution
+
+📧 Emails: first.last@unil.ch, jakob.heiss@berkeley.edu, binyu@berkeley.edu
+
+**Abstract**: Accurate uncertainty quantification is critical for reliable predictive modeling, especially in regression tasks. Existing methods typically address either aleatoric uncertainty from measurement noise or epistemic uncertainty from limited data, but not necessarily both in a balanced way. We propose CLEAR, a calibration process with two distinct parameters, $\gamma_1$ and $\gamma_2$, to combine the two uncertainty components for improved conditional coverage. CLEAR is compatible with any pair of aleatoric and epistemic estimators; we show how it can be used with (i) quantile regression for aleatoric uncertainty and (ii) ensembles drawn from the Predictability–Computability–Stability (PCS) framework for epistemic uncertainty. Across 17 diverse real-world datasets, CLEAR achieves an average improvement of 28.2\% and 17.4\% in the interval width compared to the two individually calibrated baselines while maintaining nominal coverage. This improvement can be particularly evident in scenarios dominated by either high epistemic or high aleatoric uncertainty.
 
 ![image](plots/paper-figure1.png)
 
