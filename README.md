@@ -1,4 +1,5 @@
 # CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk
+[![DOI](https://zenodo.org/badge/DOI/2507.08150.svg)](https://arxiv.org/abs/2507.08150)
 
 Ilia Azizi<sup>1*</sup>, Juraj Bodik<sup>1,2*</sup>, Jakob Heiss<sup>2*</sup>, Bin Yu<sup>2,3</sup>
 
