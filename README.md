@@ -1,5 +1,8 @@
 # CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk
+
 [![DOI](https://zenodo.org/badge/DOI/2507.08150.svg)](https://arxiv.org/abs/2507.08150)
+[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/downloads/)
+[![PyPI - Coming Soon](https://img.shields.io/badge/PyPI-Coming%20Soon-yellow)](https://pypi.org/project/clear-uq/)
 
 Ilia Azizi<sup>1*</sup>, Juraj Bodik<sup>1,2*</sup>, Jakob Heiss<sup>2*</sup>, Bin Yu<sup>2,3</sup>
 
@@ -10,43 +13,91 @@ Ilia Azizi<sup>1*</sup>, Juraj Bodik<sup>1,2*</sup>, Jakob Heiss<sup>2*</sup>, B
 
 **Abstract**: Accurate uncertainty quantification is critical for reliable predictive modeling. Existing methods typically address either aleatoric uncertainty due to measurement noise or epistemic uncertainty resulting from limited data, but not both in a balanced manner. We propose CLEAR, a calibration method with two distinct parameters, $\gamma_1$ and $\gamma_2$, to combine the two uncertainty components and improve the conditional coverage of predictive intervals for regression tasks. CLEAR is compatible with any pair of aleatoric and epistemic estimators; we show how it can be used with (i) quantile regression for aleatoric uncertainty and (ii) ensembles drawn from the Predictability–Computability–Stability (PCS) framework for epistemic uncertainty. Across 17 diverse real-world datasets, CLEAR achieves an average improvement of 28.2\% and 17.4\% in the interval width compared to the two individually calibrated baselines while maintaining nominal coverage. Similar improvements are observed when applying CLEAR to Deep Ensembles (epistemic) and Simultaneous Quantile Regression (aleatoric). The benefits are especially evident in scenarios dominated by high aleatoric or epistemic uncertainty.
 
-![image](plots/paper-figure1.png)
+![CLEAR Paper Figure](https://raw.githubusercontent.com/Unco3892/clear/main/plots/paper-figure1.png)
 
-## Requirements
+## Installation
 
-1.  Ensure Python 3.11 is installed on your system.
+### Quick Installation (PyPI)
 
-2.  Create and activate a virtual environment using Conda. It is recommended to use the provided `requirements.txt` file which lists all packages used in the development environment:
+**Requirements:** Python 3.11+
+
+Install directly from PyPI:
+
+```bash
+pip install clear-uq
+```
+
+### Local Development Installation
+
+If you have the repository cloned, install in editable mode from the root directory:
+
+```bash
+pip install -e .
+```
+
+Or install from GitHub:
+
+```bash
+pip install git+https://github.com/Unco3892/clear.git
+```
+
+### Development Setup
+
+For development or to run all experiments with baseline comparisons (PCS_UQ, UACQR):
+
+1.  **Ensure Python 3.11+ is installed** on your system.
+
+2.  **Create and activate a virtual environment** using Conda:
     ```bash
     conda create --name clear python=3.11 --yes
     conda activate clear
     ```
-    *Note*: In case of any issues with tkinter (when running `pytest` for `test_utils.py`), use the following command `conda install -c conda-forge tk tcl --yes` to install tkinter.
-
-3.  Install the dependencies using pip into your active Conda environment:
+    *Note:* If you encounter tkinter issues when running tests, run:
     ```bash
-    pip install -r requirements.txt
+    conda install -c conda-forge tk tcl --yes
     ```
-    *Note: The `requirements.txt` file was generated from the experiment's environment, and some of the packages, such as `catboot` and `lightgbm`, were only included since they were in the original baseline code bases (i.e., `PCS_UQ` and `UACQR`). The `celer` pip conflict warning is normal (package needed only for `PCS_UQ` mean models). Additionally, note that `pygam` (which is not updated frequently) conflicts with the current (and latest) version of `scipy` and `numpy`. CLEAR works perfectly fine with the latest versions of some of the packages, however, the baselines may have compatibility issues with packages (e.g. `numpy==2.0.0` or `quantile_forest==1.4.0` for `UACQR`). We try to find maximum compatibility, but if you run into issues, please let us know.*
 
-    *GPU optional installation:* the default requirement installs the CPU-only build of PyTorch. If you need CUDA support (e.g., CUDA 12.6), edit `requirements.txt` inside the activated Conda environment by commenting out the CPU `torch` installation line and uncommenting the two lines directly beneath it (the `--index-url` option and the `torch==2.6.0+cu126` entry) before running `pip install -r requirements.txt`.
-
-4.  Finally, to run the tests and make sure everything is working, execute the following command from the root directory of the repository:
+3.  **Install the package** (includes all dependencies and pytest):
     ```bash
-    pytest
+    pip install -e .
     ```
+
+4.  **Run tests** to verify everything works:
+    ```bash
+    python -m pytest
+    ```
+
+**Dependencies & Configuration:**
+- All dependencies are in `requirements.txt` and automatically read by `pyproject.toml`
+- Dependencies include baseline comparison packages (`catboost`, `lightgbm`) from PCS_UQ and UACQR
+- **GPU optional installation:** The default requirement installs the CPU-only build of PyTorch. If you need CUDA support (e.g., CUDA 12.6), edit `requirements.txt` inside the activated Conda environment by commenting out the CPU `torch` installation line and uncommenting the two lines directly beneath it (the `--index-url` option and the `torch==2.6.0+cu126` entry) before running `pip install -r requirements.txt`.
+
+**Known Compatibility Notes:**
+- `pygam` conflicts with latest scipy/numpy versions but CLEAR works fine with current versions
+- Baselines may have compatibility issues with numpy>=2.0.0 or quantile_forest>=1.4.0
+- We maintain maximum compatibility where possible; please report any issues
 
 ## Demo
 
-For a high-level overview of the CLEAR pipeline and a practical demonstration of its usage, please refer to [`demo.py`](demo.py) (script) and [`demo.ipynb`](demo.ipynb) (Jupyter Notebook), available at the root of this repository. The demo provides a guided walkthrough by applying CLEAR to synthetic, Parkinsons, and Airfoil datasets. Note that for simplicity, we have used internal training for CQR, but you can also use external training (predictions) for the CQR model. There's also some instructions for running the demo in Google Colab.
+For a high-level overview and practical demonstrations of CLEAR:
 
-Minimal example:
+- **[`minimal_example.py`](minimal_example.py)** - A simple, fully commented example demonstrating the complete CLEAR workflow
+- **[`demo.py`](demo.py) & [`demo.ipynb`](demo.ipynb)** - Comprehensive demonstrations on real datasets (Parkinsons, Airfoil)
+
+Run the minimal example:
+```bash
+python minimal_example.py
+```
+
+### Minimal Code Snippet
+
+Here's a quick overview of the CLEAR pipeline:
 
 ```python
 import numpy as np
 from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
-from src.clear.clear import CLEAR
+from clear.clear import CLEAR
 
 # 0. Generate Data (Minimal Example)
 X, y = make_regression(n_samples=200, n_features=1, noise=10, random_state=42)
@@ -141,16 +192,26 @@ Below is a high-level overview of the important directories and files in this pr
 
 ## Reproducibility
 
-To reproduce the experiments presented in this work, follow these general steps after setting up the environment as described in the "Requirements" section:
+To reproduce the experiments from the paper:
 
-1.  **Download and Prepare Data:**
-    *   The necessary datasets are expected to be in the `data/` directory. All of them are already provided.
-    *   For any datasets that might need specific preprocessing or were originally downloaded via script, you can inspect `src/experiments/download_process_real_data.py`. However, for our experiments, the data in `data/` should be ready.
+1.  **Prepare Environment:**
+    ```bash
+    conda create --name clear python=3.11 --yes
+    conda activate clear
+    pip install clear-uq
+    ```
 
-        ```bash
-        cd src/experiments
-        python download_process_real_data.py
-        ```
+2.  **Download Pre-trained Models** (optional for running benchmarks):
+    ```bash
+    python download_data.py  # Uses rclone for faster, resumable downloads
+    ```
+
+3.  **Run Benchmarks:**
+    ```bash
+    cd src/experiments
+    python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type homo --use_external_pcs
+    python benchmark_real_data.py --coverage 0.95 --models_dir ../../models/pcs_top1_pcs_10_standard
+    ```
 
 2.  **Run Benchmark Experiments:**
     *   The core scripts for running experiments are located in the `src/experiments/` directory.
@@ -173,58 +234,28 @@ To reproduce the experiments presented in this work, follow these general steps 
         python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_all_10seeds_all
         python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_qxgb_10seeds_qxgb
         python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_conformalized --csv_results_dir ../../results/conformalized/PCS_all_10seeds_qrf
-
-        # Fastest order one-liners (variant b → c → a)
-        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_standard --csv_results_dir ../../results/standard/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_standard --csv_results_dir ../../results/standard/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_standard --csv_results_dir ../../results/standard/qPCS_all_10seeds_all
-        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_conformalized --csv_results_dir ../../results/conformalized/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_all_10seeds_all
         ```
 
-        **Note:** Note that the GAM in variant (a) may not converge for `data_naval_propulsion`. This has been documented in the paper as a footnote and it's a bug related to the `pygam` package: https://github.com/dswah/pyGAM/issues/357
+        **Note:** The GAM in variant (a) may not converge for `data_naval_propulsion` due to a `pygam` bug: https://github.com/dswah/pyGAM/issues/357
 
     *   To run benchmarks on simulated datasets, navigate to `src/experiments/` and execute: `python benchmark_simulations.py`
         ```bash
         cd src/experiments
-        # Homoscedastic noise with sigma=1, d=1, 100 simulations
         python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type homo --use_external_pcs
-
-        # Heteroscedastic noise with sigma=1+|x|, d=1, 100 simulations
-        python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type hetero1 --use_external_pcs
-
-        # Heteroscedastic noise with sigma=1+1/(1+x^2), d=1, 100 simulations
-        python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type hetero2 --use_external_pcs
-
-        # Multivariate: Homoscedastic noise with sigma=1, d=1, 100 simulations, no external PCS
-        python benchmark_simulations.py --randomize_d --num_simulations 100 --noise_type homo --use_external_pcs
         ```
-    
-    *   To run benchmarks specifically for the UACQR comparison, navigate to `src/experiments/` and execute: `python benchmark_uacqr.py`
-        ```bash
-        cd src/experiments
-        python benchmark_uacqr.py
-        ```
+        Supports: `hetero1`, `hetero2`, `--randomize_d` for multivariate
 
-    *   To run the deep-ensemble + SQR variant described in `benchmark_real_data_de_sqr.py`, use:
-        ```bash
-        cd src/experiments
-
-        # Standard DE+SQR models (auto-detect datasets in qxgb_10_standard)
-        python benchmark_real_data_de_sqr.py --coverage 0.95 --models_dir ../../models/pcs_top1_qxgb_10_standard --output_dir ../../results/de_sqr --seed 42 --batch_size 64 --ensemble_epochs 1500 --sqr_lr 5e-4
-        ```
-
-        The script automatically falls back to CPU mode when CUDA is unavailable; expect longer runtimes without a GPU. Omit `--max_runs` to process every stored run (paper setting), and adjust `--ensemble_epochs`, `--batch_size`, or enable `--fast_mode` if you need faster turnaround.
-
-    *   Consult the respective scripts for any command-line arguments or configurations you might want to adjust (e.g., specific datasets, model parameters, number of seeds) that can be found in the scripts. As seen above, most scripts support `argparse` to adjust parameters.
 
 3.  **Results:**
-    *   Raw and aggregated results will typically be saved in the `results/` directory.
-    *   Plots based on these results are often generated and stored in the `plots/` directory.
+    Raw results are saved to `results/` and plots to `plots/`
 
 4.  **Case Study:**
-    *   The Ames housing case study can be run by navigating to `src/case_study/` and using the script: `python ames_clear_case_study.py`
 
-        ```bash
-        python ames_clear_case_study.py
-        ```
+    The Ames housing case study can be run by navigating to `src/case_study/` and using the script: `python ames_clear_case_study.py`
+
+    ```bash
+    python ames_clear_case_study.py
+    ```
 
 
 The experiments were conducted on a machine with the following specifications:
@@ -246,7 +277,16 @@ python -c "import torch; print(f'GPU Available: {torch.cuda.is_available()}'); p
 
 ## Models
 
-The models can be retrieved from the [following google-drive link](https://drive.google.com/drive/folders/1tn3aWrEMWM5BxFsc3q3OZcd4SlwPC3lX?usp=sharing), and all the content (including the subfolders such as `pcs_top1_qpcs_10_standard`, `pcs_top1_qxgb_10_standard`, `pcs_top1_mean_10_standard`) must be placed in the `models/` directory. We also included a `models/demo` folder, which is just a copy of the `data_parkinsons_pcs_results_95` from `pcs_top1_qpcs_10_standard` for running the demo. Additionally, the `models/README.md` is attributed to the files in the google drive link.
+Pre-trained PCS ensemble models are available via Google Drive:
+- **[Download Models](https://drive.google.com/drive/folders/1tn3aWrEMWM5BxFsc3q3OZcd4SlwPC3lX?usp=sharing)**
+- Extract contents to the `models/` directory
+- A demo folder is included for quick testing
+
+**Model Variants:**
+- `pcs_top1_qpcs_10_standard` - Variant (a)
+- `pcs_top1_qxgb_10_standard` - Variant (b)
+- `pcs_top1_pcs_10_standard` - Variant (c)
+- Conformalized versions also available
 
 ### Model Training & Calibration Time
 
