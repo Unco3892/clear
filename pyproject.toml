@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clear-uq"
+version = "0.1.0"
+description = "CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk - Uncertainty quantification for regression"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Ilia Azizi, Juraj Bodik, Jakob Heiss, Bin Yu"}
+]
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+keywords = ["uncertainty-quantification", "regression", "conformal-prediction", "machine-learning"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+]
+
+[project.urls]
+Homepage = "https://github.com/Unco3892/clear"
+Repository = "https://github.com/Unco3892/clear.git"
+Documentation = "https://github.com/Unco3892/clear#readme"
+"Bug Tracker" = "https://github.com/Unco3892/clear/issues"
+"Paper" = "https://arxiv.org/abs/2507.08150"
+
+[tool.setuptools]
+packages = ["clear", "pcs", "case_study", "experiments"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.package-data]
+clear = ["py.typed"]

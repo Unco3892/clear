@@ -118,7 +118,11 @@ class TestCLEAR(unittest.TestCase):
         for _ in range(self.n_bootstraps_test):
             m = MagicMock(predict=MagicMock(return_value=np.random.rand(len(self.X_test))))
             m.__sklearn_is_fitted__ = lambda: True
-            m.fitted_ = True 
+            m.fitted_ = True
+            # Create a mock tags object that behaves like Tags class
+            mock_tags = MagicMock()
+            mock_tags.requires_fit = True
+            m.__sklearn_tags__ = lambda: mock_tags
             fitted_mock_models.append(m)
 
         self.clear_model.lower_models = list(fitted_mock_models) 
@@ -138,7 +142,11 @@ class TestCLEAR(unittest.TestCase):
         for _ in range(self.n_bootstraps_test):
             m = MagicMock(predict=MagicMock(return_value=np.random.rand(len(self.X_test))))
             m.__sklearn_is_fitted__ = lambda: True
-            m.fitted_ = True 
+            m.fitted_ = True
+            # Create a mock tags object that behaves like Tags class
+            mock_tags = MagicMock()
+            mock_tags.requires_fit = True
+            m.__sklearn_tags__ = lambda: mock_tags
             fitted_mock_models.append(m)
             
         self.clear_model.lower_models = list(fitted_mock_models)
