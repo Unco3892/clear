@@ -1,8 +1,8 @@
 # CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk
 
 [![DOI](https://zenodo.org/badge/DOI/2507.08150.svg)](https://arxiv.org/abs/2507.08150)
-[![Python](https://img.shields.io/badge/python-3.11+-blue)](https://www.python.org/downloads/)
-[![PyPI - Coming Soon](https://img.shields.io/badge/PyPI-Coming%20Soon-yellow)](https://pypi.org/project/clear-uq/)
+[![Python](https://img.shields.io/badge/python-3.11+-green)](https://www.python.org/downloads/)
+[![PyPI](https://img.shields.io/pypi/v/clear-uq)](https://pypi.org/project/clear-uq/)
 
 Ilia Azizi<sup>1*</sup>, Juraj Bodik<sup>1,2*</sup>, Jakob Heiss<sup>2*</sup>, Bin Yu<sup>2,3</sup>
 
