@@ -3,6 +3,8 @@ import numpy as np
 import logging
 import sys
 import os
+from pathlib import Path
+
 # Set up logging
 def setup_logging(log_file=None, log_level=logging.INFO):
     """Set up logging configuration"""
@@ -89,6 +91,29 @@ def safe_flatten(arr):
         return arr.flatten()
     else:
         return np.array(arr).flatten()
+
+def get_available_datasets(models_dir: Path, coverage: int) -> list:
+    """Get list of available datasets based on existing pickle files."""
+    datasets = []
+    # Guard: directory may not exist
+    if models_dir.exists():
+        # Look for pickle files with the right pattern in provided directory
+        for pkl_file in models_dir.glob(f"data_*_pcs_results_{coverage}.pkl"):
+            dataset_name = pkl_file.stem.replace(f"_pcs_results_{coverage}", "").replace("data_", "")
+            datasets.append(dataset_name)
+
+    # Fallback: if nothing found, search recursively from repo root for matching files
+    if not datasets:
+        try:
+            repo_root = Path(__file__).resolve().parents[2]
+            matches = list(repo_root.rglob(f"data_*_pcs_results_{coverage}.pkl"))
+            for pkl_file in matches:
+                dataset_name = pkl_file.stem.replace(f"_pcs_results_{coverage}", "").replace("data_", "")
+                datasets.append(dataset_name)
+        except Exception:
+            pass
+
+    return sorted(list(set(datasets)))
 
 def get_top_model_info(run_data):
     """

@@ -1,0 +1,6 @@
+This directory contains the trained PCS ensemble models (retrieved via the google drive link in the main repo `README.md`) used with the CLEAR experiments according to the three variants:
+
+- Variant A: Quantile PCS models (all models), We call this `pcs_top1_qpcs_10_standard` where QPCS stands for all QPCS models and 10 seeds and `pcs_top1_qpcs_10_conformalized` where QPCS stands for all QPCS models and 10 seeds and the conformalized version.
+- Variant B: Quantile XGBoost which is called `pcs_top1_qxgb_10_standard` where QXGB stands for PCS QXGB models and 10 seeds and `pcs_top1_qxgb_10_conformalized` where QXGB stands for PCS QXGB models and 10 seeds and the conformalized version.
+- Variant C: Standard mean predictor PCS models as implemented in the original paper. This is in the directory `pcs_top1_pcs_10_standard` where PCS stands for PCS models (mean predictor) and 10 seeds and `pcs_top1_pcs_10_conformalized` where PCS stands for PCS models (mean predictor) and 10 seeds and the conformalized version. Then, for the aleatoric part, we pair it with a QXGB as described in the original paper.
+- demo: We also include a copy of the `data_parkinsons_pcs_results_95` from `pcs_top1_qpcs_10_standard` in the repo for the demonstration purposes.

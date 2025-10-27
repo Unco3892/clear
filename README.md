@@ -8,7 +8,7 @@ Ilia Azizi<sup>1*</sup>, Juraj Bodik<sup>1,2*</sup>, Jakob Heiss<sup>2*</sup>, B
 <sup>3</sup>Department of Electrical Engineering and Computer Sciences, University of California, Berkeley, USA
 <sup>*</sup>Equal contribution
 
-**Abstract**: Accurate uncertainty quantification is critical for reliable predictive modeling, especially in regression tasks. Existing methods typically address either aleatoric uncertainty from measurement noise or epistemic uncertainty from limited data, but not necessarily both in a balanced way. We propose CLEAR, a calibration process with two distinct parameters, $\gamma_1$ and $\gamma_2$, to combine the two uncertainty components for improved conditional coverage. CLEAR is compatible with any pair of aleatoric and epistemic estimators; we show how it can be used with (i) quantile regression for aleatoric uncertainty and (ii) ensembles drawn from the Predictability–Computability–Stability (PCS) framework for epistemic uncertainty. Across 17 diverse real-world datasets, CLEAR achieves an average improvement of 28.2\% and 17.4\% in the interval width compared to the two individually calibrated baselines while maintaining nominal coverage. This improvement can be particularly evident in scenarios dominated by either high epistemic or high aleatoric uncertainty.
+**Abstract**: Accurate uncertainty quantification is critical for reliable predictive modeling. Existing methods typically address either aleatoric uncertainty due to measurement noise or epistemic uncertainty resulting from limited data, but not both in a balanced manner. We propose CLEAR, a calibration method with two distinct parameters, $\gamma_1$ and $\gamma_2$, to combine the two uncertainty components and improve the conditional coverage of predictive intervals for regression tasks. CLEAR is compatible with any pair of aleatoric and epistemic estimators; we show how it can be used with (i) quantile regression for aleatoric uncertainty and (ii) ensembles drawn from the Predictability–Computability–Stability (PCS) framework for epistemic uncertainty. Across 17 diverse real-world datasets, CLEAR achieves an average improvement of 28.2\% and 17.4\% in the interval width compared to the two individually calibrated baselines while maintaining nominal coverage. Similar improvements are observed when applying CLEAR to Deep Ensembles (epistemic) and Simultaneous Quantile Regression (aleatoric). The benefits are especially evident in scenarios dominated by high aleatoric or epistemic uncertainty.
 
 ![image](plots/paper-figure1.png)
 
@@ -28,6 +28,8 @@ Ilia Azizi<sup>1*</sup>, Juraj Bodik<sup>1,2*</sup>, Jakob Heiss<sup>2*</sup>, B
     pip install -r requirements.txt
     ```
     *Note: The `requirements.txt` file was generated from the experiment's environment, and some of the packages, such as `catboot` and `lightgbm`, were only included since they were in the original baseline code bases (i.e., `PCS_UQ` and `UACQR`). The `celer` pip conflict warning is normal (package needed only for `PCS_UQ` mean models). Additionally, note that `pygam` (which is not updated frequently) conflicts with the current (and latest) version of `scipy` and `numpy`. CLEAR works perfectly fine with the latest versions of some of the packages, however, the baselines may have compatibility issues with packages (e.g. `numpy==2.0.0` or `quantile_forest==1.4.0` for `UACQR`). We try to find maximum compatibility, but if you run into issues, please let us know.*
+
+    *GPU optional installation:* the default requirement installs the CPU-only build of PyTorch. If you need CUDA support (e.g., CUDA 12.6), edit `requirements.txt` inside the activated Conda environment by commenting out the CPU `torch` installation line and uncommenting the two lines directly beneath it (the `--index-url` option and the `torch==2.6.0+cu126` entry) before running `pip install -r requirements.txt`.
 
 4.  Finally, to run the tests and make sure everything is working, execute the following command from the root directory of the repository:
     ```bash
@@ -100,39 +102,40 @@ print(f"Test CLEAR intervals (first 3): Lower={clear_lower[:3].round(2)}, Upper=
 Below is a high-level overview of the important directories and files in this project:
 
 ```bash
-├── data/                            # Contains all datasets used for experiments and case studies.
-├── models/                          # Stores pre-trained models and outputs from model training runs.
-├── PCS_UQ/                          # Codebase and experiments for the PCS-UQ framework (referenced in paper).
-├── UACQR/                           # Codebase and experiments for the UACQR method (referenced in paper).
-├── plots/                           # Directory for storing plots generated from experiment results.
-│   ├── real/                        # Plots related to experiments on real-world datasets.
-│   └── simulations/                 # Plots related to experiments on simulated datasets.
-├── results/                         # Stores raw and aggregated results from various experiments.
-│   ├── case_study/                  # Results specific to the Ames housing case study.
-│   ├── qPCS_all_10seeds_all/        # Variant (a) against the baselines.
-│   ├── qPCS_qxgb_10seeds_qxgb/      # Variant (b) against the baselines.
-│   └── PCS_all_10seeds_qrf/         # Variant (c) against the baselines.
-├── src/                             # Main source code for the CLEAR.
-│   ├── case_study/                  # Code for the Ames housing case study, including data preparation and analysis.
-│   ├── clear/                       # Core implementation of the CLEAR algorithm and associated utilities.
-│   │   ├── clear.py                 # Implements the main CLEAR calibration logic.
-│   │   ├── metrics.py               # Defines metrics for evaluating prediction intervals.
-│   │   ├── models.py                # Provides additional (untested) quantile regressor NOT currently used in the paper and has only been included for future extension (UNTESTED).
-│   │   └── utils.py                 # Contains utility functions used across the CLEAR module.
-│   ├── experiments/                 # Scripts to run download/process data, run benchmarks, and manage experiments.
+├── data/                                 # Contains all datasets used for experiments and case studies.
+├── models/                               # Stores pre-trained models and outputs from model training runs.
+├── PCS_UQ/                               # Codebase and experiments for the PCS-UQ framework (referenced in paper).
+├── UACQR/                                # Codebase and experiments for the UACQR method (referenced in paper).
+├── plots/                                # Directory for storing plots generated from experiment results.
+│   ├── real/                             # Plots related to experiments on real-world datasets.
+│   └── simulations/                      # Plots related to experiments on simulated datasets.
+├── results/                              # Stores raw and aggregated results from various experiments.
+│   ├── case_study/                       # Results specific to the Ames housing case study.
+│   ├── qPCS_all_10seeds_all/             # Variant (a) against the baselines.
+│   ├── qPCS_qxgb_10seeds_qxgb/           # Variant (b) against the baselines.
+│   └── PCS_all_10seeds_qrf/              # Variant (c) against the baselines.
+├── src/                                  # Main source code for the CLEAR.
+│   ├── case_study/                       # Code for the Ames housing case study, including data preparation and analysis.
+│   ├── clear/                            # Core implementation of the CLEAR algorithm and associated utilities.
+│   │   ├── clear.py                      # Implements the main CLEAR calibration logic.
+│   │   ├── metrics.py                    # Defines metrics for evaluating prediction intervals.
+│   │   └── utils.py                      # Contains utility functions used across the CLEAR module.
+│   │   ├── models/                       # Contains the general models used in the experiments
+│   ├── experiments/                      # Scripts to run download/process data, run benchmarks, and manage experiments.
 │   │   ├── download_process_real_data.py # Downloads and preprocesses real-world datasets (has already been prvoided in the data/ directory).
-│   │   ├── benchmark_real_data.py     # Runs benchmark experiments on real-world datasets.
-│   │   ├── benchmark_uacqr.py         # Runs benchmark experiments for the UACQR method.
-│   │   ├── benchmark_simulations.py   # Runs benchmark experiments on simulated datasets.
-│   │   └── utils.py                   # Utility functions for experiment scripts.
-│   ├── pcs/                         # Utility scripts related to training and using PCS models that are used in the experiments as well.
-│   └── tests/                       # Contains tests for the project's codebase.
-├── demo.py                          # A demonstration script showcasing the CLEAR methodology.
-├── demo.ipynb                       # A Jupyter Notebook demonstration of the CLEAR methodology (generated from demo.py).
-├── README.md                        # This file: Project overview, setup instructions, and repository structure.
-├── pytest.ini                       # Configuration file for pytest.
-├── requirements.txt                 # Lists Python packages and versions required to run the project.
-└── .gitignore                       # Specifies intentionally untracked files that Git should ignore.
+│   │   ├── benchmark_real_data.py        # Runs benchmark experiments on real-world datasets with PCS and CQR components.
+│   │   ├── benchmark_real_data_de_sqr.py # Runs benchmark experiments on real-world datasets with DE and SQR components.
+│   │   ├── benchmark_uacqr.py            # Runs benchmark experiments for the UACQR method.
+│   │   ├── benchmark_simulations.py      # Runs benchmark experiments on simulated datasets.
+│   │   └── utils.py                      # Utility functions for experiment scripts.
+│   ├── pcs/                              # Utility scripts related to training and using PCS models that are used in the experiments as well.
+│   └── tests/                            # Contains tests for the project's codebase.
+├── demo.py                               # A demonstration script showcasing the CLEAR methodology.
+├── demo.ipynb                            # A Jupyter Notebook demonstration of the CLEAR methodology (generated from demo.py).
+├── README.md                             # This file: Project overview, setup instructions, and repository structure.
+├── pytest.ini                            # Configuration file for pytest.
+├── requirements.txt                      # Lists Python packages and versions required to run the project.
+└── .gitignore                            # Specifies intentionally untracked files that Git should ignore.
 
 ```
 
@@ -160,14 +163,20 @@ To reproduce the experiments presented in this work, follow these general steps 
     *   To run benchmarks on real-world datasets, navigate to `src/experiments/` and execute: `python benchmark_real_data.py`
         ```bash
         cd src/experiments
-        # To run the experiments with real-data variants (a)
-        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10 --csv_results_dir ../../results/qPCS_all_10seeds_all
-        
-        # To run the experiments with real-data variants (b)
-        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10 --csv_results_dir ../../results/qPCS_qxgb_10seeds_qxgb
-        
-        # To run the experiments with real-data variants (c)
-        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_mean_10 --csv_results_dir ../../results/PCS_all_10seeds_qrf
+
+        # Standard models (variants a → b → c)
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_standard --csv_results_dir ../../results/standard/qPCS_all_10seeds_all
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_standard --csv_results_dir ../../results/standard/qPCS_qxgb_10seeds_qxgb
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_standard --csv_results_dir ../../results/standard/PCS_all_10seeds_qrf
+
+        # Conformalized models (variants a → b → c)
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_all_10seeds_all
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_qxgb_10seeds_qxgb
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_conformalized --csv_results_dir ../../results/conformalized/PCS_all_10seeds_qrf
+
+        # Fastest order one-liners (variant b → c → a)
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_standard --csv_results_dir ../../results/standard/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_standard --csv_results_dir ../../results/standard/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_standard --csv_results_dir ../../results/standard/qPCS_all_10seeds_all
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_conformalized --csv_results_dir ../../results/conformalized/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_all_10seeds_all
         ```
 
         **Note:** Note that the GAM in variant (a) may not converge for `data_naval_propulsion`. This has been documented in the paper as a footnote and it's a bug related to the `pygam` package: https://github.com/dswah/pyGAM/issues/357
@@ -193,6 +202,17 @@ To reproduce the experiments presented in this work, follow these general steps 
         cd src/experiments
         python benchmark_uacqr.py
         ```
+
+    *   To run the deep-ensemble + SQR variant described in `benchmark_real_data_de_sqr.py`, use:
+        ```bash
+        cd src/experiments
+
+        # Standard DE+SQR models (auto-detect datasets in qxgb_10_standard)
+        python benchmark_real_data_de_sqr.py --coverage 0.95 --models_dir ../../models/pcs_top1_qxgb_10_standard --output_dir ../../results/de_sqr --seed 42 --batch_size 64 --ensemble_epochs 1500 --sqr_lr 5e-4
+        ```
+
+        The script automatically falls back to CPU mode when CUDA is unavailable; expect longer runtimes without a GPU. Omit `--max_runs` to process every stored run (paper setting), and adjust `--ensemble_epochs`, `--batch_size`, or enable `--fast_mode` if you need faster turnaround.
+
     *   Consult the respective scripts for any command-line arguments or configurations you might want to adjust (e.g., specific datasets, model parameters, number of seeds) that can be found in the scripts. As seen above, most scripts support `argparse` to adjust parameters.
 
 3.  **Results:**
@@ -214,7 +234,7 @@ The experiments were conducted on a machine with the following specifications:
 - Processor: 13th Gen Intel(R) Core(TM) i9-13900KF
 - RAM: 32 GB
 - GPU: NVIDIA GeForce RTX 4090
-- CUDA Version: 12.1 worked system-wide, and 11.2 worked with conda
+- CUDA Version: 12.6 worked system-wide and 11.2 also worked with conda
 - Python & Dependencies: As described above and listed in requirements.txt
 ```
 Please note that you do not need a GPU to run the experiments, however, it is recommended to use parallelization with 20+ threads (jobs) to speed up the experiments.
@@ -226,7 +246,7 @@ python -c "import torch; print(f'GPU Available: {torch.cuda.is_available()}'); p
 
 ## Models
 
-The models can be retrieved from the [following google-drive link](https://drive.google.com/drive/folders/1e7intOLu7DzoMLMdfRH8weA74QpO6hsf?usp=sharing), and all the content (including the subfolders such as `pcs_top1_qpcs_10`, `pcs_top1_qxgb_10`, `pcs_top1_mean_10`) must be placed in the `models/` directory. We also included a `models/demo` folder, which is just a copy of the `data_parkinsons_pcs_results_95` from `pcs_top1_qpcs_10` for running the demo. Additionally, the `models/README.md` is attributed to the files in the google drive link.
+The models can be retrieved from the [following google-drive link](https://drive.google.com/drive/folders/1tn3aWrEMWM5BxFsc3q3OZcd4SlwPC3lX?usp=sharing), and all the content (including the subfolders such as `pcs_top1_qpcs_10_standard`, `pcs_top1_qxgb_10_standard`, `pcs_top1_mean_10_standard`) must be placed in the `models/` directory. We also included a `models/demo` folder, which is just a copy of the `data_parkinsons_pcs_results_95` from `pcs_top1_qpcs_10_standard` for running the demo. Additionally, the `models/README.md` is attributed to the files in the google drive link.
 
 ### Model Training & Calibration Time
 

@@ -526,8 +526,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark UACQR method on pre-processed datasets.")
-    parser.add_argument("--data_dir", type=str, default="../../models/pcs_top1_mean_10",
-                        help="Directory containing the dataset .pkl files (e.g., '../../models/pcs_top1_mean_10').")
+    parser.add_argument("--data_dir", type=str, default="../../models/pcs_top1_pcs_10_standard",
+                        help="Directory containing the dataset .pkl files (e.g., '../../models/pcs_top1_pcs_10_standard').")
     parser.add_argument("--output_csv", type=str, default="../../results/uacqr_benchmark_results.csv",
                         help="Path to save the benchmark results CSV file.")
     parser.add_argument("--coverage", type=float, default=0.95,

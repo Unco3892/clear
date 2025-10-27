@@ -13,7 +13,11 @@ scikit_learn==1.6.1
 scikit_lego==0.9.4
 seaborn==0.13.2
 setuptools==75.8.0
+# Default PyTorch build (CPU only).
 torch==2.6.0
+# To install the CUDA build instead, uncomment the two lines below and comment out the CPU line above.
+# --index-url https://download.pytorch.org/whl/cu126
+# torch==2.6.0+cu126
 tqdm==4.67.1
 ucimlrepo==0.0.7
 xgboost==2.1.4

@@ -16,6 +16,8 @@ import joblib
 import inspect
 import matplotlib.pyplot as plt
 import warnings
+joblib.parallel.parallel_backend('loky')
+joblib.parallel.DEFAULT_MP_CONTEXT = 'loky'
 import os
 # --- Start of conditional sys.path modification ---
 if __name__ == '__main__' and __package__ is None:
@@ -31,7 +33,10 @@ if __name__ == '__main__' and __package__ is None:
         sys.path.insert(0, parent_dir)
 # --- End of conditional sys.path modification ---#
 from clear.utils import compute_quantile_ensemble_bounds
-from clear.models import SimultaneousQuantileRegressor, QuantileGAM
+
+# Import the SimultaneousQuantileRegressor from the new models module
+from clear.models.general import SimultaneousQuantileRegressor
+from clear.utils import compute_quantile_ensemble_bounds
 
 class CLEAR:
     """
@@ -144,9 +149,10 @@ class CLEAR:
                 if self.random_state is not None:
                     defaults['random_state'] = self.random_state
             elif qmodel_str in ['sqr', 'simultaneousquantileregressor', 'neuralnet']:
+                # Use SimultaneousQuantileRegressor from models.py
                 quantile_model = SimultaneousQuantileRegressor
-                defaults = {'hidden_layers': [128, 128], 'learning_rate': 1e-3, 'weight_decay': 1e-4,
-                            'n_epochs': 2000, 'batch_size': 64, 'quantile': None, 'random_state': self.random_state}
+                defaults = {'hidden_layers': [128, 128], 'learning_rate': 1e-3, 'weight_decay': 1e-2,
+                            'n_epochs': 10000, 'batch_size': 64, 'quantile': None, 'random_state': self.random_state, 'device': 'auto'}
             else:
                 raise ValueError(f"Unsupported string model type: {quantile_model}. Supported types: 'linear'/'quantileregressor', 'xgb'/'xgboost', 'rf'/'qrf', 'extratrees'/'qextratrees', 'gam'/'qgam'")
         else:
@@ -193,7 +199,24 @@ class CLEAR:
             # Create augmented feature matrix with median predictions as the last column
             X_bootstrap = np.column_stack((X_bootstrap, median_bootstrap))
             
-        # Fit models for each either quantile level on the original targets or the residuals with augmented features
+        # Detect SQR/Simultaneous quantile regressor: train ONCE and reuse for all taus
+        is_sqr = False
+        try:
+            if isinstance(quantile_model, str):
+                is_sqr = quantile_model.lower() in ['sqr', 'simultaneousquantileregressor', 'neuralnet']
+            else:
+                is_sqr = quantile_model == SimultaneousQuantileRegressor
+        except Exception:
+            is_sqr = False
+
+        if is_sqr:
+            # Initialize a single SQR model with quantile=None and fit once
+            sqr_model = self._initialize_aleatoric_model(quantile_model, None, model_params)
+            sqr_model.fit(X_bootstrap, y_bootstrap)
+            # Reuse the same model object for lower/median/upper predictions
+            return sqr_model, sqr_model, sqr_model
+
+        # Otherwise, fit separate models per quantile (e.g., QRF, QXGB, Linear QR, GAM)
         lower_model = self._initialize_aleatoric_model(quantile_model, self.lower_quantile, model_params)
         median_model = self._initialize_aleatoric_model(quantile_model, 0.5, model_params)
         upper_model = self._initialize_aleatoric_model(quantile_model, self.upper_quantile, model_params)
@@ -212,7 +235,7 @@ class CLEAR:
             X: Feature matrix
             y: Target values
             quantile_model: A scikit-learn style quantile regression model class, string, or list of such
-                            Default is "rf" which uses RandomForestQuantileRegressor. Note that only QXGB, QRF, and QGAM have been fully tested and supported.
+                            Default is "rf" which uses RandomForestQuantileRegressor. Note that only QXGB, QRF, and QGAM have been fully tested and supported (for DE and SQR used in our experiments see `models.deep_ensembles.py` and `models.sqr.py`).
             model_params: Optional dictionary of parameters for the quantile model.
             fit_on_residuals: Whether to fit aleatoric models on residuals instead of raw targets.
                               If True, epistemic_preds must be provided or epistemic models must be fitted.
@@ -393,9 +416,19 @@ class CLEAR:
             
             try:
                 # Try normal prediction - might use parallel processing internally
-                all_lower_preds[i] = self.lower_models[i].predict(X_aug)
-                all_median_preds[i] = self.median_models[i].predict(X_aug)
-                all_upper_preds[i] = self.upper_models[i].predict(X_aug)
+                # Special handling for SQR: ensure we request the specific quantiles
+                if (
+                    isinstance(self.lower_models[i], SimultaneousQuantileRegressor) and
+                    isinstance(self.median_models[i], SimultaneousQuantileRegressor) and
+                    isinstance(self.upper_models[i], SimultaneousQuantileRegressor)
+                ):
+                    all_lower_preds[i] = self.lower_models[i].predict(X_aug, quantile=self.lower_quantile)
+                    all_median_preds[i] = self.median_models[i].predict(X_aug, quantile=0.5)
+                    all_upper_preds[i] = self.upper_models[i].predict(X_aug, quantile=self.upper_quantile)
+                else:
+                    all_lower_preds[i] = self.lower_models[i].predict(X_aug)
+                    all_median_preds[i] = self.median_models[i].predict(X_aug)
+                    all_upper_preds[i] = self.upper_models[i].predict(X_aug)
             except TypeError as e:
                 # Check if it's the NoneType context manager error
                 if "NoneType" in str(e) and "context manager" in str(e):
@@ -527,6 +560,7 @@ class CLEAR:
                 (median_epistemic[i] - aleatoric_left[i] - y_calib[i]) / left_dev,
                 (y_calib[i] - (median_epistemic[i] + aleatoric_right[i])) / right_dev
             )
+            # score = max(0.0, score)
             scores.append(score)
         return np.array(scores)
 
@@ -756,6 +790,258 @@ class CLEAR:
 
         return self
 
+    def calibrate_split(self, y_val1, y_val2, median_epistemic_val1, median_epistemic_val2,
+                       aleatoric_median_val1, aleatoric_median_val2, 
+                       aleatoric_lower_val1, aleatoric_lower_val2,
+                       aleatoric_upper_val1, aleatoric_upper_val2,
+                       epistemic_lower_val1, epistemic_lower_val2,
+                       epistemic_upper_val1, epistemic_upper_val2,
+                       pythagoras=False, plot=False, verbose=True):
+        """
+        Calibrate with split validation data to avoid selection bias.
+        
+        Uses Val1 for lambda selection and Val2 for conformalization (gamma calculation).
+        
+        Args:
+            y_val1: First validation split targets (for lambda selection)
+            y_val2: Second validation split targets (for conformalization/gamma)
+            median_epistemic_val1/val2: Epistemic predictions for each split
+            aleatoric_*_val1/val2: Aleatoric predictions for each split
+            epistemic_*_val1/val2: Epistemic bounds for each split
+            pythagoras: Whether to use Pythagorean combination
+            plot: Whether to plot lambda-loss curve
+            verbose: Whether to print diagnostics
+            
+        Returns:
+            self: The calibrated model
+        """
+        self.pythagoras = pythagoras
+
+        # Ensure inputs are numpy arrays
+        y_val1 = np.asarray(y_val1).flatten()
+        y_val2 = np.asarray(y_val2).flatten()
+        median_epistemic_val1 = np.asarray(median_epistemic_val1).flatten()
+        median_epistemic_val2 = np.asarray(median_epistemic_val2).flatten()
+        aleatoric_median_val1 = np.asarray(aleatoric_median_val1).flatten()
+        aleatoric_median_val2 = np.asarray(aleatoric_median_val2).flatten()
+        aleatoric_lower_val1 = np.asarray(aleatoric_lower_val1).flatten()
+        aleatoric_lower_val2 = np.asarray(aleatoric_lower_val2).flatten()
+        aleatoric_upper_val1 = np.asarray(aleatoric_upper_val1).flatten()
+        aleatoric_upper_val2 = np.asarray(aleatoric_upper_val2).flatten()
+        epistemic_lower_val1 = np.asarray(epistemic_lower_val1).flatten()
+        epistemic_lower_val2 = np.asarray(epistemic_lower_val2).flatten()
+        epistemic_upper_val1 = np.asarray(epistemic_upper_val1).flatten()
+        epistemic_upper_val2 = np.asarray(epistemic_upper_val2).flatten()
+
+        # Calculate deviations for Val1 (lambda selection)
+        aleatoric_left_val1 = aleatoric_median_val1 - aleatoric_lower_val1
+        aleatoric_right_val1 = aleatoric_upper_val1 - aleatoric_median_val1
+        epistemic_left_val1 = median_epistemic_val1 - epistemic_lower_val1
+        epistemic_right_val1 = epistemic_upper_val1 - median_epistemic_val1
+
+        # Calculate deviations for Val2 (conformalization)
+        aleatoric_left_val2 = aleatoric_median_val2 - aleatoric_lower_val2
+        aleatoric_right_val2 = aleatoric_upper_val2 - aleatoric_median_val2
+        epistemic_left_val2 = median_epistemic_val2 - epistemic_lower_val2
+        epistemic_right_val2 = epistemic_upper_val2 - median_epistemic_val2
+
+        if verbose:
+            print("\n===== SPLIT VALIDATION CALIBRATION =====")
+            print(f"Val1 size (lambda selection): {len(y_val1)} samples")
+            print(f"Val2 size (conformalization): {len(y_val2)} samples")
+
+        # Conformalization parameters using Val2
+        n_calib = len(y_val2)
+        adj_factor = 1.0 + (1.0 / n_calib)
+        target_coverage = 1.0 - self.alpha
+        conf_level = min(target_coverage * adj_factor, 1.0)
+        
+        self.conformal_level = conf_level
+        self.conformal_adjustment = adj_factor
+
+        # Handle different calibration approaches based on fixed parameters
+        calibration_mode = None
+        if self.fixed_gamma is not None and self.fixed_lambda is not None:
+            calibration_mode = "both_fixed"
+            print(f"Using fixed gamma={self.fixed_gamma:.4f} and lambda={self.fixed_lambda:.4f}")
+            self.gamma = self.fixed_gamma
+            self.optimal_lambda = self.fixed_lambda
+        elif self.fixed_gamma is not None:
+            calibration_mode = "gamma_fixed"
+            print(f"Using fixed gamma={self.fixed_gamma:.4f}, optimizing lambda")
+            self.gamma = self.fixed_gamma
+        elif self.fixed_lambda is not None:
+            calibration_mode = "lambda_fixed"
+            print(f"Using fixed lambda={self.fixed_lambda:.4f}, optimizing gamma")
+            self.optimal_lambda = self.fixed_lambda
+        else:
+            calibration_mode = "optimize_both"
+            print(f"Optimizing both gamma and lambda")
+
+        if calibration_mode == "both_fixed":
+            # Both gamma and lambda are fixed - just calculate expected coverage on Val2
+            left_devs_val2, right_devs_val2 = self._compute_combined_devs(
+                self.optimal_lambda, aleatoric_left_val2, aleatoric_right_val2, 
+                epistemic_left_val2, epistemic_right_val2
+            )
+            lower_bound_val2 = median_epistemic_val2 - self.gamma * left_devs_val2
+            upper_bound_val2 = median_epistemic_val2 + self.gamma * right_devs_val2
+            
+            coverage_val2 = np.mean((y_val2 >= lower_bound_val2) & (y_val2 <= upper_bound_val2))
+            print(f"Expected empirical coverage on Val2: {coverage_val2:.4f} (target: {self.desired_coverage:.4f})")
+
+        elif calibration_mode == "gamma_fixed":
+            # Fixed gamma: optimize lambda using combined validation data (more stable than using split)
+            # Combine both validation splits for lambda optimization since gamma is already fixed
+            y_combined = np.concatenate([y_val1, y_val2])
+            median_epistemic_combined = np.concatenate([median_epistemic_val1, median_epistemic_val2])
+            aleatoric_left_combined = np.concatenate([aleatoric_left_val1, aleatoric_left_val2])
+            aleatoric_right_combined = np.concatenate([aleatoric_right_val1, aleatoric_right_val2])
+            epistemic_left_combined = np.concatenate([epistemic_left_val1, epistemic_left_val2])
+            epistemic_right_combined = np.concatenate([epistemic_right_val1, epistemic_right_val2])
+            
+            if verbose:
+                print(f"Optimizing lambda on combined validation data ({len(y_combined)} samples)")
+            
+            # Check for unsupported combination of fixed gamma with Pythagoras
+            if pythagoras:
+                raise NotImplementedError("The combination of fixed_gamma with pythagoras=True is not implemented")
+            
+            # Use the same approach as regular calibrate method for fixed gamma
+            scores = self._calculate_fixed_gamma_scores(
+                y_combined, median_epistemic_combined, 
+                self.fixed_gamma*aleatoric_left_combined, 
+                self.fixed_gamma*aleatoric_right_combined, 
+                self.fixed_gamma*epistemic_left_combined, 
+                self.fixed_gamma*epistemic_right_combined
+            )
+    
+            # Update conformal level for combined data size
+            n_combined = len(y_combined)
+            adj_factor_combined = 1.0 + (1.0 / n_combined)
+            conf_level_combined = min(target_coverage * adj_factor_combined, 1.0)
+            
+            # Get optimal lambda from quantile of scores
+            self.optimal_lambda = np.quantile(scores, conf_level_combined, method='higher')
+            
+            if verbose:
+                print(f"Optimal lambda with fixed gamma={self.gamma:.4f}: {self.optimal_lambda:.4f}")
+                print(f"Conformal level: {conf_level_combined:.4f} (target coverage: {target_coverage:.4f})")
+
+        elif calibration_mode == "lambda_fixed":
+            # Fixed lambda: only use Val2 for gamma calibration (Val1 not needed)
+            if verbose:
+                print(f"Lambda is fixed at {self.optimal_lambda:.4f}, calibrating gamma on Val2 only")
+                print(f"Conformalization on Val2 with level {conf_level:.4f} (target coverage: {target_coverage:.4f})")
+            
+            # Calculate combined deviations for Val2 with fixed lambda
+            left_devs_val2, right_devs_val2 = self._compute_combined_devs(
+                self.optimal_lambda, aleatoric_left_val2, aleatoric_right_val2,
+                epistemic_left_val2, epistemic_right_val2
+            )
+            
+            # Calculate scores for conformal prediction on Val2
+            scores_val2 = self._calculate_conformal_scores(
+                y_val2, median_epistemic_val2, left_devs_val2, right_devs_val2
+            )
+            
+            # Get optimal gamma from quantile of scores
+            self.gamma = np.quantile(scores_val2, conf_level, method='higher')
+            
+            if verbose:
+                print(f"Optimal gamma with fixed lambda={self.optimal_lambda:.4f}: {self.gamma:.4f}")
+                
+                # Calculate expected coverage on Val2
+                lower_bound_val2 = median_epistemic_val2 - self.gamma * left_devs_val2
+                upper_bound_val2 = median_epistemic_val2 + self.gamma * right_devs_val2
+                coverage_val2 = np.mean((y_val2 >= lower_bound_val2) & (y_val2 <= upper_bound_val2))
+                print(f"Empirical coverage on Val2: {coverage_val2:.4f}")
+
+        elif calibration_mode == "optimize_both":
+            # Original two-step split validation approach
+            # Storage for lambda optimization
+            gamma_values = []
+            loss_values = []
+
+            if verbose:
+                print(f"Optimizing lambda on Val1 with {len(self.lambdas)} values from {min(self.lambdas):.4f} to {max(self.lambdas):.4f}")
+                print(f"Conformalization on Val2 with level {conf_level:.4f} (target coverage: {target_coverage:.4f})")
+
+            # STEP 1: Find optimal lambda using Val1
+            for lambda_val in self.lambdas:
+                # Calculate combined deviations for Val1
+                left_devs_val1, right_devs_val1 = self._compute_combined_devs(
+                    lambda_val, aleatoric_left_val1, aleatoric_right_val1, 
+                    epistemic_left_val1, epistemic_right_val1
+                )
+                
+                # Calculate conformal scores on Val1
+                scores_val1 = self._calculate_conformal_scores(
+                    y_val1, median_epistemic_val1, left_devs_val1, right_devs_val1
+                )
+                
+                # Get gamma for this lambda using Val1 scores
+                gamma_temp = np.quantile(scores_val1, conf_level, method='higher')
+                
+                # Calculate loss (interval width) on Val1
+                lower_bound_val1 = median_epistemic_val1 - gamma_temp * left_devs_val1
+                upper_bound_val1 = median_epistemic_val1 + gamma_temp * right_devs_val1
+                loss = np.mean(upper_bound_val1 - lower_bound_val1)
+                
+                gamma_values.append(gamma_temp)
+                loss_values.append(loss)
+
+            # Select optimal lambda based on Val1
+            optimal_idx = np.argmin(loss_values)
+            self.optimal_lambda = self.lambdas[optimal_idx]
+            
+            if verbose:
+                print(f"\nOptimal lambda from Val1: {self.optimal_lambda:.4f}")
+
+            # STEP 2: Calculate final gamma using Val2 with optimal lambda
+            left_devs_val2, right_devs_val2 = self._compute_combined_devs(
+                self.optimal_lambda, aleatoric_left_val2, aleatoric_right_val2,
+                epistemic_left_val2, epistemic_right_val2
+            )
+            
+            scores_val2 = self._calculate_conformal_scores(
+                y_val2, median_epistemic_val2, left_devs_val2, right_devs_val2
+            )
+            
+            self.gamma = np.quantile(scores_val2, conf_level, method='higher')
+            
+            if verbose:
+                print(f"Final gamma from Val2: {self.gamma:.4f}")
+                
+                # Calculate expected coverage on Val2
+                lower_bound_val2 = median_epistemic_val2 - self.gamma * left_devs_val2
+                upper_bound_val2 = median_epistemic_val2 + self.gamma * right_devs_val2
+                coverage_val2 = np.mean((y_val2 >= lower_bound_val2) & (y_val2 <= upper_bound_val2))
+                print(f"Empirical coverage on Val2: {coverage_val2:.4f}")
+
+            if plot and len(self.lambdas) > 1:
+                plt.figure(figsize=(10, 6))
+                plt.plot(self.lambdas, loss_values, 'b-', linewidth=2)
+                plt.axvline(x=self.optimal_lambda, color='r', linestyle='--', label=f'Optimal lambda = {self.optimal_lambda:.4f}')
+                plt.xlabel('Lambda')
+                plt.ylabel('Mean Interval Width (Val1)')
+                plt.title('Lambda Optimization with Split Validation')
+                plt.legend()
+                plt.grid(True, alpha=0.3)
+                plt.show()
+
+        # Store uncertainty metrics from Val2 (conformalization set)
+        self.total_aleatoric_calib = np.mean(aleatoric_left_val2 + aleatoric_right_val2)
+        self.total_epistemic_calib = np.mean(epistemic_left_val2 + epistemic_right_val2)
+        self.uncertainty_ratio_calib = self.total_epistemic_calib / (self.total_aleatoric_calib + 1e-10)
+
+        # Final summary
+        print(f"Final calibration parameters - Lambda: {self.optimal_lambda:.4f}, Gamma: {self.gamma:.4f}")
+        print(f"Conformal level used: {conf_level:.4f} (target coverage: {target_coverage:.4f}, adjustment factor: {adj_factor:.4f})")
+        print("========================================\n")
+        
+        return self
+
     def fit_epistemic(self, X, y):
         """
         Fit epistemic uncertainty models using LinearGAM.
@@ -869,15 +1155,17 @@ class CLEAR:
         else:
             if not hasattr(self, 'epistemic_models'):
                 raise AttributeError("No epistemic models available; either provide external epistemic predictions or call fit_epistemic() first.")
-
             # Get temporary aleatoric predictions to use for epistemic prediction
             if external_aleatoric is not None and 'median' in external_aleatoric:
                 temp_aleatoric_median = external_aleatoric['median']
             else:
-                # Skip this step as we'll generate aleatoric predictions later
-                temp_aleatoric_median = None
-
-            median_epistemic, epistemic_lower, epistemic_upper, _ = self.predict_epistemic(X, temp_aleatoric_median)
+                # Get temporary aleatoric predictions to use for epistemic prediction
+                if external_aleatoric is not None and 'median' in external_aleatoric:
+                    temp_aleatoric_median = external_aleatoric['median']
+                else:
+                    # Skip this step as we'll generate aleatoric predictions later
+                    temp_aleatoric_median = None
+                median_epistemic, epistemic_lower, epistemic_upper, _ = self.predict_epistemic(X, temp_aleatoric_median)
 
         # Compute aleatoric predictions using external input if provided, otherwise use fitted models
         if external_aleatoric is not None:

@@ -25,15 +25,7 @@ Comparisons are made against PCS and "CQR-R+" which is just `ALEATORIC-R` from o
 #!pip install scipy numpy joblib matplotlib pandas plotly pygam quantile_forest scikit_learn scikit_lego seaborn setuptools torch tqdm ucimlrepo xgboost pytest openml tcl matplotlib-inline celer
 
 ## Step 2 (Optional): In case you're uploading the zip file to the colab, you can unzip it
-## Clone from https://github.com/Unco3892/clear and unzip the folder
-#!git clone https://github.com/Unco3892/clear.git
-#!unzip clear.zip
-
-# %%
-# -------------------
-# COLAB CONFIGURATION
-# -------------------
-
+#!unzip clear-2025.zip
 
 ## Step 3: Run the tests
 #!pytest

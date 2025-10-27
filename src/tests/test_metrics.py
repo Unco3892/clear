@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
-import sys
-import os
+import matplotlib
+
+matplotlib.use("Agg", force=True)
 
 from src.clear import metrics
 

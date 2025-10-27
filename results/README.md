@@ -1,5 +1,9 @@
 The results are organized as follows:
-- Variant (a) is `qPCS_all_10seeds_all`
-- Variant (b) is `qPCS_qxgb_10seeds_qxgb`
-- Variant (c) is `PCS_all_10seeds_qrf`. 
-- We have an alternative to variant c, where we just run QXGB instead of QRF in `PCS_all_10seeds_qxgb`, but after studying the results, QRF was slightly better, therefore we have only retained that at the end.
+- CLEAR results (standard and conformalized) are in the `standard` and `conformalized` folders respectively.
+- Each folder, will contain the results for a given variant.
+    - Variant (a) is `qPCS_all_10seeds_all`
+    - Variant (b) is `qPCS_qxgb_10seeds_qxgb`
+    - Variant (c) is `PCS_all_10seeds_qrf`. 
+- Case study results are in the `case_study` folder.
+- UACQR results for variant (c) are in the `uacqr_benchmark_results.csv` file.
+- DE and SQR results are in the `de_sqr` folder.

@@ -34,7 +34,7 @@ except ImportError:
         sys.path.append(pcs_uq_path)
     from PCS.regression import PCS_UQ, PCS_OOB
 
-def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_path=None, alphas=[0.1, 0.05, 0.01], top_k=1, use_oob=False, calibration_method='multiplicative'):
+def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_path=None, alphas=[0.1, 0.05, 0.01], top_k=1, use_oob=False, calibration_method='multiplicative', conformalized=False):
     """
     Run a single PCS ensemble experiment for a dataset using the specified seed index.
     
@@ -47,6 +47,7 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
         top_k: Number of top-performing models to use (default: 1)
         use_oob: Whether to use PCS_OOB instead of PCS_UQ (default: False)
         calibration_method: Method for calibration, 'multiplicative' or 'additive' (default: 'multiplicative')
+        conformalized: Whether to use separate calibration set (conformalized) or reuse validation set (standard) (default: False)
     
     Returns:
         Dict containing model results and trained models for each alpha value
@@ -64,6 +65,8 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
     
     # List all possible paths where the data might be
     search_paths = [
+        # Your current pwd shows you're in F:\research\clear\data
+        os.path.join(base_data_path, dataset_name),
         os.path.join(base_data_path, dataset_name),
         # Try parent directories
         os.path.join(os.path.dirname(base_data_path), dataset_name),
@@ -96,19 +99,46 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
     # Calculate seed from index - exactly as in original
     seed = 777 + seed_index
     
-    # Train, validation, and test split - exactly as in original
+    # Train, validation, and test split
     x_train_val, x_test, y_train_val, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
-    x_train, x_val, y_train, y_val = train_test_split(x_train_val, y_train_val, test_size=0.25, random_state=seed)
     
-    # Create split_dict for storing the data
-    split_dict = {
-        "x_train": x_train.to_numpy(),
-        "y_train": y_train,
-        "x_val": x_val.to_numpy(),
-        "y_val": y_val,
-        "x_test": x_test.to_numpy(),
-        "y_test": y_test
-    }
+    if conformalized:
+        # For conformalized: split train_val into train (75%), val (12.5%), calib (12.5%)
+        # This gives us 60% train, 10% val, 10% calib, 20% test of original data
+        x_train_temp, x_val_calib, y_train_temp, y_val_calib = train_test_split(
+            x_train_val, y_train_val, test_size=0.25, random_state=seed)
+        x_val, x_calib, y_val, y_calib = train_test_split(
+            x_val_calib, y_val_calib, test_size=0.5, random_state=seed + 1)
+        x_train, y_train = x_train_temp, y_train_temp
+        
+        # Create split_dict for conformalized version with separate calibration set
+        split_dict = {
+            "x_train": x_train.to_numpy(),
+            "y_train": y_train,
+            "x_val": x_val.to_numpy(),
+            "y_val": y_val,
+            "x_calib": x_calib.to_numpy(),
+            "y_calib": y_calib,
+            "x_test": x_test.to_numpy(),
+            "y_test": y_test
+        }
+        worker_logger.log(f"[Seed {seed_index}] Conformalized mode: Train={len(y_train)}, Val={len(y_val)}, Calib={len(y_calib)}, Test={len(y_test)}")
+    else:
+        # Standard approach: reuse validation set as calibration set
+        x_train, x_val, y_train, y_val = train_test_split(x_train_val, y_train_val, test_size=0.25, random_state=seed)
+        
+        # Create split_dict for standard version (val = calib)
+        split_dict = {
+            "x_train": x_train.to_numpy(),
+            "y_train": y_train,
+            "x_val": x_val.to_numpy(),
+            "y_val": y_val,
+            "x_calib": x_val.to_numpy(),  # Reuse validation set
+            "y_calib": y_val,             # Reuse validation set
+            "x_test": x_test.to_numpy(),
+            "y_test": y_test
+        }
+        worker_logger.log(f"[Seed {seed_index}] Standard mode: Train={len(y_train)}, Val/Calib={len(y_val)}, Test={len(y_test)}")
     
     estimators = {
     "OLS": LinearRegression(n_jobs = -1),
@@ -170,7 +200,6 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
             # Use get_intervals on train+val combined data
             train_intervals_raw = get_intervals_manually(
                 pcs_model, 
-                # np.concatenate([split_dict["x_train"], split_dict["x_val"]]),
                 split_dict["x_train"],
                 alpha=alpha
             )
@@ -180,11 +209,12 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
                 split_dict["x_val"],
                 alpha=alpha
             )
-
-            # Split the combined results
-            # train_size = len(split_dict["x_train"])
-            # train_intervals_raw = train_val_intervals_raw[:train_size]
-            # val_intervals_raw = train_val_intervals_raw[train_size:]
+            
+            calib_intervals_raw = get_intervals_manually(
+                pcs_model, 
+                split_dict["x_calib"],
+                alpha=alpha
+            )
             
             # Use the same method for test data directly
             test_intervals_raw = get_intervals_manually(pcs_model, split_dict['x_test'], alpha=alpha)
@@ -192,6 +222,7 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
             # Get calibrated intervals
             train_intervals = pcs_model.predict(split_dict['x_train'])
             val_intervals = pcs_model.predict(split_dict['x_val'])
+            calib_intervals = pcs_model.predict(split_dict['x_calib'])
             test_intervals = pcs_model.predict(split_dict['x_test'])
             
             worker_logger.log(f"[Seed {seed_index}] OOB intervals and medians calculated using custom method")
@@ -199,11 +230,13 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
             # For standard PCS_UQ, use the built-in methods
             train_intervals_raw = pcs_model.get_intervals(split_dict['x_train'])
             val_intervals_raw = pcs_model.get_intervals(split_dict['x_val'])
+            calib_intervals_raw = pcs_model.get_intervals(split_dict['x_calib'])
             test_intervals_raw = pcs_model.get_intervals(split_dict['x_test'])
             
             # Get calibrated intervals
             train_intervals = pcs_model.predict(split_dict['x_train'])
             val_intervals = pcs_model.predict(split_dict['x_val'])
+            calib_intervals = pcs_model.predict(split_dict['x_calib'])
             test_intervals = pcs_model.predict(split_dict['x_test'])
             
             worker_logger.log(f"[Seed {seed_index}] Standard intervals and medians calculated")
@@ -214,15 +247,19 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
             'y_train': split_dict['y_train'],
             'x_val': split_dict['x_val'], 
             'y_val': split_dict['y_val'],
+            'x_calib': split_dict['x_calib'],
+            'y_calib': split_dict['y_calib'],
             'x_test': split_dict['x_test'], 
             'y_test': split_dict['y_test'],
             # Raw intervals for all datasets
             'train_intervals_raw': train_intervals_raw,
             'val_intervals_raw': val_intervals_raw,
+            'calib_intervals_raw': calib_intervals_raw,
             'test_intervals_raw': test_intervals_raw,
             # Calibrated intervals for all datasets
             'train_intervals': train_intervals,
             'val_intervals': val_intervals,
+            'calib_intervals': calib_intervals,
             'test_intervals': test_intervals,
             # Median predictions for all datasets
             # 'train_median_preds': train_median_preds,
@@ -234,6 +271,7 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
             'top_k': top_k,
             'calibration_method': calibration_method,
             'use_oob': use_oob,
+            'conformalized': conformalized,
             'top_model_names': list(pcs_model.top_k_models.keys()),
             'model_performances': {model: score for model, score in sorted(pcs_model.pred_scores.items(), key=lambda x: x[1], reverse=True)},
         }
@@ -247,9 +285,9 @@ def run_single_experiment_pcs(dataset_name, seed_index, n_boot=50, base_data_pat
         'seed_index': seed_index
     }
 
-def run_single_experiment_pcs_and_save(dataset_name, seed_index, n_boot=50, base_data_path=None, save_path_template=None, alphas=[0.1, 0.05, 0.01], top_k=1, use_oob=False, calibration_method='multiplicative'):
+def run_single_experiment_pcs_and_save(dataset_name, seed_index, n_boot=50, base_data_path=None, save_path_template=None, alphas=[0.1, 0.05, 0.01], top_k=1, use_oob=False, calibration_method='multiplicative', conformalized=False):
     """Modified function that runs the experiment and saves result directly to disk"""
-    full_result = run_single_experiment_pcs(dataset_name, seed_index, n_boot, base_data_path, alphas, top_k, use_oob, calibration_method)
+    full_result = run_single_experiment_pcs(dataset_name, seed_index, n_boot, base_data_path, alphas, top_k, use_oob, calibration_method, conformalized)
     results = full_result['results']
     
     # Save results for each alpha to individual files
@@ -287,6 +325,7 @@ if __name__ == "__main__":
         'data_superconductor',
         'data_qsar',
         'data_allstate', # also takes long computationally, but we have maintained it
+        # 'data_diamond', #disabled for computational reasons
     ]
 
     parser = argparse.ArgumentParser(description='Run PCS ensemble experiments')
@@ -303,6 +342,8 @@ if __name__ == "__main__":
     parser.add_argument('--use_oob', action='store_true', help='Use PCS_OOB instead of PCS_UQ')
     parser.add_argument('--calibration_method', type=str, choices=['multiplicative', 'additive'], 
                        default='multiplicative', help='Method for calibration (default: multiplicative)')
+    parser.add_argument('--conformalized', action='store_true', 
+                       help='Use separate calibration set (conformalized) instead of reusing validation set (standard)')
     parser.add_argument('--log_file', type=str, default=None, 
                        help='Path to log file (default: logs/pcs_training_<timestamp>.log)')
     args = parser.parse_args()
@@ -318,6 +359,7 @@ if __name__ == "__main__":
     logging.info(f"- Project root: {args.project_root}")
     logging.info(f"- Use OOB: {args.use_oob}")
     logging.info(f"- Calibration method: {args.calibration_method}")
+    logging.info(f"- Conformalized: {args.conformalized}")
     logging.info(f"- Top k: {args.top_k}")
     logging.info("=" * 80)
 
@@ -329,7 +371,8 @@ if __name__ == "__main__":
     logging.info(f"Using alpha values: {alphas} (confidence levels: {[(1-alpha)*100 for alpha in alphas]}%)")
 
     data_base_path = os.path.join(args.project_root, "data")
-    model_save_path = os.path.join(args.project_root, "models", f"pcs_top{args.top_k}_pcs_{args.n_seeds}", "{}_pcs_results_{}.pkl")
+    approach_suffix = "conformalized" if args.conformalized else "standard"
+    model_save_path = os.path.join(args.project_root, "models", f"pcs_top{args.top_k}_pcs_{args.n_seeds}_{approach_suffix}", "{}_pcs_results_{}.pkl")
     # Create results directory if it doesn't exist
     os.makedirs(os.path.dirname(model_save_path.format("", "")), exist_ok=True)
 
@@ -353,7 +396,8 @@ if __name__ == "__main__":
                 alphas=alphas,
                 top_k=args.top_k,
                 use_oob=args.use_oob,
-                calibration_method=args.calibration_method
+                calibration_method=args.calibration_method,
+                conformalized=args.conformalized
             )
             for i in range(args.n_seeds)
         )
@@ -387,6 +431,6 @@ if __name__ == "__main__":
 
 
 # To run the experiments, use the following command (for our paper):
-# python .\train_pcs_quantile.py --top_k 1
+# python .\train_pcs_mean.py --top_k 1
 ## Alternatively, for double-logging for each top_k, use the following command:
-## python .\train_pcs_quantile.py --top_k 1 *> logs/pcs_training_top1.log ; python .\train_pcs_quantile.py --top_k 2 *> logs/pcs_training_top2.log
+## python .\train_pcs_mean.py --top_k 1 *> logs/pcs_training_top1.log ; python .\train_pcs_mean.py --top_k 2 *> logs/pcs_training_top2.log

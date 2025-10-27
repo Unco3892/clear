@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+"""
+Benchmark of real data with PCS/CQR components.
+
+"""
+
 import os
 import sys
 import pickle
@@ -6,7 +10,6 @@ import numpy as np
 import pandas as pd
 import argparse
 import traceback
-import platform
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -14,7 +17,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib
 import time
 # Import utilty functions for the experiments
-from utils import reconstruct_dataframe, safe_flatten, get_top_model_info, setup_logging, StreamToLogger, format_metric_name
+from utils import safe_flatten, get_top_model_info, setup_logging, format_metric_name
 # Import our scripts
 script_dir = os.path.dirname(os.path.abspath(__file__))
 if script_dir not in sys.path:
@@ -151,7 +154,10 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
                   pcs_median_val, pcs_lower_val, pcs_upper_val,
                   pcs_median_test, pcs_lower_test, pcs_upper_test,
                   run_data, args, is_residual=False, train_pcs_median=None, 
-                  pcs_lower_test_calib = None, pcs_upper_test_calib =None):
+                  pcs_lower_test_calib = None, pcs_upper_test_calib =None,
+                  # Conformalized mode parameters
+                  is_conformalized=False, X_calib_df=None, y_calib=None,
+                  pcs_median_calib=None, pcs_lower_calib=None, pcs_upper_calib=None):
     """
     Process either the residual or non-residual approach to generate prediction intervals.
     
@@ -159,7 +165,7 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
         X_train/valid/test_df: Feature dataframes
         y_train/valid/test: Target values
         pcs_median/lower/upper_val: PCS bounds for validation data
-        pcs_median/lower/upper_test: PCS bounds for test data
+        pcs_median/test: PCS bounds for test data
         run_data: Dictionary containing run data
         args: Command-line arguments
         is_residual: Whether to use the residual approach
@@ -197,13 +203,27 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
     
     # Define lambdas to search over - same for all models
     lambdas = np.concatenate((np.linspace(0, 0.09, 10), np.logspace(-1, 2, 4001)))
+    
+    logger.info(f"Using full validation set ({len(y_valid)} samples) for CLEAR calibration and baseline methods")
 
+    # Validation data (shared across CLEAR and baseline methods)
+    X_val_clear = X_valid_df
+    y_val_clear = y_valid
+    pcs_median_val_clear = pcs_median_val
+    pcs_lower_val_clear = pcs_lower_val
+    pcs_upper_val_clear = pcs_upper_val
+
+    # Baseline methods use the same validation data
+    X_val_baseline = X_valid_df
+    y_val_baseline = y_valid
+    pcs_median_val_baseline = pcs_median_val
+    pcs_lower_val_baseline = pcs_lower_val
+    pcs_upper_val_baseline = pcs_upper_val
+    
     # Get top model information from the PCS run data - always use this
     model_type, model_params, quantile_models = get_top_model_info(run_data)
-    # model_params = None
-    # quantile_models = "xgb"
     
-    # Create, fit, and calibrate CLEAR model
+    # Create CLEAR model for aleatoric uncertainty estimation
     clear_model = create_clear_model(
         coverage=args.coverage,
         lambdas=lambdas,
@@ -212,7 +232,8 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
         n_jobs=args.n_jobs
     )
     
-    # Fit aleatoric model - with or without residuals
+    # Step 1bi: Fit aleatoric models using CLEAR training data (without touching calibration data)
+    # Uses PCS-selected models from Step 1a and fits on train data (residuals if residual approach)
     fit_aleatoric_model(
         clear_model=clear_model,
         X_train_df=X_train_df,
@@ -223,24 +244,43 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
         epistemic_preds=train_pcs_median if is_residual else None
     )
     
-    # Generate aleatoric predictions
-    aleatoric_median_val, aleatoric_lower_val, aleatoric_upper_val = clear_model.predict_aleatoric(
-        X_valid_df,
-        epistemic_preds=pcs_median_val if is_residual else None
+    # === BASELINE METHODS: Compute aleatoric predictions on full validation set ===
+    logger.info(f"Computing aleatoric predictions for baseline methods on validation set ({len(y_val_baseline)} samples)...")
+    aleatoric_median_val_baseline, aleatoric_lower_val_baseline, aleatoric_upper_val_baseline = clear_model.predict_aleatoric(
+        X_val_baseline,
+        epistemic_preds=pcs_median_val_baseline if is_residual else None
     )
     
+    # === CLEAR METHODS: Compute aleatoric predictions on validation data ===
+    logger.info(f"Computing aleatoric predictions for CLEAR on validation set ({len(y_val_clear)} samples)...")
+    aleatoric_median_val_clear, aleatoric_lower_val_clear, aleatoric_upper_val_clear = clear_model.predict_aleatoric(
+        X_val_clear,
+        epistemic_preds=pcs_median_val_clear if is_residual else None
+    )
+    
+    # Compute test predictions (same for both baseline and CLEAR)
     aleatoric_median_test, aleatoric_lower_test, aleatoric_upper_test = clear_model.predict_aleatoric(
         X_test_df,
         epistemic_preds=pcs_median_test if is_residual else None
     )
-        
-    # Compute CQR intervals
+    
+    # Compute calibration predictions for conformalized CLEAR (if needed)
+    if is_conformalized:
+        aleatoric_median_calib, aleatoric_lower_calib, aleatoric_upper_calib = clear_model.predict_aleatoric(
+            X_calib_df,
+            epistemic_preds=pcs_median_calib if is_residual else None
+        )
+    else:
+        aleatoric_median_calib = aleatoric_lower_calib = aleatoric_upper_calib = None
+    
+    # Compute CQR intervals using baseline validation data (full validation set)
+    logger.info(f"Computing CQR baseline using validation set ({len(y_val_baseline)} samples)...")
     cqr_lower, cqr_upper, adjustment = compute_cqr_intervals(
-        y_calib=y_valid,
-        aleatoric_median=aleatoric_median_val,
-        aleatoric_lower=aleatoric_lower_val,
-        aleatoric_upper=aleatoric_upper_val,
-        pcs_median=pcs_median_val,
+        y_calib=y_val_baseline,
+        aleatoric_median=aleatoric_median_val_baseline,
+        aleatoric_lower=aleatoric_lower_val_baseline,
+        aleatoric_upper=aleatoric_upper_val_baseline,
+        pcs_median=pcs_median_val_baseline,
         pcs_median_test=pcs_median_test,
         aleatoric_median_test=aleatoric_median_test,
         aleatoric_lower_test=aleatoric_lower_test,
@@ -253,19 +293,31 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
     result['cqr_upper'] = cqr_upper
     result['cqr_adjustment'] = adjustment
     
-    # Calibrate standard CLEAR model
+    # Step 1b: Calibrate CLEAR model using validation data (without touching calibration data)
+    # This implements Step 1bi (fit aleatoric models) and Step 1bii (CLEAR calibration on validation)
+    logger.info("Step 1b: Calibrating CLEAR model using validation data (Step 1bi + 1bii)...")
     calibrate_clear_model(
         clear_model=clear_model,
-        y_valid=y_valid,
-        median_epistemic=pcs_median_val,
-        aleatoric_median=aleatoric_median_val,
-        aleatoric_lower=aleatoric_lower_val,
-        aleatoric_upper=aleatoric_upper_val,
-        epistemic_lower=pcs_lower_val,
-        epistemic_upper=pcs_upper_val
+        y_valid=y_val_clear,
+        median_epistemic=pcs_median_val_clear,
+        aleatoric_median=aleatoric_median_val_clear,
+        aleatoric_lower=aleatoric_lower_val_clear,
+        aleatoric_upper=aleatoric_upper_val_clear,
+        epistemic_lower=pcs_lower_val_clear,
+        epistemic_upper=pcs_upper_val_clear,
+        # Conformalized CLEAR parameters
+        conformalized_clear=is_conformalized,
+        y_calib=y_calib if is_conformalized else None,
+        median_epistemic_calib=pcs_median_calib if is_conformalized else None,
+        aleatoric_median_calib=aleatoric_median_calib,
+        aleatoric_lower_calib=aleatoric_lower_calib,
+        aleatoric_upper_calib=aleatoric_upper_calib,
+        epistemic_lower_calib=pcs_lower_calib if is_conformalized else None,
+        epistemic_upper_calib=pcs_upper_calib if is_conformalized else None
     )
     
-    # Generate CLEAR predictions
+    # Step 3: Generate CLEAR predictions on unseen test data
+    # Uses the calibrated model (either from Step 1b or Step 2 if conformalized)
     clear_lower, clear_upper = predict_with_clear(
         clear_model=clear_model,
         X_test_df=X_test_df,
@@ -288,51 +340,6 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
     result['clear_total_epistemic_calib'] = clear_model.total_epistemic_calib
     result['clear_uncertainty_ratio_calib'] = clear_model.uncertainty_ratio_calib
     
-    # Create, calibrate and predict with CLEAR-c model (conformalized)
-    clear_c_model = create_clear_model(
-        coverage=args.coverage,
-        lambdas=lambdas,
-        n_bootstraps=args.n_bootstraps,
-        random_state=random_state,
-        n_jobs=args.n_jobs
-    )
-    
-    # Calibrate CLEAR-c model with conformalized bounds
-    calibrate_clear_model(
-        clear_model=clear_c_model,
-        y_valid=y_valid,
-        median_epistemic=pcs_median_val,
-        aleatoric_median=aleatoric_median_val,
-        aleatoric_lower=aleatoric_lower_val,
-        aleatoric_upper=aleatoric_upper_val,
-        epistemic_lower=pcs_lower_val,
-        epistemic_upper=pcs_upper_val,
-        is_conformalized=True,
-        adjustment=adjustment
-    )
-    
-    # Generate CLEAR-c predictions
-    clear_c_lower, clear_c_upper = predict_with_clear(
-        clear_model=clear_c_model,
-        X_test_df=X_test_df,
-        pcs_median_test=pcs_median_test,
-        pcs_lower_test=pcs_lower_test,
-        pcs_upper_test=pcs_upper_test,
-        aleatoric_median_test=pcs_median_test, # Use PCS median as the center for adjusted bounds
-        aleatoric_lower_test=cqr_lower,       # Use conformalized bounds
-        aleatoric_upper_test=cqr_upper        # Use conformalized bounds
-    )
-    
-    # Save CLEAR-c results
-    result['clear_c_model'] = clear_c_model
-    result['clear_c_lower'] = clear_c_lower
-    result['clear_c_upper'] = clear_c_upper
-    result['clear_c_optimal_lambda'] = clear_c_model.optimal_lambda
-    result['clear_c_gamma'] = clear_c_model.gamma
-    # Add uncertainty metrics
-    result['clear_c_total_aleatoric_calib'] = clear_c_model.total_aleatoric_calib
-    result['clear_c_total_epistemic_calib'] = clear_c_model.total_epistemic_calib
-    result['clear_c_uncertainty_ratio_calib'] = clear_c_model.uncertainty_ratio_calib
     
     # Calculate MEAN(PCS+CQR) baseline
     mean_pcs_cqr_lower = (pcs_lower_test_calib + cqr_lower) / 2.0
@@ -355,13 +362,13 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
     # Calibration for Gamma=1 model
     logger.info(f"Calibrating Gamma=1 model (gamma=1, {approach} approach)")
     gamma_1_model.calibrate(
-        y_calib=y_valid.flatten(),
-        median_epistemic=pcs_median_val,
-        aleatoric_median=aleatoric_median_val,
-        aleatoric_lower=aleatoric_lower_val,
-        aleatoric_upper=aleatoric_upper_val,
-        epistemic_lower=pcs_lower_val,
-        epistemic_upper=pcs_upper_val
+        y_calib=y_val_clear.flatten(),
+        median_epistemic=pcs_median_val_clear,
+        aleatoric_median=aleatoric_median_val_clear,
+        aleatoric_lower=aleatoric_lower_val_clear,
+        aleatoric_upper=aleatoric_upper_val_clear,
+        epistemic_lower=pcs_lower_val_clear,
+        epistemic_upper=pcs_upper_val_clear
     )
     logger.info(f"Gamma=1 optimal lambda: {gamma_1_model.optimal_lambda:.6f}")
     
@@ -383,45 +390,9 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
     result['gamma_1_upper'] = gamma_1_upper
     result['gamma_1_lambda'] = gamma_1_model.optimal_lambda
     
-    # Implement Gamma=1-c (conformalized Gamma=1) method
-    gamma_1_c_model = create_clear_model(
-        coverage=args.coverage,
-        lambdas=lambdas,
-        n_bootstraps=args.n_bootstraps,
-        random_state=random_state,
-        n_jobs=args.n_jobs,
-        fixed_gamma=1.0  # Fix gamma=1
-    )
+
     
-    logger.info(f"Calibrating Gamma=1-c model (gamma=1, {approach} approach, conformalized)")
-    gamma_1_c_model.calibrate(
-        y_calib=y_valid.flatten(),
-        median_epistemic=pcs_median_val,
-        aleatoric_median=pcs_median_val,  # Use PCS median as center
-        aleatoric_lower=pcs_median_val - (aleatoric_median_val - aleatoric_lower_val) - adjustment,  # Apply conformation
-        aleatoric_upper=pcs_median_val + (aleatoric_upper_val - aleatoric_median_val) + adjustment,  # Apply conformation
-        epistemic_lower=pcs_lower_val,
-        epistemic_upper=pcs_upper_val
-    )
-    logger.info(f"Gamma=1-c optimal lambda: {gamma_1_c_model.optimal_lambda:.6f}")
-    
-    # Generate Gamma=1-c predictions
-    gamma_1_c_lower, gamma_1_c_upper = predict_with_clear(
-        clear_model=gamma_1_c_model,
-        X_test_df=X_test_df,
-        pcs_median_test=pcs_median_test,
-        pcs_lower_test=pcs_lower_test,
-        pcs_upper_test=pcs_upper_test,
-        aleatoric_median_test=pcs_median_test, # Use PCS median as center
-        aleatoric_lower_test=cqr_lower,        # Use conformalized bounds directly
-        aleatoric_upper_test=cqr_upper         # Use conformalized bounds directly
-    )
-    
-    # Save Gamma=1-c results
-    result['gamma_1_c_model'] = gamma_1_c_model
-    result['gamma_1_c_lower'] = gamma_1_c_lower
-    result['gamma_1_c_upper'] = gamma_1_c_upper
-    result['gamma_1_c_lambda'] = gamma_1_c_model.optimal_lambda
+
     
     # Implement fixed lambda=1 method
     lambda_one_model = create_clear_model(
@@ -438,13 +409,13 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
     
     # Direct calibration to match demo_consistent.py implementation
     lambda_one_model.calibrate(
-        y_calib=y_valid.flatten(),
-        median_epistemic=pcs_median_val,
-        aleatoric_median=aleatoric_median_val,
-        aleatoric_lower=aleatoric_lower_val,
-        aleatoric_upper=aleatoric_upper_val,
-        epistemic_lower=pcs_lower_val,
-        epistemic_upper=pcs_upper_val
+        y_calib=y_val_clear.flatten(),
+        median_epistemic=pcs_median_val_clear,
+        aleatoric_median=aleatoric_median_val_clear,
+        aleatoric_lower=aleatoric_lower_val_clear,
+        aleatoric_upper=aleatoric_upper_val_clear,
+        epistemic_lower=pcs_lower_val_clear,
+        epistemic_upper=pcs_upper_val_clear
     )
     
     logger.info(f"Lambda=1 gamma: {lambda_one_model.gamma:.6f}")
@@ -468,53 +439,16 @@ def process_approach(X_train_df, y_train_df, X_valid_df, y_valid, X_test_df, y_t
     result['lambda_one_gamma'] = lambda_one_model.gamma
     
     # Implement fixed lambda=1 with conformalized CQR (lambda=1-c)
-    lambda_one_c_model = create_clear_model(
-        coverage=args.coverage,
-        lambdas=lambdas,
-        n_bootstraps=args.n_bootstraps,
-        random_state=random_state,
-        n_jobs=args.n_jobs,
-        fixed_lambda=1.0  # Fix lambda=1
-    )
     
     # Improved calibration for Lambda=1-c model - direct calibration with conformalization
     logger.info(f"Calibrating Lambda=1-c model ({approach} approach, conformalized)")
     
-    # Direct calibration with conformalized bounds
-    lambda_one_c_model.calibrate(
-        y_calib=y_valid.flatten(),
-        median_epistemic=pcs_median_val,
-        aleatoric_median=pcs_median_val,
-        aleatoric_lower=pcs_median_val - (aleatoric_median_val - aleatoric_lower_val) - adjustment,
-        aleatoric_upper=pcs_median_val + (aleatoric_upper_val - aleatoric_median_val) + adjustment,
-        epistemic_lower=pcs_lower_val,
-        epistemic_upper=pcs_upper_val
-    )
-    
-    logger.info(f"Lambda=1-c gamma: {lambda_one_c_model.gamma:.6f}")
-    
-    # Generate lambda=1-c predictions
-    lambda_one_c_lower, lambda_one_c_upper = predict_with_clear(
-        clear_model=lambda_one_c_model,
-        X_test_df=X_test_df,
-        pcs_median_test=pcs_median_test,
-        pcs_lower_test=pcs_lower_test,
-        pcs_upper_test=pcs_upper_test,
-        aleatoric_median_test=pcs_median_test,
-        aleatoric_lower_test=cqr_lower,
-        aleatoric_upper_test=cqr_upper
-    )
-    
-    # Save lambda=1-c results
-    result['lambda_one_c_model'] = lambda_one_c_model
-    result['lambda_one_c_lower'] = lambda_one_c_lower
-    result['lambda_one_c_upper'] = lambda_one_c_upper
-    result['lambda_one_c_gamma'] = lambda_one_c_model.gamma
     
     # Save aleatoric predictions
-    result['aleatoric_median_val'] = aleatoric_median_val
-    result['aleatoric_lower_val'] = aleatoric_lower_val 
-    result['aleatoric_upper_val'] = aleatoric_upper_val
+        # Store validation predictions (use Val1 for consistency with lambda selection)
+    result['aleatoric_median_val'] = aleatoric_median_val_clear
+    result['aleatoric_lower_val'] = aleatoric_lower_val_clear
+    result['aleatoric_upper_val'] = aleatoric_upper_val_clear
     result['aleatoric_median_test'] = aleatoric_median_test
     result['aleatoric_lower_test'] = aleatoric_lower_test
     result['aleatoric_upper_test'] = aleatoric_upper_test
@@ -544,9 +478,7 @@ def process_dataset(dataset, args, run_nums=None):
     # Results storage
     all_metrics = {
         "clear_vanilla": create_metrics_dict(include_lambda=True, include_gamma=True), # Was "clear"
-        "clear_vanilla_c": create_metrics_dict(include_lambda=True, include_gamma=True), # Was "clear_c"
         "clear": create_metrics_dict(include_lambda=True, include_gamma=True),         # Was "clear_residual"
-        "clear_c": create_metrics_dict(include_lambda=True, include_gamma=True),     # Was "clear_residual_c"
         "cqr": create_metrics_dict(),
         "cqr_residual": create_metrics_dict(),
         "pcs": create_metrics_dict(),
@@ -556,12 +488,8 @@ def process_dataset(dataset, args, run_nums=None):
         "mean_pcs_cqr_residual": create_metrics_dict(),
         "gamma_1": create_metrics_dict(include_lambda=True),
         "gamma_1_r": create_metrics_dict(include_lambda=True),
-        "gamma_1_c": create_metrics_dict(include_lambda=True),
-        "gamma_1_c_r": create_metrics_dict(include_lambda=True),
         "lambda_one": create_metrics_dict(include_gamma=True),
         "lambda_one_r": create_metrics_dict(include_gamma=True),
-        "lambda_one_c": create_metrics_dict(include_gamma=True),
-        "lambda_one_c_r": create_metrics_dict(include_gamma=True)
     }
     
     # Determine runs to process
@@ -597,12 +525,25 @@ def process_dataset(dataset, args, run_nums=None):
         X_test = run_data.get("x_test", None)
         y_test = run_data.get("y_test", None)
         
-        X_train = np.array(X_train) if isinstance(X_train, list) else X_train
-        y_train = np.array(y_train) if isinstance(y_train, list) else y_train
-        X_valid = np.array(X_valid) if isinstance(X_valid, list) else X_valid
-        y_valid = np.array(y_valid) if isinstance(y_valid, list) else y_valid
-        X_test = np.array(X_test) if isinstance(X_test, list) else X_test
-        y_test = np.array(y_test) if isinstance(y_test, list) else y_test
+        # Check if we have separate calibration data (conformalized mode)
+        is_conformalized = bool(run_data.get("conformalized", False))
+        X_calib = run_data.get("x_calib", None)
+        y_calib = run_data.get("y_calib", None)
+
+        if is_conformalized and (X_calib is None or y_calib is None):
+            logger.warning("conformalized flag is True but calibration data is missing; falling back to standard mode")
+            is_conformalized = False
+
+        if is_conformalized:
+            X_calib = np.array(X_calib) if isinstance(X_calib, list) else X_calib
+            y_calib = np.array(y_calib) if isinstance(y_calib, list) else y_calib
+            y_calib = safe_flatten(y_calib)
+            logger.info(f"Conformalized mode detected in run metadata: Train={len(y_train)}, Val={len(y_valid)}, Calib={len(y_calib)}, Test={len(y_test)}")
+        else:
+            # In standard mode, reuse validation as calibration
+            X_calib = X_valid
+            y_calib = y_valid
+            logger.info(f"Standard mode (per run metadata): Train={len(y_train)}, Val/Calib={len(y_valid)}, Test={len(y_test)}")
 
         y_test = safe_flatten(y_test)
         y_valid = safe_flatten(y_valid)
@@ -612,9 +553,8 @@ def process_dataset(dataset, args, run_nums=None):
         X_train_df = pd.DataFrame(X_train)
         y_train_df = pd.DataFrame(y_train, columns=['y'])
         X_valid_df = pd.DataFrame(X_valid)
-        y_valid_df = pd.DataFrame(y_valid, columns=['y'])
+        X_calib_df = pd.DataFrame(X_calib)
         X_test_df = pd.DataFrame(X_test)
-        y_test_df = pd.DataFrame(y_test, columns=['y'])
         alpha = 1 - args.coverage  # Target miscoverage rate
 
         # print(run_data.keys())
@@ -626,6 +566,18 @@ def process_dataset(dataset, args, run_nums=None):
         # pcs_median_val = np.array(run_data['val_median_preds'])
         pcs_median_val = pcs_intervals_val[:, 1]
         pcs_upper_val = pcs_intervals_val[:, 2]
+        
+        # Get calibration intervals if available (for conformalized mode)
+        if is_conformalized:
+            pcs_intervals_calib = np.array(run_data['calib_intervals_raw'])
+            pcs_lower_calib = pcs_intervals_calib[:, 0]
+            pcs_median_calib = pcs_intervals_calib[:, 1]
+            pcs_upper_calib = pcs_intervals_calib[:, 2]
+        else:
+            # In standard mode, calibration data is same as validation
+            pcs_lower_calib = pcs_lower_val
+            pcs_median_calib = pcs_median_val
+            pcs_upper_calib = pcs_upper_val
 
         # Extract the raw intervals
         pcs_intervals_test = np.array(run_data['test_intervals_raw'])
@@ -642,7 +594,7 @@ def process_dataset(dataset, args, run_nums=None):
         logger.info(f"Using gamma value from pickle file: {run_data['gamma']:.4f}")
         gamma_value = run_data['gamma']
 
-        # Check for median predictions format from train_pcs_quantile.py
+        # Check for median predictions format from train_pcs_data_quantile.py
         # Create a 2D array with the predictions as a single model
         # if isinstance(test_predictions, np.ndarray) and test_predictions.ndim == 1:
         #     test_predictions = np.array([test_predictions]).T
@@ -708,7 +660,14 @@ def process_dataset(dataset, args, run_nums=None):
                     is_residual=False,  # Standard approach
                     train_pcs_median=train_pcs_median,
                     pcs_lower_test_calib=pcs_lower_test_calib,
-                    pcs_upper_test_calib=pcs_upper_test_calib
+                    pcs_upper_test_calib=pcs_upper_test_calib,
+                    # Conformalized mode parameters
+                    is_conformalized=is_conformalized,
+                    X_calib_df=X_calib_df,
+                    y_calib=y_calib,
+                    pcs_median_calib=pcs_median_calib,
+                    pcs_lower_calib=pcs_lower_calib,
+                    pcs_upper_calib=pcs_upper_calib
                 )
                 
                 # Then process residual approach (if we have train_pcs_median)
@@ -732,7 +691,14 @@ def process_dataset(dataset, args, run_nums=None):
                         is_residual=True,  # Residual approach
                         train_pcs_median=train_pcs_median,
                         pcs_lower_test_calib=pcs_lower_test_calib,
-                        pcs_upper_test_calib=pcs_upper_test_calib
+                        pcs_upper_test_calib=pcs_upper_test_calib,
+                        # Conformalized mode parameters
+                        is_conformalized=is_conformalized,
+                        X_calib_df=X_calib_df,
+                        y_calib=y_calib,
+                        pcs_median_calib=pcs_median_calib,
+                        pcs_lower_calib=pcs_lower_calib,
+                        pcs_upper_calib=pcs_upper_calib
                     )
                 
                 # Process results from both approaches
@@ -783,20 +749,15 @@ def process_dataset(dataset, args, run_nums=None):
                     # Set method prefixes based on whether this is residual or standard
                     is_res = results.get('is_residual', False)
                     # method_prefix = "clear_residual" if is_res else "clear"
-                    # method_prefix_c = "clear_residual_c" if is_res else "clear_c"
                     if is_res: # Residual approach results
                         method_prefix = "clear" # Formerly "clear_residual"
-                        method_prefix_c = "clear_c" # Formerly "clear_residual_c"
                     else: # Standard approach results
                         method_prefix = "clear_vanilla" # Formerly "clear"
-                        method_prefix_c = "clear_vanilla_c" # Formerly "clear_c"
 
                     cqr_prefix = "cqr_residual" if is_res else "cqr"
                     mean_prefix = "mean_pcs_cqr_residual" if is_res else "mean_pcs_cqr"
                     gamma_1_prefix = "gamma_1_r" if is_res else "gamma_1"
-                    gamma_1_c_prefix = "gamma_1_c_r" if is_res else "gamma_1_c"
                     lambda_one_prefix = "lambda_one_r" if is_res else "lambda_one"
-                    lambda_one_c_prefix = "lambda_one_c_r" if is_res else "lambda_one_c"
                     
                     # Evaluate CLEAR
                     if results.get('clear_lower') is not None:
@@ -814,21 +775,6 @@ def process_dataset(dataset, args, run_nums=None):
                             method_params=method_params
                         )
                         
-                    # Evaluate CLEAR-c
-                    if results.get('clear_c_lower') is not None:
-                        method_params = {
-                            "lambda": results.get('clear_c_optimal_lambda'), 
-                            "gamma": results.get('clear_c_gamma'),
-                            "total_aleatoric_calib": results.get('clear_c_total_aleatoric_calib'),
-                            "total_epistemic_calib": results.get('clear_c_total_epistemic_calib'),
-                            "uncertainty_ratio_calib": results.get('clear_c_uncertainty_ratio_calib')
-                        }
-                        evaluate_and_log_metrics(
-                            all_metrics=all_metrics, y_test=y_test, method_name=method_prefix_c,
-                            lower_bounds=results['clear_c_lower'], upper_bounds=results['clear_c_upper'],
-                            alpha=alpha, evaluation_median=evaluation_median,
-                            method_params=method_params
-                        )
                         
                     # Evaluate CQR
                     if results.get('cqr_lower') is not None:
@@ -855,15 +801,7 @@ def process_dataset(dataset, args, run_nums=None):
                             method_params={"lambda": results.get('gamma_1_lambda')}
                         )
                     
-                    # Evaluate Gamma=1-c
-                    if results.get('gamma_1_c_lower') is not None:
-                        evaluate_and_log_metrics(
-                            all_metrics=all_metrics, y_test=y_test, method_name=gamma_1_c_prefix,
-                            lower_bounds=results['gamma_1_c_lower'], upper_bounds=results['gamma_1_c_upper'],
-                            alpha=alpha, evaluation_median=evaluation_median,
-                            method_params={"lambda": results.get('gamma_1_c_lambda')}
-                        )
-                    
+
                     # Evaluate Lambda=1
                     if results.get('lambda_one_lower') is not None:
                         evaluate_and_log_metrics(
@@ -873,15 +811,6 @@ def process_dataset(dataset, args, run_nums=None):
                             method_params={"gamma": results.get('lambda_one_gamma')}
                         )
                     
-                    # Evaluate Lambda=1-c
-                    if results.get('lambda_one_c_lower') is not None:
-                        evaluate_and_log_metrics(
-                            all_metrics=all_metrics, y_test=y_test, method_name=lambda_one_c_prefix,
-                            lower_bounds=results['lambda_one_c_lower'], upper_bounds=results['lambda_one_c_upper'],
-                            alpha=alpha, evaluation_median=evaluation_median,
-                            method_params={"gamma": results.get('lambda_one_c_gamma')}
-                        )
-                
                 # Print metrics for this run
                 logger.info(f"\n{'-'*40}")
                 logger.info(f"Metrics for {run_key}:")
@@ -890,9 +819,7 @@ def process_dataset(dataset, args, run_nums=None):
                 # Define a mapping of method keys to display names
                 display_name_map = {
                     "clear_vanilla": "CLEAR-Vanilla",       # Was "clear": "CLEAR"
-                    "clear_vanilla_c": "CLEAR-Vanilla-c",   # Was "clear_c": "CLEAR-c"
                     "clear": "CLEAR",                 # Was "clear_residual": "CLEAR-R"
-                    "clear_c": "CLEAR-c",             # Was "clear_residual_c": "CLEAR-R-c"
                     "cqr": "CQR",
                     "cqr_residual": "CQR-R",
                     "pcs": "PCS",
@@ -902,12 +829,8 @@ def process_dataset(dataset, args, run_nums=None):
                     "mean_pcs_cqr_residual": "Mean(PCS+CQR)-R",
                     "gamma_1": "Gamma=1",
                     "gamma_1_r": "Gamma=1-R",
-                    "gamma_1_c": "Gamma=1-c",
-                    "gamma_1_c_r": "Gamma=1-c-R",
                     "lambda_one": "Lambda=1",
                     "lambda_one_r": "Lambda=1-R",
-                    "lambda_one_c": "Lambda=1-c",
-                    "lambda_one_c_r": "Lambda=1-c-R"
                 }
                 
                 # Log metrics for this run organized by method
@@ -950,7 +873,14 @@ def process_dataset(dataset, args, run_nums=None):
                 is_residual=(args.approach == "residual"),
                 train_pcs_median=train_pcs_median if train_pcs_median is not None else None,
                 pcs_lower_test_calib=pcs_lower_test_calib, # Pass calibrated for Mean(PCS+CQR)
-                pcs_upper_test_calib=pcs_upper_test_calib  # Pass calibrated for Mean(PCS+CQR)
+                pcs_upper_test_calib=pcs_upper_test_calib,  # Pass calibrated for Mean(PCS+CQR)
+                # Conformalized mode parameters
+                is_conformalized=is_conformalized,
+                X_calib_df=X_calib_df,
+                y_calib=y_calib,
+                pcs_median_calib=pcs_median_calib,
+                pcs_lower_calib=pcs_lower_calib,
+                pcs_upper_calib=pcs_upper_calib
             )
 
             # Check if the approach was skipped (e.g., due to --residual_only)
@@ -1001,23 +931,17 @@ def process_dataset(dataset, args, run_nums=None):
             # Note: The results dict contains the *output* of process_approach.
             # If args.use_residual=True, these results are residual-based.
             # method_prefix = "clear_residual" if args.approach == "residual" else "clear"
-            # method_prefix_c = "clear_residual_c" if args.approach == "residual" else "clear_c"
             if args.approach == "residual":
                 method_prefix = "clear" # Formerly "clear_residual"
-                method_prefix_c = "clear_c" # Formerly "clear_residual_c"
             elif args.approach == "standard":
                 method_prefix = "clear_vanilla" # Formerly "clear"
-                method_prefix_c = "clear_vanilla_c" # Formerly "clear_c"
             else: # Should not happen if args.approach is 'both', handled above
                 method_prefix = "clear_vanilla" 
-                method_prefix_c = "clear_vanilla_c"
 
             cqr_prefix = "cqr_residual" if args.approach == "residual" else "cqr"
             mean_prefix = "mean_pcs_cqr_residual" if args.approach == "residual" else "mean_pcs_cqr"
             gamma_1_prefix = "gamma_1_r" if args.approach == "residual" else "gamma_1"
-            gamma_1_c_prefix = "gamma_1_c_r" if args.approach == "residual" else "gamma_1_c"
             lambda_one_prefix = "lambda_one_r" if args.approach == "residual" else "lambda_one"
-            lambda_one_c_prefix = "lambda_one_c_r" if args.approach == "residual" else "lambda_one_c"
 
             # Evaluate CLEAR (Standard or Residual)
             if results.get('clear_lower') is not None:
@@ -1035,21 +959,6 @@ def process_dataset(dataset, args, run_nums=None):
                     method_params=method_params
                 )
 
-            # Evaluate CLEAR-c (Standard or Residual)
-            if results.get('clear_c_lower') is not None:
-                method_params = {
-                    "lambda": results.get('clear_c_optimal_lambda'), 
-                    "gamma": results.get('clear_c_gamma'),
-                    "total_aleatoric": results.get('clear_c_total_aleatoric'),
-                    "total_epistemic": results.get('clear_c_total_epistemic'),
-                    "uncertainty_ratio": results.get('clear_c_uncertainty_ratio')
-                }
-                evaluate_and_log_metrics(
-                    all_metrics=all_metrics, y_test=y_test, method_name=method_prefix_c,
-                    lower_bounds=results['clear_c_lower'], upper_bounds=results['clear_c_upper'],
-                    alpha=alpha, evaluation_median=evaluation_median,
-                    method_params=method_params
-                )
 
             # Evaluate CQR (Standard or Residual)
             if results.get('cqr_lower') is not None:
@@ -1076,14 +985,6 @@ def process_dataset(dataset, args, run_nums=None):
                     method_params={"lambda": results.get('gamma_1_lambda')}
                 )
 
-            # Evaluate Gamma=1-c
-            if results.get('gamma_1_c_lower') is not None:
-                evaluate_and_log_metrics(
-                    all_metrics=all_metrics, y_test=y_test, method_name=gamma_1_c_prefix,
-                    lower_bounds=results['gamma_1_c_lower'], upper_bounds=results['gamma_1_c_upper'],
-                    alpha=alpha, evaluation_median=evaluation_median,
-                    method_params={"lambda": results.get('gamma_1_c_lambda')}
-                )
 
             # Evaluate Lambda=1
             if results.get('lambda_one_lower') is not None:
@@ -1094,30 +995,18 @@ def process_dataset(dataset, args, run_nums=None):
                     method_params={"gamma": results.get('lambda_one_gamma')} # Store gamma if available
                 )
             
-            # Evaluate Lambda=1-c
-            if results.get('lambda_one_c_lower') is not None:
-                evaluate_and_log_metrics(
-                    all_metrics=all_metrics, y_test=y_test, method_name=lambda_one_c_prefix,
-                    lower_bounds=results['lambda_one_c_lower'], upper_bounds=results['lambda_one_c_upper'],
-                    alpha=alpha, evaluation_median=evaluation_median,
-                    method_params={"gamma": results.get('lambda_one_c_gamma')} # Store gamma if available
-                )
             
             # Print metrics for this run
             logger.info(f"\nMetrics for {run_key}:")
             # Use the display name map defined below in the summary section
             display_name_map_local = {
                 "clear_vanilla": "CLEAR-Vanilla",       # Was "clear": "CLEAR"
-                "clear_vanilla_c": "CLEAR-Vanilla-c",   # Was "clear_c": "CLEAR-c"
                 "clear": "CLEAR",                 # Was "clear_residual": "CLEAR-R"
-                "clear_c": "CLEAR-c",             # Was "clear_residual_c": "CLEAR-R-c"
                 "cqr": "CQR", "cqr_residual": "CQR-R",
                 "pcs": "PCS", "a_naive": "A-Naive", "s_naive": "S-Naive",
                 "mean_pcs_cqr": "Mean(PCS+CQR)", "mean_pcs_cqr_residual": "Mean(PCS+CQR)-R",
                 "gamma_1": "Gamma=1", "gamma_1_r": "Gamma=1-R", 
-                "gamma_1_c": "Gamma=1-c", "gamma_1_c_r": "Gamma=1-c-R",
                 "lambda_one": "Lambda=1", "lambda_one_r": "Lambda=1-R",
-                "lambda_one_c": "Lambda=1-c", "lambda_one_c_r": "Lambda=1-c-R"
             }
             
             # Log metrics for methods that have results for the current run
@@ -1136,7 +1025,10 @@ def process_dataset(dataset, args, run_nums=None):
                     display_name = display_name_map_local.get(method, method.upper())
                     logger.info(f"  {display_name}:")
                     for metric_name, value in metrics_dict_for_log.items():
-                         logger.info(f"    {format_metric_name(metric_name)}: {value:.4f}")
+                        if value is not None:
+                            logger.info(f"    {format_metric_name(metric_name)}: {value:.4f}")
+                        else:
+                            logger.info(f"    {format_metric_name(metric_name)}: N/A")
 
             
             # Save results for this dataset if requested
@@ -1170,18 +1062,14 @@ def process_dataset(dataset, args, run_nums=None):
                     target_metric_keys_map = {
                         # For standard run results:
                         "clear_vanilla": "clear_vanilla",
-                        "clear_vanilla_c": "clear_vanilla_c",
                         # For residual run results:
                         "clear": "clear", # This is the new "clear" (formerly clear_residual)
-                        "clear_c": "clear_c", # This is the new "clear_c" (formerly clear_residual_c)
                         
                         # Other methods (these are processed once per run, their naming in all_metrics is already set)
                         "cqr": "cqr" if not results.get('is_residual', False) else "cqr_residual",
                         "mean_pcs_cqr": "mean_pcs_cqr" if not results.get('is_residual', False) else "mean_pcs_cqr_residual",
                         "gamma_1": "gamma_1" if not results.get('is_residual', False) else "gamma_1_r",
-                        "gamma_1_c": "gamma_1_c" if not results.get('is_residual', False) else "gamma_1_c_r",
                         "lambda_one": "lambda_one" if not results.get('is_residual', False) else "lambda_one_r",
-                        "lambda_one_c": "lambda_one_c" if not results.get('is_residual', False) else "lambda_one_c_r",
                         
                         # Baselines (processed once per run_key)
                         "pcs": "pcs", 
@@ -1200,22 +1088,15 @@ def process_dataset(dataset, args, run_nums=None):
                     methods_to_save_in_this_iteration = {}
                     if is_current_results_from_residual_run:
                         methods_to_save_in_this_iteration["clear"] = ("clear_lower", "clear_upper", "clear")
-                        methods_to_save_in_this_iteration["clear_c"] = ("clear_c_lower", "clear_c_upper", "clear_c")
-                        methods_to_save_in_this_iteration["cqr_residual"] = ("cqr_lower", "cqr_upper", "cqr_residual")
                         methods_to_save_in_this_iteration["mean_pcs_cqr_residual"] = ("mean_pcs_cqr_lower", "mean_pcs_cqr_upper", "mean_pcs_cqr_residual")
                         methods_to_save_in_this_iteration["gamma_1_r"] = ("gamma_1_lower", "gamma_1_upper", "gamma_1_r")
-                        methods_to_save_in_this_iteration["gamma_1_c_r"] = ("gamma_1_c_lower", "gamma_1_c_upper", "gamma_1_c_r")
                         methods_to_save_in_this_iteration["lambda_one_r"] = ("lambda_one_lower", "lambda_one_upper", "lambda_one_r")
-                        methods_to_save_in_this_iteration["lambda_one_c_r"] = ("lambda_one_c_lower", "lambda_one_c_upper", "lambda_one_c_r")
                     else: # Standard run
                         methods_to_save_in_this_iteration["clear_vanilla"] = ("clear_lower", "clear_upper", "clear_vanilla")
-                        methods_to_save_in_this_iteration["clear_vanilla_c"] = ("clear_c_lower", "clear_c_upper", "clear_vanilla_c")
                         methods_to_save_in_this_iteration["cqr"] = ("cqr_lower", "cqr_upper", "cqr")
                         methods_to_save_in_this_iteration["mean_pcs_cqr"] = ("mean_pcs_cqr_lower", "mean_pcs_cqr_upper", "mean_pcs_cqr")
                         methods_to_save_in_this_iteration["gamma_1"] = ("gamma_1_lower", "gamma_1_upper", "gamma_1")
-                        methods_to_save_in_this_iteration["gamma_1_c"] = ("gamma_1_c_lower", "gamma_1_c_upper", "gamma_1_c")
                         methods_to_save_in_this_iteration["lambda_one"] = ("lambda_one_lower", "lambda_one_upper", "lambda_one")
-                        methods_to_save_in_this_iteration["lambda_one_c"] = ("lambda_one_c_lower", "lambda_one_c_upper", "lambda_one_c")
 
                     # Add baselines (PCS, Naive) to be saved only once, typically with non-residual/first pass
                     if not is_current_results_from_residual_run:
@@ -1271,9 +1152,7 @@ def process_dataset(dataset, args, run_nums=None):
     # Define display names mapping (consistent with acronyms in generate_tables)
     method_display = {
         "clear_vanilla": "CLEAR-Vanilla",       # Was "clear": "CLEAR"
-        "clear_vanilla_c": "CLEAR-Vanilla-c",   # Was "clear_c": "CLEAR-c"
         "clear": "CLEAR",                 # Was "clear_residual": "CLEAR-R"
-        "clear_c": "CLEAR-c",             # Was "clear_residual_c": "CLEAR-R-c"
         "cqr": "CQR",
         "cqr_residual": "CQR-R",
         "pcs": "PCS",
@@ -1283,12 +1162,8 @@ def process_dataset(dataset, args, run_nums=None):
         "mean_pcs_cqr_residual": "Mean(PCS+CQR)-R",
         "gamma_1": "Gamma=1",
         "gamma_1_r": "Gamma=1-R",
-        "gamma_1_c": "Gamma=1-c",
-        "gamma_1_c_r": "Gamma=1-c-R",
         "lambda_one": "Lambda=1",
         "lambda_one_r": "Lambda=1-R",
-        "lambda_one_c": "Lambda=1-c",
-        "lambda_one_c_r": "Lambda=1-c-R"
     }
 
     # Determine which methods have results accumulated across runs
@@ -1296,11 +1171,11 @@ def process_dataset(dataset, args, run_nums=None):
 
     # Order methods for display
     ordered_methods = [
-        "clear", "clear_c", "clear_vanilla", "clear_vanilla_c", 
+        "clear", "clear_vanilla",
         "cqr", "cqr_residual", "pcs", "a_naive", "s_naive",
         "mean_pcs_cqr", "mean_pcs_cqr_residual",
-        "gamma_1", "gamma_1_r", "gamma_1_c", "gamma_1_c_r",
-        "lambda_one", "lambda_one_r", "lambda_one_c", "lambda_one_c_r"
+        "gamma_1", "gamma_1_r",
+        "lambda_one", "lambda_one_r"
     ]
     methods_to_show = [m for m in ordered_methods if m in methods_with_results]
 
@@ -1418,7 +1293,11 @@ def fit_aleatoric_model(clear_model, X_train_df, y_train_df, quantile_models, mo
 
 def calibrate_clear_model(clear_model, y_valid, median_epistemic, aleatoric_median, 
                           aleatoric_lower, aleatoric_upper, epistemic_lower, epistemic_upper,
-                          is_conformalized=False, adjustment=None):
+                          is_conformalized=False, adjustment=None,
+                          conformalized_clear=False, y_calib=None, median_epistemic_calib=None,
+                          aleatoric_median_calib=None, aleatoric_lower_calib=None,
+                          aleatoric_upper_calib=None, epistemic_lower_calib=None,
+                          epistemic_upper_calib=None):
     """
     Calibrate a CLEAR model.
     
@@ -1433,6 +1312,21 @@ def calibrate_clear_model(clear_model, y_valid, median_epistemic, aleatoric_medi
         epistemic_upper: Epistemic upper predictions
         is_conformalized: Whether to use conformalized bounds
         adjustment: Conformal adjustment (required if is_conformalized=True)
+        y_valid2: Val2 targets for split validation
+        median_epistemic2: Val2 epistemic median
+        aleatoric_median2: Val2 aleatoric median
+        aleatoric_lower2: Val2 aleatoric lower
+        aleatoric_upper2: Val2 aleatoric upper
+        epistemic_lower2: Val2 epistemic lower
+        epistemic_upper2: Val2 epistemic upper
+        conformalized_clear: Whether to use conformalized CLEAR (separate cal set)
+        y_calib: Calibration targets for conformalized CLEAR
+        median_epistemic_calib: Calibration epistemic median for conformalized CLEAR
+        aleatoric_median_calib: Calibration aleatoric median for conformalized CLEAR
+        aleatoric_lower_calib: Calibration aleatoric lower for conformalized CLEAR
+        aleatoric_upper_calib: Calibration aleatoric upper for conformalized CLEAR
+        epistemic_lower_calib: Calibration epistemic lower for conformalized CLEAR
+        epistemic_upper_calib: Calibration epistemic upper for conformalized CLEAR
     """
     logger = logging.getLogger()
     
@@ -1473,6 +1367,46 @@ def calibrate_clear_model(clear_model, y_valid, median_epistemic, aleatoric_medi
             epistemic_lower=epistemic_lower,
             epistemic_upper=epistemic_upper
         )
+    
+    # Step 2: Conformalized CLEAR - Use separate calibration set to re-calibrate gamma
+    # while keeping lambda fixed from Step 1b
+    if conformalized_clear:
+        # Validate that all calibration parameters are provided
+        if any(v is None for v in [y_calib, median_epistemic_calib, aleatoric_median_calib,
+                                   aleatoric_lower_calib, aleatoric_upper_calib,
+                                   epistemic_lower_calib, epistemic_upper_calib]):
+            raise ValueError("All calibration parameters must be provided when conformalized_clear=True")
+        
+        logger.info("Step 2: Applying conformalized CLEAR calibration using separate unseen calibration set...")
+        logger.info(f"Using lambda* = {clear_model.optimal_lambda:.4f} from Step 1b, re-calibrating gamma on unseen cal set")
+        
+        # Step 2: Fix lambda at lambda* from Step 1b and re-calibrate gamma on the unseen calibration set
+        # This uses CLEAR's built-in "lambda_fixed" calibration mode
+        lambda_star = clear_model.optimal_lambda  # Store the optimized lambda from validation
+        
+        # Create a temporary model with fixed lambda for conformalized calibration
+        clear_model.fixed_lambda = lambda_star  # Set fixed lambda
+        clear_model.fixed_gamma = None  # Ensure gamma is not fixed (we want to optimize it)
+        
+        # Use CLEAR's built-in calibration with lambda fixed on the unseen calibration set
+        clear_model.calibrate(
+            y_calib=y_calib.flatten(),
+            median_epistemic=median_epistemic_calib,
+            aleatoric_median=aleatoric_median_calib,
+            aleatoric_lower=aleatoric_lower_calib,
+            aleatoric_upper=aleatoric_upper_calib,
+            epistemic_lower=epistemic_lower_calib,
+            epistemic_upper=epistemic_upper_calib,
+            verbose=True
+        )
+        
+        # Store conformalized parameters for reference
+        clear_model.conformalized_gamma_star = clear_model.gamma  # Store gamma* from conformalization
+        clear_model.conformalized_lambda_star = lambda_star  # Store lambda* used for conformalization
+        
+        logger.info(f"Conformalized CLEAR: lambda*={lambda_star:.4f} (fixed from Step 1b), "
+                   f"gamma*={clear_model.gamma:.4f} (re-calibrated on unseen cal set)")
+        logger.info(f"Calibration set size: {len(y_calib)} samples")
 
 def predict_with_clear(clear_model, X_test_df, pcs_median_test, pcs_lower_test, pcs_upper_test, aleatoric_median_test, aleatoric_lower_test, aleatoric_upper_test):
     """
@@ -1569,7 +1503,8 @@ def main():
         'data_sulfur',
         'data_superconductor',
         'data_qsar',
-        'data_allstate' # takes computationally long, but we have maintained it
+        'data_allstate', # also takes long computationally, but we have maintained it
+        ## 'data_diamond', #disabled for computational reasons
     ]
     parser = argparse.ArgumentParser(description='Inference script for CLEAR-based prediction intervals.')
     parser.add_argument("--datasets", type=str, default=','.join(default_datasets), 
@@ -1579,7 +1514,7 @@ def main():
     parser.add_argument("--coverage", type=float, default=0.95, help="Target coverage probability (default: 0.95).")
     parser.add_argument("--min_lambda", type=float, default=0, help="Minimum lambda value for grid search.")
     parser.add_argument("--max_lambda", type=float, default=100, help="Maximum lambda value for grid search.")
-    parser.add_argument("--models_dir", type=str, default="../../models/pcs_top1_qpcs_10", help="Directory containing ensemble results.")
+    parser.add_argument("--models_dir", type=str, default="../../models/pcs_top1_qpcs_10_standard", help="Directory containing ensemble results.")
     parser.add_argument("--save_results", type=str, default=None, help="Path to save results pickle file")
     parser.add_argument("--quantile_model", type=str, default="rf", 
         help="Quantile regression model to use by CLEAR. Valid options include 'linear','xgb','rf','extratrees', 'sqr', 'simultaneousquantileregressor', 'gradientboostingregressor' or a custom class.")
@@ -1742,13 +1677,28 @@ if __name__ == "__main__":
 
 
 ###################################################################
+# Standard version
 # To run the experiments with the models for `qpcs_10` (variant a) then followed by `qxgb_10` (variant b) and `pcs_10` (variant c), use the following command:
-# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10 --csv_results_dir ../../results/qPCS_all_10seeds_all
-# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10 --csv_results_dir ../../results/qPCS_qxgb_10seeds_qxgb
-# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_mean_10 --csv_results_dir ../../results/PCS_all_10seeds_qrf
-# Note that the GAM in variant (a) may not converge for `data_naval_propulsion`. This has been documented in the paper as a footnote and it's a bug related to the `pygam` package: https://github.com/dswah/pyGAM/issues/357
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_standard --csv_results_dir ../../results/standard/qPCS_all_10seeds_all
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_standard --csv_results_dir ../../results/standard/qPCS_qxgb_10seeds_qxgb
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_standard --csv_results_dir ../../results/standard/PCS_all_10seeds_qrf
+# Note that the GAM in variant a may not sometimes converge, in which case just reduce the number of parallel cores. Sometimes, expectileGAM may fail to converge. See the error below:
+# https://github.com/dswah/pyGAM/issues/357
 
 ###################################################################
+# Conformalized version
+# To run the experiments with the models for `qpcs_10` (variant a) then followed by `qxgb_10` (variant b) and `pcs_10` (variant c), use the following command:
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_all_10seeds_all
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_qxgb_10seeds_qxgb
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_conformalized --csv_results_dir ../../results/conformalized/PCS_all_10seeds_qrf
+# Note that the GAM in variant a may not sometimes converge, in which case just reduce the number of parallel cores. Sometimes, expectileGAM may fail to converge. See the error below:
+# https://github.com/dswah/pyGAM/issues/357
 
-# One liner to do variant b, c and a (fastest order of variants execution)
-# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10 --csv_results_dir ../../results/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_mean_10 --csv_results_dir ../../results/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10 --csv_results_dir ../../results/qPCS_all_10seeds_all
+###################################################################
+# One liner to do variant b, c and a (fastest order)
+
+## Standard version
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_standard --csv_results_dir ../../results/standard/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_standard --csv_results_dir ../../results/standard/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_standard --csv_results_dir ../../results/standard/qPCS_all_10seeds_all
+
+## Conformalized version
+# python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_conformalized --csv_results_dir ../../results/conformalized/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_all_10seeds_all
