@@ -1,10 +1,10 @@
-# CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk
+# [CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk](https://arxiv.org/abs/2507.08150)
 
 [![DOI](https://zenodo.org/badge/DOI/2507.08150.svg)](https://arxiv.org/abs/2507.08150)
 [![Python](https://img.shields.io/badge/python-3.11+-green)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/clear-uq)](https://pypi.org/project/clear-uq/)
 
-Ilia Azizi<sup>1*</sup>, Juraj Bodik<sup>1,2*</sup>, Jakob Heiss<sup>2*</sup>, Bin Yu<sup>2,3</sup>
+[Ilia Azizi](https://iliaazizi.com/)<sup>1*</sup>, [Juraj Bodik](https://jurajbodik.com/)<sup>1,2*</sup>, [Jakob Heiss](https://sites.google.com/view/jakob-heiss)<sup>2*</sup>, [Bin Yu](https://binyu.stat.berkeley.edu/)<sup>2,3</sup>
 
 <sup>1</sup>Department of Operations, HEC, University of Lausanne, Switzerland
 <sup>2</sup>Department of Statistics, University of California, Berkeley, USA
