@@ -74,6 +74,8 @@ parser.add_argument('--aleatoric_model', type=str, default='linear', choices=['g
                     help='Model type for aleatoric uncertainty (CQR baseline and CLEAR): "gam" or "linear". Default is "gam".')
 parser.add_argument('--use_top_features', action='store_true', default=False,
                     help='Use only the top 2 features (overall_qual, gr_liv_area).')
+parser.add_argument('--subsample_train', type=float, default=1.0,
+                    help='Fraction of training data to use (e.g., 0.1 for 10%). Default is 1.0 (use all data).')
 # Parse arguments if running as a script, otherwise use default 'gam' for interactive use
 if __name__ == '__main__' and '__file__' in globals():
     args = parser.parse_args()
@@ -97,6 +99,12 @@ print(f"Using aleatoric model: {args.aleatoric_model}")
 # 
 # 1. An **interval** of predictions from a range of predictive fits from across different algorithms and data- and cleaning/pre-processing judgment call-perturbations that pass a predictability screening test. We will compare the original PCS-PPI approach with CQR and CLEAR.
 # 
+
+# Subsample training data if requested
+if args.subsample_train < 1.0:
+    print(f"Subsampling training data to {args.subsample_train*100}%")
+    ames_train_clean = ames_train_clean.sample(frac=args.subsample_train, random_state=299433)
+    print(f"New training data shape: {ames_train_clean.shape}")
 
 
 # %% [markdown]
@@ -1523,7 +1531,9 @@ print(f"CLEAR       | {clear_eval.get('PICP', clear_coverage):.3f}    | {clear_m
 print("---------------------------------------------------------------------")
 
 # Save results to CSV
+# Save to CSV with appropriate suffix
 feature_suffix = "top2" if args.use_top_features else "all"
+subsample_suffix = f"_subsample_{args.subsample_train}" if args.subsample_train < 1.0 else ""
 results_df = pd.DataFrame({
     'Method': ['PCS-PPI', 'CQR', 'CLEAR'],
     'Coverage': [
@@ -1564,6 +1574,6 @@ results_dir = os.path.join(root_dir, 'results', 'case_study')
 os.makedirs(results_dir, exist_ok=True)
 
 # Save to CSV with appropriate suffix
-csv_filename = os.path.join(results_dir, f'prediction_intervals_{feature_suffix}_{args.aleatoric_model}.csv')
+csv_filename = os.path.join(results_dir, f'prediction_intervals_{feature_suffix}_{args.aleatoric_model}{subsample_suffix}.csv')
 results_df.to_csv(csv_filename, index=False)
 print(f"\nResults saved to: {csv_filename}")
