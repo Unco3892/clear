@@ -1,6 +1,9 @@
-# [CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk](https://arxiv.org/abs/2507.08150)
+<img src="https://iliaazizi.com/images/hex/clear.png" align="right" width="120" alt="CLEAR hex logo">
 
-[![DOI](https://zenodo.org/badge/DOI/2507.08150.svg)](https://arxiv.org/abs/2507.08150)
+# [CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk](https://openreview.net/forum?id=RY4IHaDLik)
+
+[![ICLR 2026](https://img.shields.io/badge/ICLR-2026-blue)](https://openreview.net/forum?id=RY4IHaDLik)
+[![arXiv](https://img.shields.io/badge/arXiv-2507.08150-b31b1b)](https://arxiv.org/abs/2507.08150)
 [![Python](https://img.shields.io/badge/python-3.11+-green)](https://www.python.org/downloads/)
 [![PyPI](https://img.shields.io/pypi/v/clear-uq)](https://pypi.org/project/clear-uq/)
 
@@ -48,41 +51,46 @@ For development or to run all experiments with baseline comparisons (PCS_UQ, UAC
 1.  **Ensure Python 3.11+ is installed** on your system.
 
 2.  **Create and activate a virtual environment** using Conda:
+
     ```bash
     conda create --name clear python=3.11 --yes
     conda activate clear
     ```
     *Note:* If you encounter tkinter issues when running tests, run:
+
     ```bash
     conda install -c conda-forge tk tcl --yes
     ```
 
 3.  **Install the package** (includes all dependencies and pytest):
+
     ```bash
     pip install -e .
     ```
 
 4.  **Run tests** to verify everything works:
+
     ```bash
     python -m pytest
     ```
 
 **Dependencies & Configuration:**
+
 - All dependencies are in `requirements.txt` and automatically read by `pyproject.toml`
 - Dependencies include baseline comparison packages (`catboost`, `lightgbm`) from PCS_UQ and UACQR
 - **GPU optional installation:** The default requirement installs the CPU-only build of PyTorch. If you need CUDA support (e.g., CUDA 12.6), edit `requirements.txt` inside the activated Conda environment by commenting out the CPU `torch` installation line and uncommenting the two lines directly beneath it (the `--index-url` option and the `torch==2.6.0+cu126` entry) before running `pip install -r requirements.txt`.
 
 **Known Compatibility Notes:**
+
 - `pygam` conflicts with latest scipy/numpy versions but CLEAR works fine with current versions
 - Baselines may have compatibility issues with numpy>=2.0.0 or quantile_forest>=1.4.0
 - We maintain maximum compatibility where possible; please report any issues
 
 ## Demo
 
-For a high-level overview and practical demonstrations of CLEAR:
+For a high-level overview and practical demonstrations of CLEAR see **[`demo.py`](demo.py) & [`demo.ipynb`](demo.ipynb)** which include comprehensive demonstrations on real datasets (Parkinsons, Airfoil).
 
-- **[`minimal_example.py`](minimal_example.py)** - A simple, fully commented example demonstrating the complete CLEAR workflow
-- **[`demo.py`](demo.py) & [`demo.ipynb`](demo.ipynb)** - Comprehensive demonstrations on real datasets (Parkinsons, Airfoil)
+<!-- - **[`minimal_example.py`](minimal_example.py)** - A simple, fully commented example demonstrating the complete CLEAR workflow -->
 
 Run the minimal example:
 ```bash
@@ -195,6 +203,7 @@ Below is a high-level overview of the important directories and files in this pr
 To reproduce the experiments from the paper:
 
 1.  **Prepare Environment:**
+
     ```bash
     conda create --name clear python=3.11 --yes
     conda activate clear
@@ -202,26 +211,22 @@ To reproduce the experiments from the paper:
     ```
 
 2.  **Download Pre-trained Models** (optional for running benchmarks):
+
     ```bash
     python download_data.py  # Uses rclone for faster, resumable downloads
     ```
 
-3.  **Run Benchmarks:**
-    ```bash
-    cd src/experiments
-    python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type homo --use_external_pcs
-    python benchmark_real_data.py --coverage 0.95 --models_dir ../../models/pcs_top1_pcs_10_standard
-    ```
-
-2.  **Run Benchmark Experiments:**
+3.  **Run Benchmark Experiments:**
     *   The core scripts for running experiments are located in the `src/experiments/` directory.
     *   *Optional:* We provide the trained PCS ensemble models in [one of the sections below](#Models), however, you can also retrain the PCS quantile and mean predictor models in `src/pcs/` using the `train_pcs_quantile.py` and `train_pcs_mean.py` scripts.
+
         ```bash
         cd src/pcs
         python train_pcs_quantile.py
         python train_pcs_mean.py
         ```
     *   To run benchmarks on real-world datasets, navigate to `src/experiments/` and execute: `python benchmark_real_data.py`
+
         ```bash
         cd src/experiments
 
@@ -239,6 +244,7 @@ To reproduce the experiments from the paper:
         **Note:** The GAM in variant (a) may not converge for `data_naval_propulsion` due to a `pygam` bug: https://github.com/dswah/pyGAM/issues/357
 
     *   To run benchmarks on simulated datasets, navigate to `src/experiments/` and execute: `python benchmark_simulations.py`
+
         ```bash
         cd src/experiments
         python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type homo --use_external_pcs
@@ -246,10 +252,10 @@ To reproduce the experiments from the paper:
         Supports: `hetero1`, `hetero2`, `--randomize_d` for multivariate
 
 
-3.  **Results:**
+4.  **Results:**
     Raw results are saved to `results/` and plots to `plots/`
 
-4.  **Case Study:**
+5.  **Case Study:**
 
     The Ames housing case study can be run by navigating to `src/case_study/` and using the script: `python ames_clear_case_study.py`
 
@@ -279,10 +285,12 @@ python -c "import torch; print(f'GPU Available: {torch.cuda.is_available()}'); p
 
 Pre-trained PCS ensemble models are available via Google Drive:
 - **[Download Models](https://drive.google.com/drive/folders/1tn3aWrEMWM5BxFsc3q3OZcd4SlwPC3lX?usp=sharing)**
+
 - Extract contents to the `models/` directory
 - A demo folder is included for quick testing
 
 **Model Variants:**
+
 - `pcs_top1_qpcs_10_standard` - Variant (a)
 - `pcs_top1_qxgb_10_standard` - Variant (b)
 - `pcs_top1_pcs_10_standard` - Variant (c)
@@ -411,4 +419,19 @@ The datasets included are:
 </div>
 
 For details on the original sources and specific preprocessing steps for each dataset, please refer to the comments and documentation within `src/experiments/download_process_real_data.py`.
+
+## Citation
+
+If you use CLEAR in your research, please cite:
+
+```bibtex
+@inproceedings{
+azizi2026clear,
+title={{CLEAR}: Calibrated Learning for Epistemic and Aleatoric Risk},
+author={Ilia Azizi and Juraj Bodik and Jakob Heiss and Bin Yu},
+booktitle={The Fourteenth International Conference on Learning Representations},
+year={2026},
+url={https://openreview.net/forum?id=RY4IHaDLik}
+}
+```
 
