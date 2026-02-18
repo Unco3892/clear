@@ -29,9 +29,9 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 # -------------------
 # Installs clear-uq if not already available (e.g., on Google Colab).
 # Locally this is a no-op if the package is already installed.
-# NOTE: On Colab, the first install may take 1-2 minutes and will
+# NOTE: On Colab, the first install takes ~3-5 minutes and will
 #       automatically restart the runtime to pick up new dependencies.
-#       After the restart, simply re-run this cell (it will be instant).
+#       After the restart, simply re-run all cells (the install is instant).
 import subprocess, sys
 
 try:
@@ -40,28 +40,25 @@ try:
     version = importlib.metadata.version("clear-uq")
     print(f"\u2713 clear-uq already installed (version {version})")
 except ImportError:
-    print("Installing clear-uq from PyPI (this may take 1-2 minutes) ...")
-    result = subprocess.run(
-        [sys.executable, "-m", "pip", "install", "clear-uq"],
-        capture_output=True, text=True
-    )
-    if result.returncode == 0:
-        import importlib.metadata
-        version = importlib.metadata.version("clear-uq")
-        print(f"\u2713 clear-uq installed successfully (version {version})")
-        # On Colab, restart the runtime so that pre-loaded packages (pandas,
-        # numpy, etc.) are reloaded against the newly installed versions.
-        # Without this, you may see "numpy.dtype size changed" errors.
-        try:
-            import google.colab
-            print("Restarting Colab runtime to pick up new packages ...")
-            google.colab.runtime.restart()
-        except ImportError:
-            pass  # Not on Colab — no restart needed
-    else:
-        print("\u2717 Installation failed. pip stderr:")
-        print(result.stderr)
-        raise RuntimeError("Failed to install clear-uq. See output above.")
+    print("Installing clear-uq from PyPI (this may take 3-5 minutes) ...")
+    # Show pip progress so users see what's happening during the install
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "clear-uq"])
+    import importlib.metadata
+    version = importlib.metadata.version("clear-uq")
+    print(f"\n\u2713 clear-uq {version} installed successfully!")
+    # On Colab, restart the runtime so that pre-loaded C-extension packages
+    # (numpy, pandas, etc.) are reloaded against the newly installed versions.
+    # Without this, you get "numpy.dtype size changed" errors.
+    try:
+        from google.colab import runtime  # must use 'from' import
+        print("\u21BB Restarting Colab runtime \u2014 please re-run all cells after restart ...")
+        runtime.restart()
+    except ImportError:
+        pass  # Not on Colab — no restart needed
+    except Exception:
+        # Fallback: force-kill the process to trigger a Colab restart
+        import os, signal
+        os.kill(os.getpid(), signal.SIGKILL)
 
 # %%
 # --------------------------
