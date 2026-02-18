@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # %% [markdown]
 """
-# CLEAR Demo: Calibrated Learning for Epistemic and Aleatoric Risk
+# Demo: Calibrated Learning for Epistemic and Aleatoric Risk (CLEAR)
 
 This demo shows how to use the CLEAR framework to build calibrated prediction intervals that combine aleatoric (noise) and epistemic (model) uncertainty.
 
@@ -10,10 +10,10 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 2. CLEAR with built-in aleatoric and flexible epistemic models (Random Forest + Quantile XGBoost)
 3. CLEAR as a pure calibration layer (fully external predictions) **with baseline comparison**
 4. California Housing dataset with XGBoost epistemic model
-5. PCS ensemble (Predictability-Computability-Stability) on the Parkinsons dataset: pre-trained results auto-downloaded; compares CLEAR vs ALEATORIC-R vs PCS
-6. Retrain PCS from scratch on the Airfoil dataset: shows the full CLEAR + PCS pipeline end-to-end, no pre-trained files required
+5. PCS ensemble (Predictability-Computability-Stability) on the Parkinsons dataset for the epistemic part with built-in aleatoric. Here the pre-trained results auto-downloaded, and then we compare CLEAR vs ALEATORIC-R vs PCS
+6. Retrain PCS from scratch on the Airfoil dataset. This shows the full CLEAR + PCS pipeline end-to-end, no pre-trained files required
 
-Examples 1–3 use the **Airfoil Self-Noise** dataset from our paper (1503 samples, 5 features).
+**Datasets:** All the datasets are retrieved automatically. Example scenarios 1,2,3 and 6 use the `Airfoil Self-Noise` dataset from our paper (1503 samples, 5 features). Example 4 uses the `California Housing` dataset built into sklearn. Example 5 uses the `Parkinsons Telemonitoring` dataset also from our paper.
 
 **To run on Google Colab**, simply run all cells (the first cell installs the package automatically).
 """
@@ -145,7 +145,7 @@ This is the simplest way to use CLEAR. We fit an epistemic model (GAM bootstrap 
 
 # %%
 print("=" * 60)
-print("EXAMPLE 1: CLEAR with Built-in Models (GAM + QRF)")
+print("Example 1: CLEAR with Built-in Models (GAM + QRF)")
 print("=" * 60)
 
 clear_1 = CLEAR(
@@ -208,7 +208,7 @@ Here we use a **Random Forest** as the epistemic model instead of GAM. You can p
 
 # %%
 print("\n" + "=" * 60)
-print("EXAMPLE 2: CLEAR with Flexible Epistemic Model (RF + QXGB)")
+print("Example 2: CLEAR with Flexible Epistemic Model (RF + QXGB)")
 print("=" * 60)
 
 clear_2 = CLEAR(
@@ -274,7 +274,7 @@ We then compare CLEAR against two standard baselines **using the same underlying
 
 # %%
 print("\n" + "=" * 60)
-print("EXAMPLE 3: Fully External Predictions (GradientBoosting + QRF)")
+print("Example 3: Fully External Predictions (GradientBoosting + QRF)")
 print("=" * 60)
 
 from sklearn.ensemble import GradientBoostingRegressor
@@ -447,7 +447,7 @@ Demonstrates CLEAR on a larger, well-known dataset that requires no downloads. U
 
 # %%
 print("\n" + "=" * 60)
-print("EXAMPLE 4: California Housing (XGBoost + QRF)")
+print("Example 4: California Housing (XGBoost + QRF)")
 print("=" * 60)
 
 from sklearn.datasets import fetch_california_housing
@@ -566,7 +566,7 @@ comparison_table(
 )
 
 # %% [markdown]
-r"""
+"""
 ## Example 5: PCS Ensemble on Parkinsons Dataset
 
 Demonstrates CLEAR layered on top of a pre-trained **PCS** (Predictability-Computability-Stability) ensemble, the epistemic component used in the paper. The pre-trained results (~13 MB) are downloaded automatically from the repository the first time this cell runs.
@@ -580,7 +580,7 @@ Four methods are compared at the same target coverage (95%):
 
 # %%
 print("\n" + "=" * 60)
-print("EXAMPLE 5: PCS Ensemble (Parkinsons Dataset)")
+print("Example 5: PCS Ensemble (Parkinsons Dataset)")
 print("=" * 60)
 
 import pickle
@@ -761,7 +761,7 @@ Four methods are compared (same target coverage):
 
 # %%
 print("\n" + "=" * 60)
-print("EXAMPLE 6: Retrain PCS from Scratch (Airfoil, QRF ensemble)")
+print("Example 6: Retrain PCS from Scratch (Airfoil, QRF ensemble)")
 print("=" * 60)
 
 # Reuse the Airfoil splits from Examples 1–3 (already in memory)
