@@ -8,6 +8,8 @@ from xgboost import XGBRegressor
 from quantile_forest import ExtraTreesQuantileRegressor, RandomForestQuantileRegressor
 # alternative implementation that yields the same results
 from sklearn.linear_model import QuantileRegressor
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import Ridge
 from pygam import ExpectileGAM, LinearGAM
 # from pygam import s, GAM
 from tqdm import tqdm
@@ -156,8 +158,15 @@ class CLEAR:
             else:
                 raise ValueError(f"Unsupported string model type: {quantile_model}. Supported types: 'linear'/'quantileregressor', 'xgb'/'xgboost', 'rf'/'qrf', 'extratrees'/'qextratrees', 'gam'/'qgam'")
         else:
-            defaults = {'quantile': quantile}
+            # Custom class: only pass 'quantile' if the class constructor accepts it
+            defaults = {}
             sig = inspect.signature(quantile_model.__init__)
+            if 'quantile' in sig.parameters:
+                defaults['quantile'] = quantile
+            elif 'quantile_alpha' in sig.parameters:
+                defaults['quantile_alpha'] = quantile
+            elif 'alpha' in sig.parameters:
+                defaults['alpha'] = quantile
             if 'random_state' in sig.parameters and self.random_state is not None:
                 defaults['random_state'] = self.random_state
 
@@ -166,6 +175,61 @@ class CLEAR:
         if quantile_model == QuantileRegressor:
             defaults.pop('random_state', None)
         return quantile_model(**defaults)
+
+    def _initialize_epistemic_model(self, epistemic_model, model_params):
+        """
+        Initialize an epistemic (point-prediction) model instance.
+
+        Args:
+            epistemic_model: String shortcut or a model class.
+                Supported strings: 'gam'/'lineargam', 'rf'/'randomforest',
+                'xgb'/'xgboost', 'ridge'.
+                Custom classes must implement fit(X, y) and predict(X).
+            model_params: Optional dict of parameters to override defaults.
+
+        Returns:
+            An unfitted model instance ready for .fit(X, y).
+        """
+        if model_params is None:
+            model_params = {}
+        else:
+            model_params = model_params.copy()
+
+        if isinstance(epistemic_model, str):
+            emodel_str = epistemic_model.lower()
+            if emodel_str in ['gam', 'lineargam']:
+                defaults = {'n_splines': 10, 'lam': 0.0000001}
+                defaults.update(model_params)
+                return LinearGAM(**defaults)
+            elif emodel_str in ['rf', 'randomforest']:
+                defaults = {'n_estimators': 100, 'min_samples_leaf': 10, 'n_jobs': -1}
+                if self.random_state is not None:
+                    defaults['random_state'] = self.random_state
+                defaults.update(model_params)
+                return RandomForestRegressor(**defaults)
+            elif emodel_str in ['xgb', 'xgboost']:
+                defaults = {'n_estimators': 100, 'n_jobs': -1}
+                if self.random_state is not None:
+                    defaults['random_state'] = self.random_state
+                defaults.update(model_params)
+                return XGBRegressor(**defaults)
+            elif emodel_str in ['ridge']:
+                defaults = {'alpha': 1.0}
+                defaults.update(model_params)
+                return Ridge(**defaults)
+            else:
+                raise ValueError(
+                    f"Unsupported epistemic model string: '{epistemic_model}'. "
+                    f"Supported: 'gam'/'lineargam', 'rf'/'randomforest', 'xgb'/'xgboost', 'ridge'"
+                )
+        else:
+            # Custom class: instantiate with model_params
+            defaults = {}
+            sig = inspect.signature(epistemic_model.__init__)
+            if 'random_state' in sig.parameters and self.random_state is not None:
+                defaults['random_state'] = self.random_state
+            defaults.update(model_params)
+            return epistemic_model(**defaults)
 
     def _fit_single_bootstrap(self, X, y, quantile_model, model_params, bootstrap_idx, median_preds=None):
         """
@@ -1042,44 +1106,48 @@ class CLEAR:
         
         return self
 
-    def fit_epistemic(self, X, y):
+    def fit_epistemic(self, X, y, epistemic_model="gam", model_params=None):
         """
-        Fit epistemic uncertainty models using LinearGAM.
-        
+        Fit epistemic uncertainty models using bootstrapping.
+
         Args:
             X: Feature matrix
             y: Target vector
-            
+            epistemic_model: A model class or string shortcut for the epistemic model.
+                Default is "gam" which uses LinearGAM (original behavior).
+                Supported strings: 'gam'/'lineargam', 'rf'/'randomforest',
+                'xgb'/'xgboost', 'ridge'.
+                Custom classes must implement fit(X, y) and predict(X).
+            model_params: Optional dictionary of parameters for the model.
+
         Returns:
             self: The fitted model
         """
         X = np.asarray(X)
         y = np.asarray(y).flatten()
-        
+
         # Initialize epistemic models list
         self.epistemic_models = []
-        
+
         # Print progress message
-        print("Fitting epistemic models...")
-        
+        print(f"Fitting epistemic models with model: {epistemic_model}...")
+
         # Fit bootstrap epistemic models
         for i in tqdm(range(self.n_bootstraps)):
             # Bootstrap sample indices
             if self.random_state is not None:
                 np.random.seed(self.random_state + i)
-            
+
             # Resample with replacement
             indices = np.random.choice(len(y), size=len(y), replace=True)
             X_bootstrap = X[indices]
             y_bootstrap = y[indices]
-                        
-            # Allow customization of GAM parameters
-            gam_params = {'n_splines': 10, 'lam': 0.0000001}
-            
-            # Fit GAM model with the specified parameters
-            gam_model = LinearGAM(**gam_params).fit(X_bootstrap, y_bootstrap)
-            self.epistemic_models.append(gam_model)
-        
+
+            # Initialize and fit model
+            model = self._initialize_epistemic_model(epistemic_model, model_params)
+            model.fit(X_bootstrap, y_bootstrap)
+            self.epistemic_models.append(model)
+
         return self
 
     def predict_epistemic(self, X, aleatoric_median=None, symmetric_noise=False):
@@ -1122,7 +1190,6 @@ class CLEAR:
             symmetric_noise=symmetric_noise
         )
         
-        print(f"[predict_epistemic] shapes: median_pred {median_pred.shape} (n_samples,), lower_pred {lower_pred.shape} (n_samples,), upper_pred {upper_pred.shape} (n_samples,), ensemble_preds {ensemble_preds.shape} (n_models, n_samples)")
         return median_pred, lower_pred, upper_pred, ensemble_preds
 
     def predict(self, X, external_epistemic=None, external_aleatoric=None):
