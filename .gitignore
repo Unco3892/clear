@@ -43,3 +43,5 @@ ENV/
 *~
 .DS_Store
 models/download_data.py
+/paper
+/poster

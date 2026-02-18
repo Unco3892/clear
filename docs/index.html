@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk</title>
+  <link rel="icon" href="https://iliaazizi.com/images/hex/clear.png" type="image/png">
+  <meta name="description"
+    content="CLEAR: a calibration method that adaptively balances aleatoric and epistemic uncertainty for tighter, valid prediction intervals. ICLR 2026.">
+
+  <!-- Fira Sans (matches the poster) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Fira+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ]
+    });"></script>
+
+  <style>
+    /* ── Variables ── */
+    :root {
+      --navy: #192030;
+      --navy-deep: #111827;
+      --teal: #00B4C8;
+      --aqua: #3CD2E1;
+      --gold: #F0C33C;
+      --light-cyan: #D2F5FA;
+      --soft-cyan: #EBFAFC;
+      --epistemic: #E65050;
+      --aleatoric: #4682B4;
+      --text: #2c2c3e;
+      --text-muted: #6b7280;
+      --bg-alt: #f7f8fa;
+      --border: #e5e7eb;
+      --radius: 12px;
+    }
+
+    /* ── Reset & Base ── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Fira Sans', sans-serif;
+      color: var(--text);
+      line-height: 1.65;
+      background: #fff;
+      font-size: 16px;
+    }
+
+    a {
+      color: var(--teal);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    sup {
+      font-size: 0.7em;
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    .wrap-lg {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── Section rhythm ── */
+    .sec {
+      padding: 3rem 0;
+    }
+
+    .sec-alt {
+      padding: 3rem 0;
+      background: var(--bg-alt);
+    }
+
+    .sec-dark {
+      padding: 3rem 0;
+      background: var(--navy);
+      color: white;
+    }
+
+    .sec-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.3rem;
+    }
+
+    .sec-dark .sec-eyebrow {
+      color: var(--aqua);
+    }
+
+    .sec-heading {
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--navy);
+      margin-bottom: 1.2rem;
+    }
+
+    .sec-dark .sec-heading {
+      color: #fff;
+    }
+
+    /* ── Thin accent rule ── */
+    .teal-rule {
+      width: 40px;
+      height: 3px;
+      background: var(--teal);
+      border-radius: 2px;
+      margin: 0.4rem 0 1.1rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════════ */
+    .hero {
+      background: var(--navy);
+      background-image:
+        radial-gradient(ellipse at 15% 60%, rgba(0, 180, 200, 0.09) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(60, 210, 225, 0.07) 0%, transparent 50%),
+        linear-gradient(160deg, #192030 0%, #1a2540 100%);
+      color: white;
+      padding: 3.2rem 2rem 3rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* dot grid overlay */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(0, 180, 200, 0.10) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-title {
+      font-size: clamp(2rem, 3.2vw, 2.9rem);
+      font-weight: 700;
+      line-height: 1.18;
+      margin-bottom: 1rem;
+      color: white;
+    }
+
+    .hero-title .accent {
+      color: var(--aqua);
+    }
+
+    /* ── Venue pill ── */
+    .venue-strip {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(0, 180, 200, 0.28);
+      border-radius: 50px;
+      padding: 0.28rem 1.05rem 0.28rem 0.38rem;
+      margin-bottom: 1.2rem;
+      gap: 0;
+    }
+
+    .logo-spotlight-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.1rem 0.2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      transition: transform 0.15s, filter 0.15s;
+    }
+
+    .logo-spotlight-btn:hover {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 7px rgba(0, 180, 200, 0.55));
+    }
+
+    .paper-logo {
+      width: 38px;
+      display: block;
+    }
+
+    .vs-divider {
+      width: 1px;
+      height: 26px;
+      background: rgba(0, 180, 200, 0.28);
+      margin: 0 0.72rem;
+      flex-shrink: 0;
+    }
+
+    /* ICLR link inside pill */
+    .iclr-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.46rem;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
+      font-size: 0.88rem;
+      letter-spacing: 0.02em;
+    }
+
+    .iclr-link:hover {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .iclr-link img {
+      height: 20px;
+      filter: brightness(0) invert(1);
+      opacity: 0.88;
+    }
+
+    /* Authors */
+    .authors {
+      font-size: 1.05rem;
+      margin-bottom: 0.35rem;
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    .authors a {
+      color: var(--aqua);
+    }
+
+    .authors a:hover {
+      text-decoration: underline;
+    }
+
+    .affiliations {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 0.15rem;
+    }
+
+    .equal-note {
+      font-size: 0.76rem;
+      color: rgba(255, 255, 255, 0.33);
+      margin-bottom: 1.6rem;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.48rem 1.1rem;
+      border-radius: 50px;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none !important;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.12s, box-shadow 0.12s;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-teal {
+      background: #00B4C8;
+      color: #fff;
+    }
+
+    .btn-arxiv {
+      background: #b91c1c;
+      color: #fff;
+    }
+
+    .btn-github {
+      background: #24292e;
+      color: #fff;
+    }
+
+    .btn-pypi {
+      background: #3775A9;
+      color: #fff;
+    }
+
+    .btn-gold {
+      background: var(--gold);
+      color: var(--navy);
+      font-weight: 600;
+    }
+
+    .btn-colab {
+      background: #F4811F;
+      color: white;
+    }
+
+    /* ═══════════════════════════════════════════
+       SPOTLIGHT MODAL
+    ═══════════════════════════════════════════ */
+    .logo-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      z-index: 9999;
+      overflow: auto;
+      cursor: zoom-out;
+      animation: fadeInOverlay 0.18s ease;
+      /* centre content by default; image overrides when zoomed */
+      padding: 1.5rem;
+      box-sizing: border-box;
+    }
+
+    .logo-modal-overlay.open {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-modal-overlay.zoomed {
+      display: block;
+    }
+
+    @keyframes fadeInOverlay {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .logo-modal-img {
+      /* fit-to-viewport by default */
+      display: block;
+      max-width: min(95vw, 1300px);
+      max-height: 88vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border-radius: 6px;
+      cursor: zoom-in;
+      animation: fadeInModal 0.2s ease;
+      transition: max-width 0.2s, max-height 0.2s;
+    }
+
+    /* zoomed state — actual pixel size, overlay scrolls */
+    .logo-modal-overlay.zoomed .logo-modal-img {
+      max-width: none;
+      max-height: none;
+      cursor: zoom-out;
+      margin: auto;
+    }
+
+    /* hex logo: keep compact */
+    .logo-modal-img.is-logo {
+      max-width: min(50vw, 320px);
+      max-height: 50vh;
+      cursor: default;
+      filter: drop-shadow(0 8px 32px rgba(0, 180, 200, 0.4));
+    }
+
+    @keyframes fadeInModal {
+      from {
+        opacity: 0;
+        transform: scale(0.92);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* ═══════════════════════════════════════════
+       ABSTRACT
+    ═══════════════════════════════════════════ */
+    .abstract-text {
+      font-size: 1.03rem;
+      line-height: 1.8;
+      color: var(--text);
+      text-align: justify;
+    }
+
+    /* ═══════════════════════════════════════════
+       METHOD / KEY IDEA
+    ═══════════════════════════════════════════ */
+    .formula-card {
+      background: var(--navy);
+      border-radius: var(--radius);
+      padding: 1.8rem 1.5rem;
+      margin: 1.2rem 0 1rem;
+      text-align: center;
+      border: 1px solid rgba(0, 180, 200, 0.2);
+      box-shadow: 0 4px 28px rgba(0, 0, 0, 0.14);
+    }
+
+    .katex-display {
+      color: white;
+    }
+
+    .katex {
+      font-size: 1.2rem;
+    }
+
+    /* ── Formula legend (replaces inline formula-note) ── */
+    .formula-legend {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.32rem 1rem;
+      margin-top: 1.1rem;
+      text-align: left;
+      border-top: 1px solid rgba(0, 180, 200, 0.15);
+      padding-top: 0.9rem;
+    }
+
+    .fl-sym {
+      font-size: 0.82rem;
+      color: var(--aqua);
+      white-space: nowrap;
+      padding-top: 0.08rem;
+      font-style: italic;
+    }
+
+    .fl-def {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.78);
+      line-height: 1.5;
+    }
+
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .param-card {
+      background: var(--soft-cyan);
+      border: 1px solid var(--light-cyan);
+      border-left: 4px solid var(--teal);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+    }
+
+    .param-card .pname {
+      font-weight: 700;
+      color: var(--navy);
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .param-card p {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* ── Algorithm — simple numbered list ── */
+    .algo-ol {
+      margin-top: 1rem;
+      padding-left: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .algo-ol li {
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.55;
+      padding-left: 0.3rem;
+    }
+
+    .algo-ol li::marker {
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    .algo-ol li strong {
+      color: var(--navy);
+    }
+
+    /* ═══════════════════════════════════════════
+       CONTRIBUTIONS — academic numbered list
+    ═══════════════════════════════════════════ */
+    .contrib-ol {
+      list-style: none;
+      counter-reset: contrib;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 0.4rem;
+    }
+
+    .contrib-ol li {
+      counter-increment: contrib;
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+      font-size: 0.96rem;
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .contrib-ol li::before {
+      content: counter(contrib);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #fff;
+      background: var(--teal);
+      border-radius: 50%;
+      min-width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      /* nudge down to optically align with cap-height of first line */
+      position: relative;
+      top: 0.28em;
+    }
+
+    .contrib-ol li>span {
+      display: block;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESULTS
+    ═══════════════════════════════════════════ */
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      text-align: center;
+      padding: 0.9rem 1.3rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(0, 180, 200, 0.2);
+      border-radius: 10px;
+      flex: 1;
+      min-width: 150px;
+      max-width: 210px;
+    }
+
+    .stat-num {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--aqua);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-desc {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.52);
+      line-height: 1.4;
+    }
+
+    .result-figure {
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 0.85rem;
+    }
+
+    .result-figure img {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+      cursor: zoom-in;
+      transition: opacity 0.15s;
+    }
+
+    .result-figure img:hover {
+      opacity: 0.9;
+    }
+
+    .fig-caption {
+      text-align: center;
+      font-size: 0.81rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 0.6rem;
+    }
+
+    /* Concept figure (on light background) */
+    .concept-figure {
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 0.85rem;
+      margin-top: 1.5rem;
+    }
+
+    .concept-figure img {
+      width: 100%;
+      border-radius: 8px;
+      display: block;
+      cursor: zoom-in;
+      transition: opacity 0.15s;
+    }
+
+    .concept-figure img:hover {
+      opacity: 0.88;
+    }
+
+    .concept-figure .fig-caption-light {
+      text-align: center;
+      font-size: 0.81rem;
+      color: var(--text-muted);
+      margin-top: 0.6rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       CASE STUDY
+    ═══════════════════════════════════════════ */
+    .case-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .case-text p {
+      font-size: 0.95rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .highlight-box {
+      background: var(--soft-cyan);
+      border: 1px solid var(--light-cyan);
+      border-left: 4px solid var(--teal);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-size: 0.88rem;
+      margin-top: 0.8rem;
+    }
+
+    .highlight-box ul {
+      margin-left: 1.1rem;
+      margin-top: 0.3rem;
+    }
+
+    .highlight-box li {
+      margin-bottom: 0.25rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+    }
+
+    thead tr {
+      background: var(--navy);
+      color: white;
+    }
+
+    thead th {
+      padding: 0.55rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    tbody td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:hover {
+      background: var(--bg-alt);
+    }
+
+    tbody tr.highlight-row {
+      background: var(--soft-cyan);
+      font-weight: 600;
+    }
+
+    tbody tr.highlight-row td {
+      color: var(--navy);
+    }
+
+    .sep-row td {
+      background: var(--bg-alt);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      padding: 0.28rem 0.75rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       INSTALL
+    ═══════════════════════════════════════════ */
+    .install-outer {
+      position: relative;
+    }
+
+    .install-wrap {
+      display: flex;
+      align-items: center;
+      background: #0f1117;
+      border-radius: 10px;
+      padding: 1rem 1.4rem;
+      gap: 0.65rem;
+      font-family: 'Fira Mono', monospace;
+      font-size: 1.05rem;
+    }
+
+    .install-wrap .ps {
+      color: var(--teal);
+      user-select: none;
+    }
+
+    .install-wrap .cmd {
+      color: #9cdcfe;
+    }
+
+    /* ═══════════════════════════════════════════
+       BIBTEX
+    ═══════════════════════════════════════════ */
+    .bibtex-outer {
+      position: relative;
+    }
+
+    .bibtex-wrap {
+      background: #0f1117;
+      border-radius: 10px;
+      padding: 1.2rem 1.4rem;
+      font-family: 'Fira Mono', monospace;
+      font-size: 0.84rem;
+      line-height: 1.75;
+      color: #abb2bf;
+      overflow-x: auto;
+    }
+
+    .bibtex-wrap .k {
+      color: #c678dd;
+    }
+
+    .bibtex-wrap .v {
+      color: #98c379;
+    }
+
+    .bibtex-wrap .f {
+      color: #61afef;
+    }
+
+    /* ── Copy button — hover only ── */
+    .copy-btn {
+      position: absolute;
+      top: 0.65rem;
+      right: 0.7rem;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 0.28rem 0.7rem;
+      font-family: 'Fira Sans', sans-serif;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, background 0.15s, color 0.15s;
+    }
+
+    .bibtex-outer:hover .copy-btn,
+    .install-outer:hover .copy-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.13);
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .copy-btn.copied {
+      color: var(--teal);
+      border-color: var(--teal);
+    }
+
+    /* ═══════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════ */
+    footer {
+      background: var(--navy-deep);
+      color: rgba(255, 255, 255, 0.33);
+      text-align: center;
+      padding: 1.4rem 1rem;
+      font-size: 0.79rem;
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.43);
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+
+    /* Formula card: allow horizontal scroll on small screens */
+    .formula-card {
+      overflow-x: auto;
+    }
+
+    .formula-card .katex-display {
+      min-width: 0;
+    }
+
+    /* Case study table: scrollable wrapper */
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 760px) {
+
+      /* Hero */
+      .hero {
+        padding: 2.2rem 1.2rem 2rem;
+      }
+
+      .hero-title {
+        font-size: clamp(1.55rem, 6.5vw, 2.4rem);
+      }
+
+      .authors {
+        font-size: 0.93rem;
+      }
+
+      .affiliations {
+        font-size: 0.78rem;
+      }
+
+      /* Sections */
+      .sec,
+      .sec-alt,
+      .sec-dark {
+        padding: 2rem 0;
+      }
+
+      .wrap,
+      .wrap-lg {
+        padding: 0 1.1rem;
+      }
+
+      /* Grids → single column */
+      .param-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .case-grid {
+        grid-template-columns: 1fr;
+      }
+
+      /* Stats row */
+      .stats-row {
+        gap: 0.65rem;
+      }
+
+      .stat-card {
+        min-width: 120px;
+        padding: 0.75rem 0.9rem;
+      }
+
+      .stat-num {
+        font-size: 1.7rem;
+      }
+
+      /* Buttons */
+      .btn {
+        font-size: 0.84rem;
+        padding: 0.44rem 0.9rem;
+      }
+
+      /* Install block */
+      .install-wrap {
+        font-size: 0.9rem;
+        padding: 0.85rem 1rem;
+        overflow-x: auto;
+      }
+
+      /* BibTeX */
+      .bibtex-wrap {
+        font-size: 0.78rem;
+      }
+
+      /* Section headings */
+      .sec-heading {
+        font-size: 1.35rem;
+      }
+
+      /* Formula */
+      .katex {
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: clamp(1.4rem, 8vw, 2rem);
+      }
+
+      .stat-num {
+        font-size: 1.5rem;
+      }
+
+      .stat-card {
+        padding: 0.65rem 0.75rem;
+      }
+
+      .paper-logo {
+        width: 30px;
+      }
+
+      .iclr-link {
+        font-size: 0.78rem;
+      }
+
+      .iclr-link img {
+        height: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════ UNIFIED SPOTLIGHT MODAL ═══════════════════ -->
+  <div class="logo-modal-overlay" id="spotlightModal" onclick="closeModal()">
+    <img id="spotlightImg" src="" class="logo-modal-img" alt="">
+  </div>
+
+  <!-- ═══════════════════ HERO ═══════════════════ -->
+  <section class="hero">
+    <div class="hero-inner wrap">
+
+      <h1 class="hero-title">
+        <span class="accent">CLEAR</span>: Calibrated Learning<br>for Epistemic and Aleatoric Risk
+      </h1>
+
+      <div style="display:flex; justify-content:center;">
+        <div class="venue-strip">
+          <button class="logo-spotlight-btn" onclick="openLogoModal()" title="View CLEAR logo">
+            <img src="https://iliaazizi.com/images/hex/clear.png" class="paper-logo" alt="CLEAR">
+          </button>
+          <div class="vs-divider"></div>
+          <a href="https://iclr.cc/Conferences/2026/CallForPapers" target="_blank" rel="noopener" class="iclr-link">
+            <img src="https://iclr.cc/static/core/img/ICLR-logo.svg" alt="ICLR">
+            <span>2026</span>
+          </a>
+        </div>
+      </div>
+
+      <p class="authors">
+        <a href="https://iliaazizi.com/">Ilia Azizi</a><sup>1*</sup> &ensp;·&ensp;
+        <a href="https://jurajbodik.com/">Juraj Bodik</a><sup>1,2*</sup> &ensp;·&ensp;
+        <a href="https://sites.google.com/view/jakob-heiss">Jakob Heiss</a><sup>2*</sup> &ensp;·&ensp;
+        <a href="https://binyu.stat.berkeley.edu/">Bin Yu</a><sup>2,3</sup>
+      </p>
+      <p class="affiliations">
+        <sup>1</sup>HEC, University of Lausanne &emsp;
+        <sup>2</sup>Dept.&thinsp;of Statistics, UC Berkeley &emsp;
+        <sup>3</sup>EECS, UC Berkeley
+      </p>
+      <p class="equal-note"><sup>*</sup>Equal contribution</p>
+
+      <div class="btn-row">
+        <a href="https://openreview.net/forum?id=RY4IHaDLik" class="btn btn-teal">
+          <i class="fas fa-file-alt"></i>&thinsp;Paper
+        </a>
+        <a href="https://arxiv.org/abs/2507.08150" class="btn btn-arxiv">
+          <i class="ai ai-arxiv"></i>&thinsp;arXiv
+        </a>
+        <a href="https://github.com/Unco3892/clear" class="btn btn-github">
+          <i class="fab fa-github"></i>&thinsp;Code
+        </a>
+        <a href="https://pypi.org/project/clear-uq/" class="btn btn-pypi">
+          <i class="fas fa-box"></i>&thinsp;PyPI
+        </a>
+        <a href="https://colab.research.google.com/github/Unco3892/clear/blob/main/demo.ipynb" class="btn btn-colab">
+          <i class="fas fa-play-circle"></i>&thinsp; Demo
+        </a>
+        <a href="https://github.com/Unco3892/clear/blob/main/docs/poster.pdf" target="_blank" rel="noopener"
+          class="btn btn-gold">
+          <i class="fas fa-image"></i>&thinsp;Poster
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ABSTRACT ═══════════════════ -->
+  <section class="sec">
+    <div class="wrap">
+      <p class="sec-eyebrow">Abstract</p>
+      <div class="teal-rule"></div>
+      <p class="abstract-text">
+        Accurate uncertainty quantification is critical for reliable predictive modeling.
+        Existing methods typically address either <em>aleatoric</em> uncertainty due to
+        measurement noise or <em>epistemic</em> uncertainty resulting from limited data,
+        but not both in a balanced manner. We propose <strong>CLEAR</strong>, a calibration
+        method with two distinct parameters, $\gamma_1$ and $\gamma_2$, to combine the two
+        uncertainty components and improve the conditional coverage of predictive intervals
+        for regression tasks. CLEAR is compatible with any pair of aleatoric and epistemic
+        estimators; we show how it can be used with (i) quantile regression for aleatoric
+        uncertainty and (ii) ensembles drawn from the
+        Predictability&ndash;Computability&ndash;Stability (PCS) framework for epistemic
+        uncertainty. Across 17 diverse real-world datasets, CLEAR achieves an average
+        improvement of 28.2% and 17.4% in the interval width compared to the two individually
+        calibrated baselines while maintaining nominal coverage. Similar improvements are
+        observed when applying CLEAR to Deep Ensembles (epistemic) and Simultaneous Quantile
+        Regression (aleatoric). The benefits are especially evident in scenarios dominated by
+        high aleatoric or epistemic uncertainty.
+      </p>
+
+      <div class="concept-figure">
+        <img src="figures/concept.png" alt="Aleatoric vs. epistemic uncertainty and CLEAR prediction intervals"
+          onclick="openFigModal(this.src, this.alt)">
+        <p class="fig-caption-light">
+          <strong>Left:</strong> Aleatoric uncertainty (blue) reflects irreducible data noise; epistemic uncertainty
+          (red) is large in extrapolation regions with limited training data.
+          <strong>Right:</strong> CLEAR combines both sources in a data-driven manner, yielding tighter and
+          better-calibrated prediction intervals.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ METHOD ═══════════════════ -->
+  <section class="sec-alt">
+    <div class="wrap">
+      <p class="sec-eyebrow">Method</p>
+      <div class="teal-rule"></div>
+      <p style="font-size:1rem; color:var(--text); max-width:700px; margin-bottom:0;">
+        CLEAR constructs prediction intervals by adaptively combining
+        <span style="color:var(--aleatoric); font-weight:600;">aleatoric</span> (data noise)
+        and
+        <span style="color:var(--epistemic); font-weight:600;">epistemic</span> (model)
+        uncertainty through two calibration parameters, $\gamma_1$ and $\lambda$.
+      </p>
+
+      <div class="formula-card">
+        $$C(x) = \left[\,\hat{f}(x)\;\pm\;\Bigl(\underbrace{\gamma_1}_{\substack{\text{coverage}\\\text{parameter}}}
+        \cdot \underbrace{\mathrm{ale}_{\pm}(x)}_{\text{\color{#3CD2E1}data noise}} \;+\;
+        \underbrace{\lambda\gamma_1}_{\substack{\text{balance}\\\text{parameter}}} \cdot
+        \underbrace{\mathrm{epi}_{\pm}(x)}_{\text{\color{#3CD2E1}model unc.}}\Bigr)\,\right]$$
+        <div class="formula-legend">
+          <div class="fl-sym">$\gamma_1$</div>
+          <div class="fl-def">Calibration parameter; ensures marginal $(1-\alpha)$ coverage for any finite sample via
+            conformal guarantee.</div>
+          <div class="fl-sym">$\lambda = 0$</div>
+          <div class="fl-def">Interval reduces to aleatoric uncertainty only.</div>
+          <div class="fl-sym">$\lambda \to \infty$</div>
+          <div class="fl-def">Interval reduces to epistemic uncertainty only.</div>
+          <div class="fl-sym">$\lambda^\star$</div>
+          <div class="fl-def">Data-driven optimal trade-off, selected by minimizing quantile loss on
+            $\mathcal{D}_\mathrm{val}$.</div>
+        </div>
+      </div>
+
+      <div class="param-grid">
+        <div class="param-card">
+          <div class="pname">$\gamma_1$ — Coverage</div>
+          <p>Ensures marginal $(1-\alpha)$ coverage for any finite sample via a conformal guarantee. Calibrated on a
+            held-out set.</p>
+        </div>
+        <div class="param-card">
+          <div class="pname">$\lambda$ — Balance</div>
+          <p>Balances aleatoric vs. epistemic contribution. Selected on a validation set by minimizing quantile loss.
+          </p>
+        </div>
+        <div class="param-card">
+          <div class="pname">Model-agnostic</div>
+          <p>Works with any pair of aleatoric and epistemic estimators: CQR + PCS, SQR + Deep Ensembles, and more.</p>
+        </div>
+      </div>
+
+      <h3 style="font-size:1rem; font-weight:600; color:var(--navy); margin:2rem 0 0.8rem;">Algorithm (4 steps)</h3>
+      <ol class="algo-ol">
+        <li><strong>Estimate epistemic</strong> uncertainty on $\mathcal{D}_\text{train}$ — PCS ensembles yield
+          upper/lower bounds.</li>
+        <li><strong>Estimate aleatoric</strong> uncertainty on $\mathcal{D}_\text{train}$ — quantile regression on
+          residuals.</li>
+        <li><strong>Calibrate</strong> on $\mathcal{D}_\text{cal}$ — find smallest $\gamma_1$ for each $\lambda$
+          achieving $\geq(1-\alpha)$ coverage.</li>
+        <li><strong>Select</strong> $\lambda^\star$ on $\mathcal{D}_\text{val}$ — pick $\lambda$ minimising quantile
+          loss (tightest valid intervals).</li>
+      </ol>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ CONTRIBUTIONS ═══════════════════ -->
+  <section class="sec">
+    <div class="wrap">
+      <p class="sec-eyebrow">Contributions</p>
+      <div class="teal-rule"></div>
+      <ol class="contrib-ol">
+        <li><span>We introduce two calibration parameters, $\gamma_1$ and $\gamma_2 = \lambda\gamma_1$, that jointly
+            guarantee marginal coverage and adaptively balance the scale of aleatoric and epistemic uncertainty — the
+            first method to do so.</span></li>
+        <li><span>We show that fitting quantile regression on model residuals $Y_i - \hat{f}(X_i)$, rather than directly
+            on targets, yields substantially more stable aleatoric uncertainty estimates.</span></li>
+        <li><span>We combine PCS ensemble perturbation intervals with conformalized quantile regression (CQR) for the
+            first time, and demonstrate the strength of this pairing across diverse settings.</span></li>
+        <li><span>We conduct large-scale uncertainty quantification benchmarks on 17 real-world regression datasets over
+            10 random seeds, with multiple model variants and comparisons to state-of-the-art baselines.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ RESULTS ═══════════════════ -->
+  <section class="sec-dark">
+    <div class="wrap">
+      <p class="sec-eyebrow">Results</p>
+      <h2 class="sec-heading">17 Real-world Datasets</h2>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num">+28.2%</div>
+          <div class="stat-desc">narrower intervals vs.<br>aleatoric-only baseline</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">+17.4%</div>
+          <div class="stat-desc">narrower intervals vs.<br>epistemic-only baseline</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">15/17</div>
+          <div class="stat-desc">datasets where CLEAR<br>is the top method</div>
+        </div>
+      </div>
+
+      <div class="result-figure">
+        <img src="figures/benchmark.png" alt="CLEAR benchmark: NCIW and Quantile Loss across 17 real-world datasets"
+          onclick="openFigModal(this.src, this.alt)">
+        <p class="fig-caption">
+          Quantile loss and NCIW across 17 real-world datasets, averaged over 10 seeds, normalized relative to CLEAR (=
+          1.0 baseline). Lower is better; error bars show ±1σ. Inset boxplot: average % relative increase over CLEAR.
+          EPISTEMIC = PCS ensemble; ALEATORIC = bootstrapped CQR; ALEATORIC-R = CQR on residuals.
+        </p>
+      </div>
+      <p style="font-size:0.88rem; color:rgba(255,255,255,0.48); margin-top:1.1rem; text-align:center;">
+        Results also hold with Deep Ensembles + Simultaneous Quantile Regression: CLEAR improves interval width by 28.6%
+        and 13.4% over the two baselines, confirming generalizability beyond PCS&nbsp;+&nbsp;CQR.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ CASE STUDY ═══════════════════ -->
+  <section class="sec-alt">
+    <div class="wrap">
+      <p class="sec-eyebrow">Case Study</p>
+      <h2 class="sec-heading">Ames Housing: Adaptive $\lambda$</h2>
+
+      <div class="case-grid">
+        <div class="case-text">
+          <p>
+            CLEAR automatically adapts the balance parameter $\lambda$ to the prevailing
+            uncertainty regime — no manual tuning required.
+          </p>
+          <p>
+            With only 2 features (high aleatoric uncertainty), $\lambda \approx 0.64$,
+            weighting the aleatoric component more. With all features (low epistemic
+            uncertainty), $\lambda \approx 14.5$, leaning on the epistemic component.
+          </p>
+          <div class="highlight-box">
+            <strong>Key insight</strong>
+            <ul>
+              <li>Few features → <span style="color:var(--aleatoric);font-weight:600;">aleatoric dominates</span>
+                ($\lambda \approx 0.64$)</li>
+              <li>All features → <span style="color:var(--epistemic);font-weight:600;">epistemic dominates</span>
+                ($\lambda \approx 14.5$)</li>
+              <li>$\lambda$ adapts <em>automatically</em> to the data regime</li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Setting</th>
+                  <th>Method</th>
+                  <th>Width ($)</th>
+                  <th>Coverage</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="sep-row">
+                  <td colspan="4">2 features (high aleatoric)</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td>PCS</td>
+                  <td>107,880</td>
+                  <td>87%</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td>CQR</td>
+                  <td>104,741</td>
+                  <td>90%</td>
+                </tr>
+                <tr class="highlight-row">
+                  <td></td>
+                  <td>CLEAR</td>
+                  <td><strong>95,177</strong></td>
+                  <td>89%</td>
+                </tr>
+                <tr class="sep-row">
+                  <td colspan="4">All features (high epistemic)</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td>PCS</td>
+                  <td>57,594</td>
+                  <td>89%</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td>CQR</td>
+                  <td>62,398</td>
+                  <td>88%</td>
+                </tr>
+                <tr class="highlight-row">
+                  <td></td>
+                  <td>CLEAR</td>
+                  <td><strong>55,910</strong></td>
+                  <td>88%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem;">Target: 90% coverage. CLEAR achieves
+            the best or near-best interval width in both regimes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ INSTALL ═══════════════════ -->
+  <section class="sec">
+    <div class="wrap">
+      <p class="sec-eyebrow">Get Started</p>
+      <h2 class="sec-heading" style="margin-bottom:1rem;">Quick Install</h2>
+      <div class="install-outer">
+        <button class="copy-btn" onclick="copyInstall(this)" title="Copy install command">
+          <i class="far fa-copy"></i> Copy
+        </button>
+        <div class="install-wrap">
+          <span class="ps">$</span>
+          <span class="cmd">pip install clear-uq</span>
+        </div>
+      </div>
+      <p style="font-size:0.88rem; color:var(--text-muted); margin-top:0.8rem;">
+        Requires Python 3.11+. &ensp;
+        See the <a href="https://github.com/Unco3892/clear">GitHub repo</a> for full setup, experiments, and
+        reproducibility instructions.
+        &ensp; Try the interactive <a
+          href="https://colab.research.google.com/github/Unco3892/clear/blob/main/demo.ipynb">Colab demo</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ BIBTEX ═══════════════════ -->
+  <section class="sec-alt">
+    <div class="wrap">
+      <p class="sec-eyebrow">Citation</p>
+      <h2 class="sec-heading" style="margin-bottom:1rem;">BibTeX</h2>
+      <div class="bibtex-outer">
+        <button class="copy-btn" onclick="copyBibtex(this)" title="Copy BibTeX">
+          <i class="far fa-copy"></i> Copy
+        </button>
+        <pre class="bibtex-wrap" id="bibtex-text"><span class="k">@inproceedings</span>{<span class="f">azizi2026clear</span>,
+  <span class="f">title</span>     = {<span class="v">{CLEAR}: Calibrated Learning for Epistemic and Aleatoric Risk</span>},
+  <span class="f">author</span>    = {<span class="v">Ilia Azizi and Juraj Bodik and Jakob Heiss and Bin Yu</span>},
+  <span class="f">booktitle</span> = {<span class="v">The Fourteenth International Conference on Learning Representations</span>},
+  <span class="f">year</span>      = {<span class="v">2026</span>},
+  <span class="f">url</span>       = {<span class="v">https://openreview.net/forum?id=RY4IHaDLik</span>}
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ FOOTER ═══════════════════ -->
+  <footer>
+    Released under the <a href="https://github.com/Unco3892/clear/blob/main/LICENSE.txt" target="_blank"
+      rel="noopener">MIT License</a>
+  </footer>
+
+  <script>
+    /* ── Spotlight modal ── */
+    var overlay = null, spotImg = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      overlay = document.getElementById('spotlightModal');
+      spotImg = document.getElementById('spotlightImg');
+
+      /* Click image → toggle zoom (fit ↔ native size, scrollable) */
+      spotImg.addEventListener('click', function (e) {
+        e.stopPropagation();
+        overlay.classList.toggle('zoomed');
+      });
+    });
+
+    function _openSpotlight(src, alt, isLogo) {
+      spotImg.src = src;
+      spotImg.alt = alt || '';
+      spotImg.classList.toggle('is-logo', !!isLogo);
+      overlay.classList.remove('zoomed');
+      overlay.classList.add('open');
+      /* restore scroll position */
+      overlay.scrollTop = 0;
+      overlay.scrollLeft = 0;
+    }
+
+    function openLogoModal() { _openSpotlight('https://iliaazizi.com/images/hex/clear.png', 'CLEAR logo', true); }
+    function openFigModal(src, alt) { _openSpotlight(src, alt, false); }
+
+    function closeModal() {
+      overlay.classList.remove('open', 'zoomed');
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    /* ── BibTeX copy ── */
+    function copyBibtex(btn) {
+      var text = '@inproceedings{azizi2026clear,\n  title     = {{CLEAR}: Calibrated Learning for Epistemic and Aleatoric Risk},\n  author    = {Ilia Azizi and Juraj Bodik and Jakob Heiss and Bin Yu},\n  booktitle = {The Fourteenth International Conference on Learning Representations},\n  year      = {2026},\n  url       = {https://openreview.net/forum?id=RY4IHaDLik}\n}';
+      navigator.clipboard.writeText(text).then(function () {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<i class="far fa-copy"></i> Copy';
+        }, 2000);
+      });
+    }
+
+    /* ── Install copy ── */
+    function copyInstall(btn) {
+      navigator.clipboard.writeText('pip install clear-uq').then(function () {
+        btn.classList.add('copied');
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(function () {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<i class="far fa-copy"></i> Copy';
+        }, 2000);
+      });
+    }
+  </script>
+
+</body>
+
+</html>
