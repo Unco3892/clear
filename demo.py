@@ -15,7 +15,7 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 
 **Datasets:** All the datasets are retrieved automatically. Example scenarios 1,2,3 and 6 use the `Airfoil Self-Noise` dataset from our paper (1503 samples, 5 features). Example 4 uses the `California Housing` dataset built into sklearn. Example 5 uses the `Parkinsons Telemonitoring` dataset also from our paper.
 
-**To run on Google Colab**, simply run all cells (the first cell installs the package automatically). Note that you can either run `demo.py` or `demo.ipynb` as the content are the same.
+**To run on Google Colab**, simply run all cells (the first cell installs the package automatically). Note that you can either run `demo.py` or `demo.ipynb` as the content are the same. On Colab, the first cell will restart the runtime after installation — if you see a *"Your session crashed"* warning, that is completely normal; just re-run all cells and the demo will proceed immediately.
 """
 
 # %% [markdown]
@@ -40,9 +40,10 @@ try:
     version = importlib.metadata.version("clear-uq")
     print(f"\u2713 clear-uq already installed (version {version})")
 except ImportError:
-    print("Installing clear-uq from PyPI (this may take 3-5 minutes) ...")
-    # Show pip progress so users see what's happening during the install
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "clear-uq"])
+    print("Installing clear-uq from GitHub (this may take 4-5 minutes) ...")
+    # Install from GitHub to get the latest version (includes all submodules)
+    subprocess.check_call([sys.executable, "-m", "pip", "install",
+                           "git+https://github.com/Unco3892/clear.git"])
     import importlib.metadata
     version = importlib.metadata.version("clear-uq")
     print(f"\n\u2713 clear-uq {version} installed successfully!")
@@ -51,7 +52,7 @@ except ImportError:
     # Without this, you get "numpy.dtype size changed" errors.
     try:
         from google.colab import runtime  # must use 'from' import
-        print("\u21BB Restarting Colab runtime \u2014 please re-run all cells after restart ...")
+        print("\u21BB Restarting Colab runtime \u2014 if you see a 'session crashed' warning, that is normal. Just re-run all cells.")
         runtime.restart()
     except ImportError:
         pass  # Not on Colab — no restart needed
