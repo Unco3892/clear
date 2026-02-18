@@ -15,7 +15,7 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 
 **Datasets:** All the datasets are retrieved automatically. Example scenarios 1,2,3 and 6 use the `Airfoil Self-Noise` dataset from our paper (1503 samples, 5 features). Example 4 uses the `California Housing` dataset built into sklearn. Example 5 uses the `Parkinsons Telemonitoring` dataset also from our paper.
 
-**To run on Google Colab**, simply run all cells (the first cell installs the package automatically). Note that you can either run `demo.py` or `demo.ipynb` as the content are the same. On Colab, the first cell will restart the runtime after installation — if you see a *"Your session crashed"* warning, that is completely normal; just re-run all cells and the demo will proceed immediately.
+**To run on Google Colab**, simply run all cells (the first cell installs the package automatically). Note that you can either run `demo.py` or `demo.ipynb` as the content are the same. On Colab, the first cell will restart the runtime after installation. If you see a *"Your session crashed"* warning, that is completely normal; just re-run all cells and the demo will proceed immediately.
 """
 
 # %% [markdown]
@@ -77,13 +77,6 @@ import matplotlib.pyplot as plt
 from clear.clear import CLEAR
 from clear.metrics import evaluate_intervals
 from clear.utils import plot_prediction_intervals
-
-# Disable Colab's vertical-scroll cap on cell output (no-op outside Colab)
-try:
-    from google.colab import output as _colab_output
-    _colab_output.no_vertical_scroll()
-except ImportError:
-    pass
 
 # Configuration
 DESIRED_COVERAGE = 0.95         # Target coverage for prediction intervals
@@ -618,6 +611,11 @@ Four methods are compared at the same target coverage (95%):
 - **Aleatoric-R**: aleatoric QRF intervals centered on PCS median, conformally calibrated
 - **Aleatoric (CQR)**: plain CQR, QRF trained on raw targets, no epistemic component
 - **Epistemic (PCS)**: standard multiplicative PCS calibration (epistemic-only, no aleatoric model)
+
+> **Note on coverage:** The pre-trained PCS results used here are from the **standard** (non-conformalized) variant (`pcs_top1_qpcs_10_standard`). Standard PCS intervals do not carry marginal coverage guarantees, so all methods may fall below the nominal 95% target on this single run — this is expected behavior. The **conformalized** variant (`pcs_top1_qpcs_10_conformalized`) post-processes the PCS intervals with split conformal prediction, providing stronger marginal coverage guarantees. Both variants are available in the pre-trained model archive (see the `models/` directory and `README.md`). To switch, update `PKL_PATH_FULL` in the cell below to point to the conformalized directory:
+> ```python
+> PKL_PATH_FULL = os.path.join("models", "pcs_top1_qpcs_10_conformalized", "data_parkinsons_pcs_results_95.pkl")
+> ```
 """
 
 # %%

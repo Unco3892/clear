@@ -91,11 +91,9 @@ For development or to run all experiments with baseline comparisons (PCS_UQ, UAC
 
 For a high-level overview and practical demonstrations of CLEAR see **[`demo.py`](demo.py) & [`demo.ipynb`](demo.ipynb)** which include comprehensive demonstrations on real datasets (Parkinsons, Airfoil).
 
-<!-- - **[`minimal_example.py`](minimal_example.py)** - A simple, fully commented example demonstrating the complete CLEAR workflow -->
-
-Run the minimal example:
+Run the demo:
 ```bash
-python minimal_example.py
+python demo.py
 ```
 
 ### Minimal Code Snippet
@@ -129,7 +127,7 @@ clear_model = CLEAR(desired_coverage=0.95, n_bootstraps=10, random_state=777)
 clear_model.fit_aleatoric(
     X=X_train, 
     y=y_train, 
-    quantile_model='qrf',
+    quantile_model='rf',
     fit_on_residuals=True, 
     epistemic_preds= (X_train[:,0] * np.mean(y_train/X_train[:,0])))
 
@@ -171,9 +169,12 @@ Below is a high-level overview of the important directories and files in this pr
 │   └── simulations/                      # Plots related to experiments on simulated datasets.
 ├── results/                              # Stores raw and aggregated results from various experiments.
 │   ├── case_study/                       # Results specific to the Ames housing case study.
-│   ├── qPCS_all_10seeds_all/             # Variant (a) against the baselines.
-│   ├── qPCS_qxgb_10seeds_qxgb/           # Variant (b) against the baselines.
-│   └── PCS_all_10seeds_qrf/              # Variant (c) against the baselines.
+│   ├── standard/                         # Results for standard (non-conformalized) model variants.
+│   │   ├── qPCS_all_10seeds_all/         # Variant (a) against the baselines.
+│   │   ├── qPCS_qxgb_10seeds_qxgb/      # Variant (b) against the baselines.
+│   │   └── PCS_all_10seeds_qrf/          # Variant (c) against the baselines.
+│   ├── conformalized/                    # Results for conformalized model variants (same sub-structure as standard/).
+│   └── de_sqr/                           # Results for Deep Ensemble + SQR experiments.
 ├── src/                                  # Main source code for the CLEAR.
 │   ├── case_study/                       # Code for the Ames housing case study, including data preparation and analysis.
 │   ├── clear/                            # Core implementation of the CLEAR algorithm and associated utilities.
