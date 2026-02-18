@@ -71,7 +71,7 @@
 
     a {
       color: var(--teal);
-      text-decoration: none;
+      text-decoration: none !important;
     }
 
     a:hover {
@@ -90,7 +90,7 @@
     }
 
     .wrap-lg {
-      max-width: 1060px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 0 2rem;
     }
@@ -233,8 +233,8 @@
     .iclr-link {
       display: inline-flex;
       align-items: center;
-      gap: 0.46rem;
-      text-decoration: none;
+      gap: 0.22rem;
+      text-decoration: none !important;
       color: rgba(255, 255, 255, 0.9);
       font-weight: 600;
       font-size: 0.88rem;
@@ -243,13 +243,20 @@
 
     .iclr-link:hover {
       color: #fff;
-      text-decoration: none;
+      text-decoration: none !important;
     }
 
     .iclr-link img {
-      height: 20px;
+      height: 21px;
       filter: brightness(0) invert(1);
-      opacity: 0.88;
+      opacity: 0.92;
+      vertical-align: middle;
+      clip-path: inset(0 0 4px 0);
+    }
+
+    .iclr-link span {
+      vertical-align: middle;
+      line-height: 1;
     }
 
     /* Authors */
@@ -449,29 +456,35 @@
       font-size: 1.2rem;
     }
 
-    /* ── Formula legend (replaces inline formula-note) ── */
+    /* ── Formula legend (outside the dark card) ── */
     .formula-legend {
       display: grid;
       grid-template-columns: auto 1fr;
       gap: 0.32rem 1rem;
-      margin-top: 1.1rem;
       text-align: left;
-      border-top: 1px solid rgba(0, 180, 200, 0.15);
-      padding-top: 0.9rem;
     }
 
     .fl-sym {
       font-size: 0.82rem;
-      color: var(--aqua);
+      color: var(--teal);
       white-space: nowrap;
       padding-top: 0.08rem;
       font-style: italic;
+      font-weight: 600;
     }
 
     .fl-def {
       font-size: 0.82rem;
-      color: rgba(255, 255, 255, 0.78);
+      color: var(--text);
       line-height: 1.5;
+    }
+
+    .formula-legend-panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1.1rem;
+      margin-top: 0.6rem;
     }
 
     .param-grid {
@@ -589,8 +602,7 @@
       border: 1px solid rgba(0, 180, 200, 0.2);
       border-radius: 10px;
       flex: 1;
-      min-width: 150px;
-      max-width: 210px;
+      min-width: 0;
     }
 
     .stat-num {
@@ -986,10 +998,10 @@
 
   <!-- ═══════════════════ HERO ═══════════════════ -->
   <section class="hero">
-    <div class="hero-inner wrap">
+    <div class="hero-inner wrap-lg">
 
       <h1 class="hero-title">
-        <span class="accent">CLEAR</span>: Calibrated Learning<br>for Epistemic and Aleatoric Risk
+        <span class="accent">CLEAR</span>: Calibrated Learning for Epistemic and Aleatoric Risk
       </h1>
 
       <div style="display:flex; justify-content:center;">
@@ -998,7 +1010,7 @@
             <img src="https://iliaazizi.com/images/hex/clear.png" class="paper-logo" alt="CLEAR">
           </button>
           <div class="vs-divider"></div>
-          <a href="https://iclr.cc/Conferences/2026/CallForPapers" target="_blank" rel="noopener" class="iclr-link">
+          <a href="https://iclr.cc/Conferences/2026" target="_blank" rel="noopener" class="iclr-link">
             <img src="https://iclr.cc/static/core/img/ICLR-logo.svg" alt="ICLR">
             <span>2026</span>
           </a>
@@ -1085,11 +1097,11 @@
     <div class="wrap">
       <p class="sec-eyebrow">Method</p>
       <div class="teal-rule"></div>
-      <p style="font-size:1rem; color:var(--text); max-width:700px; margin-bottom:0;">
+      <p style="font-size:1rem; color:var(--text); margin-bottom:0;">
         CLEAR constructs prediction intervals by adaptively combining
-        <span style="color:var(--aleatoric); font-weight:600;">aleatoric</span> (data noise)
+        <span style="color:var(--aleatoric);font-weight:600;">aleatoric<span style="color:var(--text);font-weight:400;">&nbsp;(data noise)</span></span>
         and
-        <span style="color:var(--epistemic); font-weight:600;">epistemic</span> (model)
+        <span style="color:var(--epistemic);font-weight:600;">epistemic<span style="color:var(--text);font-weight:400;">&nbsp;(model)</span></span>
         uncertainty through two calibration parameters, $\gamma_1$ and $\lambda$.
       </p>
 
@@ -1098,6 +1110,8 @@
         \cdot \underbrace{\mathrm{ale}_{\pm}(x)}_{\text{\color{#3CD2E1}data noise}} \;+\;
         \underbrace{\lambda\gamma_1}_{\substack{\text{balance}\\\text{parameter}}} \cdot
         \underbrace{\mathrm{epi}_{\pm}(x)}_{\text{\color{#3CD2E1}model unc.}}\Bigr)\,\right]$$
+      </div>
+      <div class="formula-legend-panel">
         <div class="formula-legend">
           <div class="fl-sym">$\gamma_1$</div>
           <div class="fl-def">Calibration parameter; ensures marginal $(1-\alpha)$ coverage for any finite sample via
@@ -1169,6 +1183,16 @@
       <p class="sec-eyebrow">Results</p>
       <h2 class="sec-heading">17 Real-world Datasets</h2>
 
+      <p style="font-size:0.95rem; color:rgba(255,255,255,0.72); margin-bottom:1.8rem; line-height:1.7;">
+        We benchmark across <strong style="color:rgba(255,255,255,0.92);">17 real-world regression datasets</strong>,
+        10 random splits (60%/20%/20%), and multiple model and estimator variants,
+        at <strong style="color:rgba(255,255,255,0.92);">95% nominal coverage</strong>.
+        CLEAR is compared against two individually calibrated baselines: an aleatoric-only approach using
+        Conformalized Quantile Regression (CQR) and an epistemic-only PCS ensemble.
+        Results are reported in <strong style="color:rgba(255,255,255,0.92);">Normalized Calibrated Interval Width (NCIW)</strong>
+        and <strong style="color:rgba(255,255,255,0.92);">quantile loss</strong>; lower is better in both.
+      </p>
+
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-num">+28.2%</div>
@@ -1193,8 +1217,8 @@
           EPISTEMIC = PCS ensemble; ALEATORIC = bootstrapped CQR; ALEATORIC-R = CQR on residuals.
         </p>
       </div>
-      <p style="font-size:0.88rem; color:rgba(255,255,255,0.48); margin-top:1.1rem; text-align:center;">
-        Results also hold with Deep Ensembles + Simultaneous Quantile Regression: CLEAR improves interval width by 28.6%
+      <p style="font-size:0.88rem; color:rgba(255,255,255,0.88); margin-top:1.1rem; text-align:center;">
+        Results also hold with Deep Ensembles + Simultaneous Quantile Regression: CLEAR improves interval width (NCIW) by 28.6%
         and 13.4% over the two baselines, confirming generalizability beyond PCS&nbsp;+&nbsp;CQR.
       </p>
     </div>
@@ -1209,18 +1233,17 @@
       <div class="case-grid">
         <div class="case-text">
           <p>
-            CLEAR automatically adapts the balance parameter $\lambda$ to the prevailing
-            uncertainty regime — no manual tuning required.
-          </p>
-          <p>
-            With only 2 features (high aleatoric uncertainty), $\lambda \approx 0.64$,
-            weighting the aleatoric component more. With all features (low epistemic
-            uncertainty), $\lambda \approx 14.5$, leaning on the epistemic component.
+            Data processing can significantly affect the uncertainty. We take the Ames Housing dataset and deliberately vary the feature set to engineer controlled uncertainty regimes.
+            Restricting to the top 2 predictors (originally 80) deprives the model of information, inducing
+            high <span style="color:var(--aleatoric);font-weight:600;">aleatoric</span>
+            uncertainty. Using all features with richer data processing (PCS pipeline) reduces it and shifts dominance to
+            <span style="color:var(--epistemic);font-weight:600;">epistemic</span> uncertainty. CLEAR's $\lambda$ correctly identifies the dominant
+            source in each regime and adjusts accordingly.
           </p>
           <div class="highlight-box">
             <strong>Key insight</strong>
             <ul>
-              <li>Few features → <span style="color:var(--aleatoric);font-weight:600;">aleatoric dominates</span>
+              <li>2 features → <span style="color:var(--aleatoric);font-weight:600;">aleatoric dominates</span>
                 ($\lambda \approx 0.64$)</li>
               <li>All features → <span style="color:var(--epistemic);font-weight:600;">epistemic dominates</span>
                 ($\lambda \approx 14.5$)</li>
@@ -1307,13 +1330,20 @@
           <span class="cmd">pip install clear-uq</span>
         </div>
       </div>
-      <p style="font-size:0.88rem; color:var(--text-muted); margin-top:0.8rem;">
-        Requires Python 3.11+. &ensp;
-        See the <a href="https://github.com/Unco3892/clear">GitHub repo</a> for full setup, experiments, and
-        reproducibility instructions.
-        &ensp; Try the interactive <a
-          href="https://colab.research.google.com/github/Unco3892/clear/blob/main/demo.ipynb">Colab demo</a>.
-      </p>
+      <ul style="list-style:none; margin-top:0.9rem; display:flex; flex-direction:column; gap:0.45rem; padding:0;">
+        <li style="display:flex; align-items:baseline; gap:0.55rem; font-size:0.88rem; color:var(--text-muted);">
+          <i class="fas fa-cube" style="color:var(--teal); font-size:0.75rem; flex-shrink:0;"></i>
+          <span>Requires Python 3.11+.</span>
+        </li>
+        <li style="display:flex; align-items:baseline; gap:0.55rem; font-size:0.88rem; color:var(--text-muted);">
+          <i class="fab fa-github" style="color:var(--teal); font-size:0.75rem; flex-shrink:0;"></i>
+          <span>See the <a href="https://github.com/Unco3892/clear">GitHub repo</a> for full setup, experiments, and reproducibility instructions.</span>
+        </li>
+        <li style="display:flex; align-items:baseline; gap:0.55rem; font-size:0.88rem; color:var(--text-muted);">
+          <i class="fas fa-play-circle" style="color:var(--teal); font-size:0.75rem; flex-shrink:0;"></i>
+          <span>Try the interactive <a href="https://colab.research.google.com/github/Unco3892/clear/blob/main/demo.ipynb">Colab demo</a>.</span>
+        </li>
+      </ul>
     </div>
   </section>
 

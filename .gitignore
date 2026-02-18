@@ -42,6 +42,8 @@ ENV/
 *.swo
 *~
 .DS_Store
+
+# Content files
 models/download_data.py
 /paper
 /poster
