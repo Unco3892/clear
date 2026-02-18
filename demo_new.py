@@ -46,9 +46,11 @@ import io
 import copy
 from sklearn.model_selection import train_test_split
 from sklearn.utils import resample
+import matplotlib.pyplot as plt
 
 from clear.clear import CLEAR
 from clear.metrics import evaluate_intervals
+from clear.utils import plot_prediction_intervals
 
 # Configuration
 DESIRED_COVERAGE = 0.95         # Target coverage for prediction intervals
@@ -56,6 +58,10 @@ N_BOOTSTRAPS = 10               # Number of bootstrap samples (use 100 for paper
 RANDOM_STATE = 777              # Random seed for reproducibility
 N_JOBS = -1                     # Parallel jobs (-1 = all cores)
 ALPHA = 1 - DESIRED_COVERAGE    # Miscoverage level
+# Optional: pass a custom lambda grid to CLEAR() to match the paper's benchmark exactly.
+# The default grid is sufficient for most use cases. Uncomment to use the paper's grid:
+# LAMBDAS_CLEAR = np.concatenate((np.linspace(0, 0.09, 10), np.logspace(-1, 2, 4001)))
+# Then pass it as: CLEAR(..., lambdas=LAMBDAS_CLEAR)
 
 np.random.seed(RANDOM_STATE)
 print("Imports and configuration loaded.")
@@ -650,7 +656,7 @@ ALPHA_5 = ALPHA   # same as global (0.05 → 95% coverage)
 N_BOOTSTRAPS_5 = 10
 print(f"Fitting aleatoric QRF on PCS training residuals (via CLEAR, {N_BOOTSTRAPS_5} bootstraps)...")
 clear_5 = CLEAR(desired_coverage=DESIRED_COVERAGE, n_bootstraps=N_BOOTSTRAPS_5,
-                random_state=RANDOM_STATE)
+                random_state=RANDOM_STATE, n_jobs=N_JOBS)
 clear_5.fit_aleatoric(
     X_train_p, y_train_p,
     quantile_model="rf",
@@ -703,7 +709,7 @@ pcs_lower_5 = ep_med_test_5 - pcs_gamma * (ep_up_test_5 - ep_low_test_5) / 2.0
 pcs_upper_5 = ep_med_test_5 + pcs_gamma * (ep_up_test_5 - ep_low_test_5) / 2.0
 metrics_pcs_5 = evaluate_intervals(y_test_p, pcs_lower_5, pcs_upper_5, alpha=ALPHA_5, f=ep_med_test_5)
 
-# --- Aleatoric baseline (CQR): QRF on raw targets, no epistemic component ---
+# --- CQR baseline: QRF on raw targets, no epistemic component ---
 al_raw_lo_5 = RandomForestQuantileRegressor(
     n_estimators=100, default_quantiles=ALPHA_5 / 2,
     min_samples_leaf=10, random_state=RANDOM_STATE
@@ -730,7 +736,7 @@ comparison_table(
     {
         "CLEAR": metrics_5,
         "ALEATORIC-R": metrics_ar_5,
-        "Aleatoric": metrics_al_5,
+        "CQR": metrics_al_5,
         "PCS": metrics_pcs_5,
     },
     DESIRED_COVERAGE
@@ -925,3 +931,35 @@ comparison_table(
     },
     DESIRED_COVERAGE
 )
+
+# %% [markdown]
+"""
+## Visualization
+
+Plot prediction intervals for Example 5 (Parkinsons + PCS) — the richest comparison with all
+four methods: CLEAR, ALEATORIC-R (CQR-R+ in the paper, i.e. residual CQR centred on PCS median),
+plain CQR (QRF on raw targets, no epistemic component), and PCS (epistemic-only).
+Intervals are sorted by target value so width and coverage differences are visible.
+Plots are saved to ``plots/demo/`` and displayed inline.
+"""
+
+# %%
+plot_dir = os.path.join("plots", "demo")
+os.makedirs(plot_dir, exist_ok=True)
+
+print("\nPlotting intervals — Example 5 (Parkinsons, PCS)...")
+intervals_5 = {
+    "CLEAR":       (lower_5,     upper_5,     metrics_5),
+    "ALEATORIC-R": (ar_lower_5,  ar_upper_5,  metrics_ar_5),
+    "CQR":         (al_lower_5,  al_upper_5,  metrics_al_5),
+    "PCS":         (pcs_lower_5, pcs_upper_5, metrics_pcs_5),
+}
+plot_prediction_intervals(
+    X_test_p, y_test_p, intervals_5,
+    dataset_name="parkinsons",
+    run_key="demo_run_0",
+    coverage_target=DESIRED_COVERAGE,
+    base_plot_dir=plot_dir,
+    display=True,
+)
+print(f"Saved to: {os.path.join(plot_dir, 'parkinsons')}")
