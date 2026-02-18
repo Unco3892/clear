@@ -15,7 +15,7 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 
 **Datasets:** All the datasets are retrieved automatically. Example scenarios 1,2,3 and 6 use the `Airfoil Self-Noise` dataset from our paper (1503 samples, 5 features). Example 4 uses the `California Housing` dataset built into sklearn. Example 5 uses the `Parkinsons Telemonitoring` dataset also from our paper.
 
-**To run on Google Colab**, simply run all cells (the first cell installs the package automatically).
+**To run on Google Colab**, simply run all cells (the first cell installs the package automatically). Note that you can either run `demo.py` or `demo.ipynb` as the content are the same.
 """
 
 # %% [markdown]
@@ -435,8 +435,11 @@ comparison_table(
     },
     DESIRED_COVERAGE
 )
-print("\nAll methods achieve valid coverage. CLEAR produces tighter intervals by")
-print("optimally weighting epistemic and aleatoric uncertainty components.")
+
+# %% [markdown]
+"""
+All methods achieve valid coverage. CLEAR produces tighter intervals byoptimally weighting epistemic and aleatoric uncertainty components.
+"""
 
 # %% [markdown]
 """
@@ -587,19 +590,27 @@ import pickle
 from urllib.request import urlretrieve
 
 # --- Auto-download pre-trained PCS results ---
-PKL_PATH = os.path.join("models", "demo", "data_parkinsons_pcs_results_95.pkl")
+# Prefer the full model directory (qpcs_10_standard) when available locally;
+# fall back to the demo copy committed to the repo (numerically identical).
+PKL_PATH_FULL = os.path.join("models", "pcs_top1_qpcs_10_standard", "data_parkinsons_pcs_results_95.pkl")
+PKL_PATH_DEMO = os.path.join("models", "demo", "data_parkinsons_pcs_results_95.pkl")
 PKL_URL = (
     "https://raw.githubusercontent.com/Unco3892/clear/main/"
     "models/demo/data_parkinsons_pcs_results_95.pkl"
 )
 
-if not os.path.exists(PKL_PATH):
+if os.path.exists(PKL_PATH_FULL):
+    PKL_PATH = PKL_PATH_FULL
+    print(f"Loading PCS results from full model directory: {PKL_PATH}")
+elif os.path.exists(PKL_PATH_DEMO):
+    PKL_PATH = PKL_PATH_DEMO
+    print(f"Loading PCS results from: {PKL_PATH}")
+else:
+    PKL_PATH = PKL_PATH_DEMO
     os.makedirs(os.path.dirname(PKL_PATH), exist_ok=True)
     print(f"Downloading pre-trained PCS results (~13 MB) ...")
     urlretrieve(PKL_URL, PKL_PATH)
     print("Download complete.")
-else:
-    print(f"Loading PCS results from: {PKL_PATH}")
 
 with open(PKL_PATH, "rb") as f:
     pcs_data = pickle.load(f)
@@ -631,40 +642,26 @@ ep_up_test_5    = np.array(run["test_intervals_raw"])[:, 2]
 
 ALPHA_5 = ALPHA   # same as global (0.05 → 95% coverage)
 
-# --- Fit external aleatoric QRF on training residuals ---
-print("Fitting aleatoric QRF on PCS training residuals...")
-residuals_train_5 = y_train_p - ep_med_train_5
-X_train_aug_5 = np.column_stack([X_train_p, ep_med_train_5])
-X_calib_aug_5 = np.column_stack([X_calib_p, ep_med_calib_5])
-X_test_aug_5  = np.column_stack([X_test_p,  ep_med_test_5])
-
-al_qrf_low_5 = RandomForestQuantileRegressor(
-    n_estimators=100, default_quantiles=ALPHA_5 / 2,
-    min_samples_leaf=10, random_state=RANDOM_STATE
+# --- Fit aleatoric model via CLEAR (bootstrapped QRF on residuals) ---
+# NOTE: Set to 10 here for speed. To exactly replicate the paper's benchmark
+# results (results/standard/qPCS_all_10seeds_all/), increase this to 100;
+# all reported metrics (PICP, MPIW, NCIW, QuantileLoss, lambda, gamma) match
+# the benchmark to 6+ decimal places at N_BOOTSTRAPS_5 = 100.
+N_BOOTSTRAPS_5 = 10
+print(f"Fitting aleatoric QRF on PCS training residuals (via CLEAR, {N_BOOTSTRAPS_5} bootstraps)...")
+clear_5 = CLEAR(desired_coverage=DESIRED_COVERAGE, n_bootstraps=N_BOOTSTRAPS_5,
+                random_state=RANDOM_STATE)
+clear_5.fit_aleatoric(
+    X_train_p, y_train_p,
+    quantile_model="rf",
+    fit_on_residuals=True,
+    epistemic_preds=ep_med_train_5
 )
-al_qrf_med_5 = RandomForestQuantileRegressor(
-    n_estimators=100, default_quantiles=0.5,
-    min_samples_leaf=10, random_state=RANDOM_STATE
-)
-al_qrf_up_5 = RandomForestQuantileRegressor(
-    n_estimators=100, default_quantiles=1 - ALPHA_5 / 2,
-    min_samples_leaf=10, random_state=RANDOM_STATE
-)
-al_qrf_low_5.fit(X_train_aug_5, residuals_train_5)
-al_qrf_med_5.fit(X_train_aug_5, residuals_train_5)
-al_qrf_up_5.fit(X_train_aug_5, residuals_train_5)
 
-# Aleatoric predictions (add PCS median back to residual predictions)
-al_low_calib_5  = al_qrf_low_5.predict(X_calib_aug_5) + ep_med_calib_5
-al_med_calib_5  = al_qrf_med_5.predict(X_calib_aug_5) + ep_med_calib_5
-al_up_calib_5   = al_qrf_up_5.predict(X_calib_aug_5)  + ep_med_calib_5
+al_med_calib_5, al_low_calib_5, al_up_calib_5 = clear_5.predict_aleatoric(X_calib_p, epistemic_preds=ep_med_calib_5)
+al_med_test_5,  al_low_test_5,  al_up_test_5  = clear_5.predict_aleatoric(X_test_p,  epistemic_preds=ep_med_test_5)
 
-al_low_test_5   = al_qrf_low_5.predict(X_test_aug_5)  + ep_med_test_5
-al_med_test_5   = al_qrf_med_5.predict(X_test_aug_5)  + ep_med_test_5
-al_up_test_5    = al_qrf_up_5.predict(X_test_aug_5)   + ep_med_test_5
-
-# --- CLEAR as a pure calibration layer ---
-clear_5 = CLEAR(desired_coverage=DESIRED_COVERAGE, random_state=RANDOM_STATE)
+# --- Calibrate CLEAR ---
 clear_5.calibrate(
     y_calib_p,
     median_epistemic=ep_med_calib_5,
