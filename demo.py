@@ -30,10 +30,26 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 # Installs clear-uq if not already available (e.g., on Google Colab).
 # Locally this is a no-op if the package is already installed.
 import subprocess, sys
+
 try:
     import clear
+    import importlib.metadata
+    version = importlib.metadata.version("clear-uq")
+    print(f"\u2713 clear-uq already installed (version {version})")
 except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "clear-uq"])
+    print("Installing clear-uq from PyPI ...")
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "clear-uq"],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        import importlib.metadata
+        version = importlib.metadata.version("clear-uq")
+        print(f"\u2713 clear-uq installed successfully (version {version})")
+    else:
+        print("\u2717 Installation failed. pip stderr:")
+        print(result.stderr)
+        raise RuntimeError("Failed to install clear-uq. See output above.")
 
 # %%
 # --------------------------
@@ -51,6 +67,13 @@ import matplotlib.pyplot as plt
 from clear.clear import CLEAR
 from clear.metrics import evaluate_intervals
 from clear.utils import plot_prediction_intervals
+
+# Disable Colab's vertical-scroll cap on cell output (no-op outside Colab)
+try:
+    from google.colab import output as _colab_output
+    _colab_output.no_vertical_scroll()
+except ImportError:
+    pass
 
 # Configuration
 DESIRED_COVERAGE = 0.95         # Target coverage for prediction intervals
