@@ -29,6 +29,9 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 # -------------------
 # Installs clear-uq if not already available (e.g., on Google Colab).
 # Locally this is a no-op if the package is already installed.
+# NOTE: On Colab, the first install may take 1-2 minutes and will
+#       automatically restart the runtime to pick up new dependencies.
+#       After the restart, simply re-run this cell (it will be instant).
 import subprocess, sys
 
 try:
@@ -37,7 +40,7 @@ try:
     version = importlib.metadata.version("clear-uq")
     print(f"\u2713 clear-uq already installed (version {version})")
 except ImportError:
-    print("Installing clear-uq from PyPI ...")
+    print("Installing clear-uq from PyPI (this may take 1-2 minutes) ...")
     result = subprocess.run(
         [sys.executable, "-m", "pip", "install", "clear-uq"],
         capture_output=True, text=True
@@ -46,6 +49,15 @@ except ImportError:
         import importlib.metadata
         version = importlib.metadata.version("clear-uq")
         print(f"\u2713 clear-uq installed successfully (version {version})")
+        # On Colab, restart the runtime so that pre-loaded packages (pandas,
+        # numpy, etc.) are reloaded against the newly installed versions.
+        # Without this, you may see "numpy.dtype size changed" errors.
+        try:
+            import google.colab
+            print("Restarting Colab runtime to pick up new packages ...")
+            google.colab.runtime.restart()
+        except ImportError:
+            pass  # Not on Colab — no restart needed
     else:
         print("\u2717 Installation failed. pip stderr:")
         print(result.stderr)
