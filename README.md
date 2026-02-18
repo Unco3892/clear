@@ -2,6 +2,7 @@
 
 # [CLEAR: Calibrated Learning for Epistemic and Aleatoric Risk](https://openreview.net/forum?id=RY4IHaDLik)
 
+[![Project Page](https://img.shields.io/badge/Project-Page-teal)](https://unco3892.github.io/clear/)
 [![ICLR 2026](https://img.shields.io/badge/ICLR-2026-blue)](https://openreview.net/forum?id=RY4IHaDLik)
 [![arXiv](https://img.shields.io/badge/arXiv-2507.08150-b31b1b)](https://arxiv.org/abs/2507.08150)
 [![Python](https://img.shields.io/badge/python-3.11+-green)](https://www.python.org/downloads/)
