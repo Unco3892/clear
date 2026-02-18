@@ -15,7 +15,7 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 
 **Datasets:** All the datasets are retrieved automatically. Example scenarios 1,2,3 and 6 use the `Airfoil Self-Noise` dataset from our paper (1503 samples, 5 features). Example 4 uses the `California Housing` dataset built into sklearn. Example 5 uses the `Parkinsons Telemonitoring` dataset also from our paper.
 
-**To run on Google Colab**, simply run all cells (the first cell installs the package automatically). Note that you can either run `demo.py` or `demo.ipynb` as the content are the same. On Colab, the first cell will restart the runtime after installation. If you see a *"Your session crashed"* warning, that is completely normal; just re-run all cells and the demo will proceed immediately.
+**To run on Google Colab**, simply run all cells (the first cell installs the package automatically from PyPI). Note that you can either run `demo.py` or `demo.ipynb` as the content are the same. On Colab, the first cell will restart the runtime after installation. If you see a *"Your session crashed"* warning, that is completely normal; just re-run all cells and the demo will proceed immediately.
 """
 
 # %% [markdown]
@@ -29,7 +29,7 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 # -------------------
 # Installs clear-uq if not already available (e.g., on Google Colab).
 # Locally this is a no-op if the package is already installed.
-# NOTE: On Colab, the first install takes ~3-5 minutes and will
+# NOTE: On Colab, the first install takes ~4-5 minutes and will
 #       automatically restart the runtime to pick up new dependencies.
 #       After the restart, simply re-run all cells (the install is instant).
 import subprocess, sys
@@ -40,10 +40,8 @@ try:
     version = importlib.metadata.version("clear-uq")
     print(f"\u2713 clear-uq already installed (version {version})")
 except ImportError:
-    print("Installing clear-uq from GitHub (this may take 4-5 minutes) ...")
-    # Install from GitHub to get the latest version (includes all submodules)
-    subprocess.check_call([sys.executable, "-m", "pip", "install",
-                           "git+https://github.com/Unco3892/clear.git"])
+    print("Installing clear-uq from PyPI (this may take 4-5 minutes) ...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "clear-uq"])
     import importlib.metadata
     version = importlib.metadata.version("clear-uq")
     print(f"\n\u2713 clear-uq {version} installed successfully!")
