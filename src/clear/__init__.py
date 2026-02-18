@@ -1,6 +1,6 @@
-# from . import clear
-# from . import metrics
-# from . import models
-# from . import utils
+from .clear import CLEAR
+from . import metrics
+from . import utils
+from . import models
 
-# __all__ = ["clear", "metrics", "models", "utils"]
+__all__ = ["CLEAR", "metrics", "utils", "models"]

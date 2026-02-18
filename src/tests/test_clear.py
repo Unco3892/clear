@@ -272,5 +272,50 @@ class TestCLEAR(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.clear_model.predict(self.X_test)
 
+    # --- Tests for flexible fit_epistemic ---
+
+    @patch('src.clear.clear.RandomForestRegressor')
+    def test_fit_epistemic_rf(self, MockRF):
+        """Verify fit_epistemic with 'rf' string creates RandomForestRegressor models."""
+        mock_rf_instance = MockRF.return_value
+        mock_rf_instance.fit.return_value = mock_rf_instance
+        mock_rf_instance.__sklearn_is_fitted__ = lambda: True
+        mock_rf_instance.fitted_ = True
+
+        self.clear_model.fit_epistemic(self.X_train, self.y_train, epistemic_model="rf")
+        self.assertEqual(len(self.clear_model.epistemic_models), self.n_bootstraps_test)
+        self.assertEqual(MockRF.call_count, self.n_bootstraps_test)
+
+    def test_fit_epistemic_custom_class(self):
+        """Verify fit_epistemic works with a custom model class (Ridge)."""
+        from sklearn.linear_model import Ridge
+        self.clear_model.fit_epistemic(
+            self.X_train, self.y_train,
+            epistemic_model=Ridge,
+            model_params={"alpha": 1.0}
+        )
+        self.assertEqual(len(self.clear_model.epistemic_models), self.n_bootstraps_test)
+        for model in self.clear_model.epistemic_models:
+            self.assertIsInstance(model, Ridge)
+
+    @patch('src.clear.clear.LinearGAM')
+    def test_fit_epistemic_default_unchanged(self, MockLinearGAM):
+        """Verify default fit_epistemic() still uses LinearGAM with original params."""
+        mock_gam_instance = MockLinearGAM.return_value
+        mock_gam_instance.fit.return_value = mock_gam_instance
+        mock_gam_instance.__sklearn_is_fitted__ = lambda: True
+        mock_gam_instance.fitted_ = True
+
+        self.clear_model.fit_epistemic(self.X_train, self.y_train)
+        # Verify LinearGAM was called with the original default parameters
+        call_kwargs = MockLinearGAM.call_args_list[0][1]
+        self.assertEqual(call_kwargs['n_splines'], 10)
+        self.assertAlmostEqual(call_kwargs['lam'], 0.0000001)
+
+    def test_fit_epistemic_invalid_string(self):
+        """Verify fit_epistemic raises ValueError on unknown string."""
+        with self.assertRaises(ValueError):
+            self.clear_model.fit_epistemic(self.X_train, self.y_train, epistemic_model="nonexistent")
+
 if __name__ == '__main__':
     unittest.main() 

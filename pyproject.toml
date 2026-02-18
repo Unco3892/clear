@@ -34,8 +34,8 @@ Documentation = "https://github.com/Unco3892/clear#readme"
 "Bug Tracker" = "https://github.com/Unco3892/clear/issues"
 "Paper" = "https://arxiv.org/abs/2507.08150"
 
-[tool.setuptools]
-packages = ["clear", "pcs", "case_study", "experiments"]
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-dir]
 "" = "src"
