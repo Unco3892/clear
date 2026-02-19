@@ -32,28 +32,37 @@ This demo shows how to use the CLEAR framework to build calibrated prediction in
 # NOTE: On Colab, the first install takes ~4-5 minutes and will
 #       automatically restart the runtime to pick up new dependencies.
 #       After the restart, simply re-run all cells (the install is instant).
-import subprocess, sys
+import subprocess, sys, importlib.metadata
 
 try:
-    import clear
-    import importlib.metadata
-    version = importlib.metadata.version("clear-uq")
-    print(f"\u2713 clear-uq already installed (version {version})")
+    _on_colab = bool(__import__("google.colab", fromlist=["colab"]))  # type: ignore[import]
 except ImportError:
-    print("Installing clear-uq from PyPI (this may take 4-5 minutes) ...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "clear-uq"])
-    import importlib.metadata
-    version = importlib.metadata.version("clear-uq")
-    print(f"\n\u2713 clear-uq {version} installed successfully!")
-    # On Colab, restart the runtime so that pre-loaded C-extension packages
-    # (numpy, pandas, etc.) are reloaded against the newly installed versions.
-    # Without this, you get "numpy.dtype size changed" errors.
+    _on_colab = False
+
+try:
+    _prev_version = importlib.metadata.version("clear-uq")
+except importlib.metadata.PackageNotFoundError:
+    _prev_version = None
+
+# Always upgrade to the latest version from PyPI.
+print("Checking for latest clear-uq on PyPI ...")
+subprocess.check_call([sys.executable, "-m", "pip", "install", "clear-uq", "--upgrade", "--quiet", "--no-cache-dir"])
+version = importlib.metadata.version("clear-uq")
+if _prev_version is None:
+    print(f"\u2713 clear-uq {version} installed successfully!")
+elif _prev_version != version:
+    print(f"\u2713 clear-uq upgraded {_prev_version} \u2192 {version}")
+else:
+    print(f"\u2713 clear-uq already up to date (version {version})")
+
+# On Colab only: restart when a new version was fetched so that pre-loaded
+# C-extension packages (numpy, pandas, etc.) are reloaded against the new
+# versions. Without this, you get "numpy.dtype size changed" errors.
+if _on_colab and _prev_version != version:
     try:
-        from google.colab import runtime  # must use 'from' import
+        from google.colab import runtime  # type: ignore[import]  # must use 'from' import
         print("\u21BB Restarting Colab runtime \u2014 if you see a 'session crashed' warning, that is normal. Just re-run all cells.")
         runtime.restart()
-    except ImportError:
-        pass  # Not on Colab — no restart needed
     except Exception:
         # Fallback: force-kill the process to trigger a Colab restart
         import os, signal
