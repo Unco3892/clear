@@ -249,10 +249,51 @@ To reproduce the experiments from the paper:
 
         ```bash
         cd src/experiments
-        python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type homo --use_external_pcs
-        ```
-        Supports: `hetero1`, `hetero2`, `--randomize_d` for multivariate
 
+        # Homoscedastic noise with sigma=1, d=1, 100 simulations
+        python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type homo --use_external_pcs
+
+        # Heteroscedastic noise with sigma=1+|x|, d=1, 100 simulations
+        python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type hetero1 --use_external_pcs
+
+        # Heteroscedastic noise with sigma=1+1/(1+x^2), d=1, 100 simulations
+        python benchmark_simulations.py --d 1 --num_simulations 100 --noise_type hetero2 --use_external_pcs
+
+        # Multivariate: Homoscedastic noise with sigma=1, d=1, 100 simulations
+        python benchmark_simulations.py --randomize_d --num_simulations 100 --noise_type homo --use_external_pcs
+        ```
+
+    *   To run benchmarks specifically for the UACQR comparison, navigate to `src/experiments/` and execute:
+
+        ```bash
+        cd src/experiments
+        python benchmark_uacqr.py
+        ```
+
+    *   To run the Deep Ensemble + SQR variant described in `benchmark_real_data_de_sqr.py`, use:
+
+        ```bash
+        cd src/experiments
+
+        # Standard DE+SQR models (auto-detect datasets in qxgb_10_standard)
+        python benchmark_real_data_de_sqr.py --coverage 0.95 --models_dir ../../models/pcs_top1_qxgb_10_standard --output_dir ../../results/de_sqr --seed 42 --batch_size 64 --ensemble_epochs 1500 --sqr_lr 5e-4
+        ```
+
+        The script automatically falls back to CPU mode when CUDA is unavailable; expect longer runtimes without a GPU. Omit `--max_runs` to process every stored run (paper setting), and adjust `--ensemble_epochs`, `--batch_size`, or enable `--fast_mode` if you need faster turnaround.
+
+    *   For faster overall runtime, the real-data benchmarks can be chained in order (variant b → c → a):
+
+        ```bash
+        cd src/experiments
+
+        # Fastest order one-liners: standard (variant b → c → a)
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_standard --csv_results_dir ../../results/standard/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_standard --csv_results_dir ../../results/standard/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_standard --csv_results_dir ../../results/standard/qPCS_all_10seeds_all
+
+        # Fastest order one-liners: conformalized (variant b → c → a)
+        python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 25 --global_log --approach both --models_dir ../../models/pcs_top1_qxgb_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_qxgb_10seeds_qxgb ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_pcs_10_conformalized --csv_results_dir ../../results/conformalized/PCS_all_10seeds_qrf ; python benchmark_real_data.py --coverage 0.95 --generate_tables --n_jobs 30 --global_log --approach both --models_dir ../../models/pcs_top1_qpcs_10_conformalized --csv_results_dir ../../results/conformalized/qPCS_all_10seeds_all
+        ```
+
+    *   Consult the respective scripts for any command-line arguments or configurations you might want to adjust (e.g., specific datasets, model parameters, number of seeds). Most scripts support `argparse` to adjust parameters.
 
 4.  **Results:**
     Raw results are saved to `results/` and plots to `plots/`
