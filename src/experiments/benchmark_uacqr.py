@@ -392,6 +392,20 @@ def main(args):
     all_results = []
     alpha = 1.0 - args.coverage
 
+    # Column order for CSV output (defined once, used for incremental + final writes)
+    _cols_order = ["Dataset", "Seed", "Method", "Coverage_Target", "Alpha",
+                   "PICP", "NIW", "MPIW", "QuantileLoss", "ExpectileLoss", "IntervalScoreLoss",
+                   "CRPS", "AUC", "NCIW", "c_test_cal"]
+
+    # Prepare output CSV for incremental writing (clear any previous file)
+    _output_dir = os.path.dirname(args.output_csv)
+    if _output_dir and not os.path.exists(_output_dir):
+        os.makedirs(_output_dir)
+    if os.path.exists(args.output_csv):
+        os.remove(args.output_csv)
+        logger.info(f"Cleared previous output file: {args.output_csv}")
+    _written_idx = 0
+
     # Define UACQR parameters from args
     uacqr_params = {
         # "min_samples_leaf": args.min_samples_leaf, # Not used for internal RFQR hyperparams anymore
@@ -496,33 +510,31 @@ def main(args):
                         ]))
                         logger.info(f"DEBUG - {method} miss rate: {miss_rate:.4f}, avg miss magnitude: {avg_miss_mag:.6f}")
 
-    # Save results to CSV
+        # Incremental save after each dataset completes
+        if len(all_results) > _written_idx:
+            _new_df = pd.DataFrame(all_results[_written_idx:])
+            _cols = [c for c in _cols_order if c in _new_df.columns]
+            _new_df = _new_df[_cols]
+            _header = not os.path.exists(args.output_csv)
+            _new_df.to_csv(args.output_csv, mode='a', index=False,
+                           header=_header, float_format='%.10g')
+            _written_idx = len(all_results)
+            logger.info(f"  [Incremental save] {dataset_name_base} done — {_written_idx} rows total in {args.output_csv}")
+
+    # Final flush: write any rows not yet saved incrementally
     if not all_results:
         logger.info("\nNo results generated.")
         return
 
-    results_df = pd.DataFrame(all_results)
-    # Reorder columns for better readability if needed
-    # Use metric names directly as returned by evaluate_intervals
-    cols_order = ["Dataset", "Seed", "Method", "Coverage_Target", "Alpha",
-                  "PICP", "NIW", "MPIW", "QuantileLoss", "ExpectileLoss", "IntervalScoreLoss",
-                  "CRPS", "AUC", "NCIW", "c_test_cal"]
-    # Filter out columns not present (e.g., if an eval failed for a specific metric)
-    cols_order = [col for col in cols_order if col in results_df.columns]
-    results_df = results_df[cols_order]
+    if _written_idx < len(all_results):
+        _new_df = pd.DataFrame(all_results[_written_idx:])
+        _cols = [c for c in _cols_order if c in _new_df.columns]
+        _new_df = _new_df[_cols]
+        _header = not os.path.exists(args.output_csv)
+        _new_df.to_csv(args.output_csv, mode='a', index=False,
+                       header=_header, float_format='%.10g')
 
-
-    # Ensure output directory exists
-    output_dir = os.path.dirname(args.output_csv)
-    if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-        logger.info(f"Created output directory: {output_dir}")
-
-    try:
-        results_df.to_csv(args.output_csv, index=False, float_format='%.5f')
-        logger.info(f"\nBenchmark results saved to: {args.output_csv}")
-    except Exception as e:
-        logger.error(f"\nError saving results to CSV: {e}")
+    logger.info(f"\nBenchmark complete. {len(all_results)} total rows saved to: {args.output_csv}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark UACQR method on pre-processed datasets.")
@@ -540,7 +552,7 @@ if __name__ == "__main__":
                          help="max_features parameter for UACQR's internal RandomForestQuantileRegressor (as fraction).")
     parser.add_argument("--random_state", type=int, default=777,
                         help="Base random seed for reproducibility. Seed for each run will be base_seed + run_index.")
-    parser.add_argument("--clear_results_dir", type=str, default='../../results/PCS_all_10seeds_qrf',
+    parser.add_argument("--clear_results_dir", type=str, default='../../results/standard/PCS_all_10seeds_qrf',
                         help="Directory containing the CLEAR benchmark CSV files (e.g., '../../results/PCS_all_10seeds_qrf') to load comparative results from.")
     parser.add_argument("--parallel_jobs", type=int, default=30,
                         help="Number of parallel jobs for UACQR's bootstrap model fitting. Use -1 for all available cores.")

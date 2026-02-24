@@ -32,7 +32,9 @@ def setup_logging(log_file=None, log_level=logging.INFO):
         os.makedirs(os.path.dirname(os.path.abspath(log_file)), exist_ok=True)
         file_handler = logging.FileHandler(log_file)
         file_handler.setFormatter(logging.Formatter(log_format))
+        file_handler.flush = lambda: file_handler.stream.flush()
         logger.addHandler(file_handler)
+        logger.info(f"Logging to file: {log_file}")
         
     return logger
 

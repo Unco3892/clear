@@ -263,11 +263,16 @@ To reproduce the experiments from the paper:
         python benchmark_simulations.py --randomize_d --num_simulations 100 --noise_type homo --use_external_pcs
         ```
 
-    *   To run benchmarks specifically for the UACQR comparison, navigate to `src/experiments/` and execute:
+    *   To run benchmarks specifically for the UACQR comparison (Table 1 and Appendix tables), navigate to `src/experiments/` and execute both runs:
 
         ```bash
         cd src/experiments
-        python benchmark_uacqr.py
+
+        # Standard CLEAR variant (c) vs UACQR (Table 1)
+        python benchmark_uacqr.py --data_dir ../../models/pcs_top1_pcs_10_standard --clear_results_dir ../../results/standard/PCS_all_10seeds_qrf --output_csv ../../results/uacqr_benchmark_results_standard.csv
+
+        # Conformalized CLEAR variant (c) vs UACQR (Appendix tables)
+        python benchmark_uacqr.py --data_dir ../../models/pcs_top1_pcs_10_conformalized --clear_results_dir ../../results/conformalized/PCS_all_10seeds_qrf --output_csv ../../results/uacqr_benchmark_results_conformalized.csv
         ```
 
     *   To run the Deep Ensemble + SQR variant described in `benchmark_real_data_de_sqr.py`, use:

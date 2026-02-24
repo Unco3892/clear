@@ -782,7 +782,7 @@ class uacqr():
             
             try:
                 # Predict in parallel across models
-                all_preds = joblib.Parallel(n_jobs=n_parallel, verbose=0, prefer="threads")(
+                all_preds = joblib.Parallel(n_jobs=n_parallel, verbose=0, backend="threading")(
                     joblib.delayed(self.__predict_individual_model_batch)(
                         x_test, model, lower=lower
                     ) for model in self.models_B
