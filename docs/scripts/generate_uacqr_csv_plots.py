@@ -56,6 +56,10 @@ def load_specific_metric_data(csv_path, metric_col_name, coverage_target_float):
         print(f"Warning: Metric column '{metric_col_name}' not found in the CSV.")
         return pd.DataFrame()
 
+    # Replace inf with NaN so they are excluded from mean/std calculations
+    df_filtered = df_filtered.copy()
+    df_filtered[metric_col_name] = df_filtered[metric_col_name].replace([np.inf, -np.inf], np.nan)
+
     # Group by Dataset and Method, then calculate mean and std for the metric
     # The CSV already contains one row per Dataset, Seed, Method. We need to average over seeds.
     agg_df = df_filtered.groupby(['Dataset', 'Method']).agg(
@@ -503,10 +507,14 @@ def generate_all_metrics_summary_table(csv_path, coverage_target_float, output_t
         print("Warning: No specified metric columns exist in the data. Cannot generate summary table.")
         return
 
+    # Replace inf with NaN so they are excluded from mean/std calculations
+    df_filtered = df_filtered.copy()
+    df_filtered[existing_metrics] = df_filtered[existing_metrics].replace([np.inf, -np.inf], np.nan)
+
     # Group by Dataset and Method, then calculate mean and std for each metric
     # The CSV already contains one row per Dataset, Seed, Method. We need to average over seeds.
     grouped = df_filtered.groupby(['Dataset', 'Method'])
-    
+
     summary_dfs = []
     for metric in existing_metrics:
         metric_summary = grouped[metric].agg(['mean', 'std']).reset_index()

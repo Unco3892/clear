@@ -384,7 +384,7 @@ def _generate_conformalized_metric_table(
         for _, display_name in method_info:
             if display_name in combined_data[dataset]:
                 m = combined_data[dataset][display_name]['mean']
-                if not np.isnan(m):
+                if np.isfinite(m):
                     values_methods.append((m, display_name))
         values_methods.sort(key=lambda x: x[0], reverse=higher_is_better)
         best_method = values_methods[0][1] if values_methods else None
@@ -396,7 +396,7 @@ def _generate_conformalized_metric_table(
                 mean_val = combined_data[dataset][display_name]['mean']
                 std_val = combined_data[dataset][display_name]['std']
 
-                if np.isnan(mean_val):
+                if not np.isfinite(mean_val):
                     row.append("-")
                     continue
 
@@ -424,7 +424,7 @@ def _generate_conformalized_metric_table(
                         cell = f"\\textbf{{{cell}}}"
                     elif display_name == second_best:
                         cell = f"\\underline{{{cell}}}"
-                    elif not np.isnan(best_val) and not np.isnan(mean_val):
+                    elif np.isfinite(best_val) and np.isfinite(mean_val):
                         if higher_is_better:
                             if best_val != 0 and mean_val < best_val * 0.77:
                                 cell = f"\\textcolor{{red}}{{{cell}}}"
@@ -839,7 +839,7 @@ def generate_uacqr_improvement_table(setting="standard"):
                 cl_mean = cl[uacqr_col].mean()
                 bl_mean = bl[uacqr_col].mean()
 
-                if abs(bl_mean) > 1e-12 and not np.isnan(cl_mean) and not np.isnan(bl_mean):
+                if abs(bl_mean) > 1e-12 and np.isfinite(cl_mean) and np.isfinite(bl_mean):
                     pct = (bl_mean - cl_mean) / abs(bl_mean) * 100
                 else:
                     pct = np.nan
@@ -877,7 +877,7 @@ def generate_uacqr_improvement_table(setting="standard"):
         for baseline in baselines:
             for _, display_name, _ in metrics:
                 pct = table_data[dataset].get((baseline, display_name), np.nan)
-                if np.isnan(pct):
+                if not np.isfinite(pct):
                     cells.append("--")
                 else:
                     if pct > 0:

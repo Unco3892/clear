@@ -399,7 +399,7 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
                     if values_for_metric:
                         max_runs = max(max_runs, len(values_for_metric))
                         # Filter out potential non-numeric string placeholders like '-' before np.mean/std
-                        numeric_values = [v for v in values_for_metric if isinstance(v, (int, float)) and not np.isnan(v)]
+                        numeric_values = [v for v in values_for_metric if isinstance(v, (int, float)) and np.isfinite(v)]
                         if numeric_values:
                             mean_val = float(np.mean(numeric_values))
                             std_val = float(np.std(numeric_values))
