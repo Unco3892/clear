@@ -46,9 +46,10 @@ def interval_score_loss(upper, lower, y_true, alpha):
     upper = np.array(upper)
     lower = np.array(lower)
     
-    return (upper - lower) + \
-           (2/alpha) * (lower - y_true) * (y_true < lower) + \
-           (2/alpha) * (y_true - upper) * (y_true > upper)
+    # Use np.where to avoid inf * 0 = NaN from IEEE 754 when bounds are infinite
+    below_lower = np.where(y_true < lower, (2/alpha) * (lower - y_true), 0.0)
+    above_upper = np.where(y_true > upper, (2/alpha) * (y_true - upper), 0.0)
+    return (upper - lower) + below_lower + above_upper
 
 def average_interval_score_loss(upper, lower, y_true, alpha):
     """
