@@ -164,14 +164,14 @@ Below is a high-level overview of the important directories and files in this pr
 ├── models/                               # Stores pre-trained models and outputs from model training runs.
 ├── PCS_UQ/                               # Codebase and experiments for the PCS-UQ framework (referenced in paper).
 ├── UACQR/                                # Codebase and experiments for the UACQR method (referenced in paper).
-├── docs/figures/                          # Directory for storing plots generated from experiment results.
+├── docs/figures/                         # Directory for storing plots generated from experiment results.
 │   ├── real/                             # Plots related to experiments on real-world datasets.
 │   └── simulations/                      # Plots related to experiments on simulated datasets.
 ├── results/                              # Stores raw and aggregated results from various experiments.
 │   ├── case_study/                       # Results specific to the Ames housing case study.
 │   ├── standard/                         # Results for standard (non-conformalized) model variants.
 │   │   ├── qPCS_all_10seeds_all/         # Variant (a) against the baselines.
-│   │   ├── qPCS_qxgb_10seeds_qxgb/      # Variant (b) against the baselines.
+│   │   ├── qPCS_qxgb_10seeds_qxgb/       # Variant (b) against the baselines.
 │   │   └── PCS_all_10seeds_qrf/          # Variant (c) against the baselines.
 │   ├── conformalized/                    # Results for conformalized model variants (same sub-structure as standard/).
 │   └── de_sqr/                           # Results for Deep Ensemble + SQR experiments.

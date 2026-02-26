@@ -976,11 +976,11 @@ comparison_table(
 
 Plot prediction intervals for Example 5 (Parkinsons + PCS) comparing all four methods.
 Intervals are sorted by target value so width and coverage differences are visible.
-Plots are saved to ``plots/demo/`` and displayed inline.
+Plots are saved to ``docs/figures/demo/`` and displayed inline.
 """
 
 # %%
-plot_dir = os.path.join("plots", "demo")
+plot_dir = os.path.join("docs", "figures", "demo")
 os.makedirs(plot_dir, exist_ok=True)
 
 print("\nPlotting intervals — Example 5 (Parkinsons, PCS)...")
