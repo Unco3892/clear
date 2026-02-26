@@ -39,7 +39,7 @@ sys.path.append(os.path.join(script_dir, '..'))
 # Imports for CQR and CLEAR
 from sklearn.linear_model import QuantileRegressor
 from clear.clear import CLEAR
-from clear.metrics import evaluate_intervals # Assuming evaluate_intervals is accessible
+from clear.metrics import evaluate_intervals
 
 
 # Suppress warnings

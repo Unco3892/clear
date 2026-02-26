@@ -245,7 +245,6 @@ def load_clear_results(dataset_name_base, seed_key_str, clear_results_dir, targe
         return []
 
     # Filter for the specific seed and relevant methods
-    # Assuming seed_key_str is like 'run_0', need to extract the integer part for matching 'Seed' column
     try:
         seed_val = int(seed_key_str.split('_')[-1])
     except ValueError:
@@ -278,7 +277,7 @@ def load_clear_results(dataset_name_base, seed_key_str, clear_results_dir, targe
             # PICP, NIW, MPIW, QuantileLoss, CRPS, AUC, NCIW, c_test_cal
             if metric_key_csv == 'picp': metric_dict['PICP'] = row['Value']
             elif metric_key_csv == 'niw': metric_dict['NIW'] = row['Value']
-            elif metric_key_csv == 'mpiw': metric_dict['MPIW'] = row['Value'] # Assuming MPIW is also in CSVs
+            elif metric_key_csv == 'mpiw': metric_dict['MPIW'] = row['Value']
             elif metric_key_csv == 'quantileloss': metric_dict['QuantileLoss'] = row['Value']
             elif metric_key_csv == 'crps': metric_dict['CRPS'] = row['Value']
             elif metric_key_csv == 'auc': metric_dict['AUC'] = row['Value']
@@ -567,7 +566,6 @@ if __name__ == "__main__":
     # Validate coverage
     if not 0 < args.coverage < 1:
         # Use logger for error messages before exiting
-        # Assuming logger might not be initialized if args are invalid early,
         # print to stderr as a fallback, then try to log if possible.
         eprint = lambda *x, **kw: print(*x, file=sys.stderr, **kw)
         eprint("Error: Coverage must be between 0 and 1.")
