@@ -959,6 +959,11 @@
       .katex {
         font-size: 1rem;
       }
+
+      /* Abstract: left-align on small screens */
+      .abstract-text {
+        text-align: left;
+      }
     }
 
     @media (max-width: 480px) {
@@ -1080,7 +1085,7 @@
       </p>
 
       <div class="concept-figure">
-        <img src="figures/concept.png" alt="Aleatoric vs. epistemic uncertainty and CLEAR prediction intervals"
+        <img src="page/concept.png" alt="Aleatoric vs. epistemic uncertainty and CLEAR prediction intervals"
           onclick="openFigModal(this.src, this.alt)">
         <p class="fig-caption-light">
           <strong>Left:</strong> Aleatoric uncertainty (blue) reflects irreducible data noise; epistemic uncertainty
@@ -1209,7 +1214,7 @@
       </div>
 
       <div class="result-figure">
-        <img src="figures/benchmark.png" alt="CLEAR benchmark: NCIW and Quantile Loss across 17 real-world datasets"
+        <img src="page/benchmark.png" alt="CLEAR benchmark: NCIW and Quantile Loss across 17 real-world datasets"
           onclick="openFigModal(this.src, this.alt)">
         <p class="fig-caption">
           Quantile loss and NCIW across 17 real-world datasets, averaged over 10 seeds, normalized relative to CLEAR (=
