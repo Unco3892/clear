@@ -627,16 +627,22 @@ def generate_conformalized_tables():
     """
     Generate conformalized PCS/CQR variant tables (33 files: 11 per variant).
 
-    Conformalized tables combine data from TWO sources:
+    Conformalized tables combine data from THREE sources:
     - Conformalized CSV: CLEAR-c, PCS-EPISTEMIC-c, ALEATORIC-R-c
     - Standard CSV: CLEAR (baseline)
-    For variant c, also UACQR-P and UACQR-S from aggregated CSV.
+    - Standard UACQR CSV: UACQR-P, UACQR-S (for variant c)
+    UACQR always uses standard results because it calibrates on the full
+    calib+val dataset (it hasn't seen val before), making the standard
+    results the fair comparison.
     """
     print("\n" + "=" * 60)
     print("=== Generating Conformalized PCS/CQR Tables ===")
     print("=" * 60)
 
-    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr', 'uacqr_benchmark_results_conformalized.csv')
+    # UACQR always uses the standard CSV: UACQR calibrates on the full
+    # calib+val dataset (it hasn't seen val before), so even in the
+    # conformalized setting the standard results are the fair comparison.
+    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr', 'uacqr_benchmark_results_standard.csv')
     has_uacqr = os.path.exists(uacqr_csv)
 
     for i, (folder, label) in enumerate(zip(VARIANT_FOLDERS, VARIANT_LABELS)):
@@ -803,7 +809,9 @@ def generate_uacqr_improvement_table(setting="standard"):
 
     Args:
         setting: "standard" or "conformalized". Controls which CLEAR data
-                 is used. UACQR baselines are always the same.
+                 is used. UACQR baselines always come from the standard CSV
+                 (UACQR calibrates on full calib+val, so standard is the
+                 fair comparison regardless of setting).
                  Use "standard" for the main paper table and "conformalized"
                  for the appendix table.
     """
@@ -811,7 +819,10 @@ def generate_uacqr_improvement_table(setting="standard"):
     print(f"=== Generating CLEAR vs UACQR Improvement Table ({setting}) ===")
     print("=" * 60)
 
-    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr', f'uacqr_benchmark_results_{setting}.csv')
+    # UACQR always uses the standard CSV: UACQR calibrates on the full
+    # calib+val dataset (it hasn't seen val before), so even in the
+    # conformalized setting the standard results are the fair comparison.
+    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr', 'uacqr_benchmark_results_standard.csv')
     if not os.path.exists(uacqr_csv):
         print(f"  UACQR results CSV not found ({uacqr_csv}), skipping.")
         return
