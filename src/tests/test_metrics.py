@@ -121,6 +121,54 @@ class TestMetrics(unittest.TestCase):
         aisl = metrics.average_interval_score_loss(self.upper_narrow, self.lower_narrow, self.y_true, self.alpha_test)
         self.assertTrue(aisl >= 0)
 
+    def test_infinite_interval_score_loss(self):
+        """ISL should return inf (not NaN) for infinite bounds."""
+        y = np.array([1.0, 2.0, 3.0])
+        lower_inf = np.full(3, -np.inf)
+        upper_inf = np.full(3, np.inf)
+        isl = metrics.interval_score_loss(upper_inf, lower_inf, y, 0.1)
+        self.assertTrue(np.all(np.isinf(isl)), "ISL should be inf for infinite bounds")
+        self.assertFalse(np.any(np.isnan(isl)), "ISL should not be NaN for infinite bounds")
+
+    def test_infinite_crps_interval(self):
+        """CRPS should return inf (not NaN) for infinite bounds."""
+        y = np.array([1.0, 2.0, 3.0])
+        lower_inf = np.full(3, -np.inf)
+        upper_inf = np.full(3, np.inf)
+        crps_val = metrics.crps_interval(y, lower_inf, upper_inf)
+        self.assertTrue(np.isinf(crps_val), "CRPS should be inf for infinite bounds")
+        self.assertFalse(np.isnan(crps_val), "CRPS should not be NaN for infinite bounds")
+
+    def test_infinite_compute_auc(self):
+        """AUC should return inf (not NaN) for infinite bounds."""
+        y = np.array([1.0, 2.0, 3.0])
+        lower_inf = np.full(3, -np.inf)
+        upper_inf = np.full(3, np.inf)
+        auc_val, auc_info = metrics.compute_auc(y, lower_inf, upper_inf)
+        self.assertTrue(np.isinf(auc_val), "AUC should be inf for infinite bounds")
+        self.assertFalse(np.isnan(auc_val), "AUC should not be NaN for infinite bounds")
+
+    def test_infinite_compute_nciw(self):
+        """NCIW should return inf (not NaN) for infinite bounds."""
+        y = np.array([1.0, 2.0, 3.0])
+        lower_inf = np.full(3, -np.inf)
+        upper_inf = np.full(3, np.inf)
+        nciw_val, nciw_info = metrics.compute_nciw(y, lower_inf, upper_inf, alpha=0.1)
+        self.assertTrue(np.isinf(nciw_val), "NCIW should be inf for infinite bounds")
+        self.assertFalse(np.isnan(nciw_val), "NCIW should not be NaN for infinite bounds")
+
+    def test_infinite_evaluate_intervals_no_nan(self):
+        """evaluate_intervals should produce no NaN for any metric with infinite bounds."""
+        y = np.array([1.0, 2.0, 3.0])
+        lower_inf = np.full(3, -np.inf)
+        upper_inf = np.full(3, np.inf)
+        result = metrics.evaluate_intervals(y, lower_inf, upper_inf, alpha=0.05)
+        for key, val in result.items():
+            self.assertFalse(
+                np.isnan(val) if isinstance(val, float) else False,
+                f"{key} should not be NaN for infinite bounds, got {val}"
+            )
+
     def test_compute_auc_and_nciw(self):
         # These are more complex, testing for non-error and plausible output ranges
         auc_val, auc_info = metrics.compute_auc(self.y_true, self.lower_narrow, self.upper_narrow, f=self.f_median)

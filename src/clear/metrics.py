@@ -254,7 +254,12 @@ def crps_interval(y_true, lower, upper):
         if np.abs(b - a) < epsilon:
             crps_values[i] = np.abs(y - a)
             continue
-            
+
+        # Handle infinite interval case
+        if np.isinf(b - a):
+            crps_values[i] = np.inf
+            continue
+
         # Ensure interval width is always positive
         interval_width = max(b - a, epsilon)
         
@@ -304,11 +309,15 @@ def compute_auc(y_true, lower, upper, f=None):
     y_true = np.asarray(y_true).flatten()
     lower = np.asarray(lower).flatten()
     upper = np.asarray(upper).flatten()
-    
+
+    # Handle infinite interval case
+    if np.any(np.isinf(lower)) or np.any(np.isinf(upper)):
+        return np.inf, {"sorted_c": np.array([]), "PICPs": np.array([]), "NMPIWs": np.array([])}
+
     # Use provided median f if available; otherwise compute as symmetric midpoint.
     if f is None:
         f = (lower + upper) / 2.0
-    
+
     # Base deviations.
     l_base = f - lower
     u_base = upper - f
@@ -323,7 +332,7 @@ def compute_auc(y_true, lower, upper, f=None):
         else:
             c_val = 0
         c_candidates.append(c_val)
-    
+
     # Use sorted candidate values instead of a uniform grid.
     sorted_c = np.sort(c_candidates)
     n_points = len(sorted_c)
@@ -374,13 +383,17 @@ def compute_nciw(y_true, lower, upper, alpha=0.1, f=None):
     y_true = np.asarray(y_true).flatten()
     lower = np.asarray(lower).flatten()
     upper = np.asarray(upper).flatten()
-    
+
+    # Handle infinite interval case
+    if np.any(np.isinf(lower)) or np.any(np.isinf(upper)):
+        return np.inf, {"c_test_cal": 0.0, "sorted_c": np.array([]), "PICPs": np.array([])}
+
     if f is None:
         f = (lower + upper) / 2.0
-    
+
     l_base = f - lower
     u_base = upper - f
-    
+
     # Compute candidate scaling factors for each data point.
     c_candidates = []
     for i in range(len(y_true)):
