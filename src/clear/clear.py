@@ -1117,7 +1117,7 @@ if __name__ == "__main__":
     )
     
     # Evaluate results (basic example)
-    from metrics import picp, mpiw
+    from clear.metrics import picp, mpiw
     
     coverage_clear = picp(y_test, lower_pred_clear, upper_pred_clear)
     width_clear = mpiw(lower_pred_clear, upper_pred_clear)
