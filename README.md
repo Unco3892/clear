@@ -164,7 +164,7 @@ Below is a high-level overview of the important directories and files in this pr
 ├── models/                               # Stores pre-trained models and outputs from model training runs.
 ├── PCS_UQ/                               # Codebase and experiments for the PCS-UQ framework (referenced in paper).
 ├── UACQR/                                # Codebase and experiments for the UACQR method (referenced in paper).
-├── plots/                                # Directory for storing plots generated from experiment results.
+├── docs/figures/                          # Directory for storing plots generated from experiment results.
 │   ├── real/                             # Plots related to experiments on real-world datasets.
 │   └── simulations/                      # Plots related to experiments on simulated datasets.
 ├── results/                              # Stores raw and aggregated results from various experiments.
@@ -269,10 +269,10 @@ To reproduce the experiments from the paper:
         cd src/experiments
 
         # Standard CLEAR variant (c) vs UACQR (Table 1)
-        python benchmark_uacqr.py --data_dir ../../models/pcs_top1_pcs_10_standard --clear_results_dir ../../results/standard/PCS_all_10seeds_qrf --output_csv ../../results/uacqr_benchmark_results_standard.csv
+        python benchmark_uacqr.py --data_dir ../../models/pcs_top1_pcs_10_standard --clear_results_dir ../../results/standard/PCS_all_10seeds_qrf --output_csv ../../results/uacqr/uacqr_benchmark_results_standard.csv
 
         # Conformalized CLEAR variant (c) vs UACQR (Appendix tables)
-        python benchmark_uacqr.py --data_dir ../../models/pcs_top1_pcs_10_conformalized --clear_results_dir ../../results/conformalized/PCS_all_10seeds_qrf --output_csv ../../results/uacqr_benchmark_results_conformalized.csv
+        python benchmark_uacqr.py --data_dir ../../models/pcs_top1_pcs_10_conformalized --clear_results_dir ../../results/conformalized/PCS_all_10seeds_qrf --output_csv ../../results/uacqr/uacqr_benchmark_results_conformalized.csv
         ```
 
     *   To run the Deep Ensemble + SQR variant described in `benchmark_real_data_de_sqr.py`, use:
@@ -301,7 +301,7 @@ To reproduce the experiments from the paper:
     *   Consult the respective scripts for any command-line arguments or configurations you might want to adjust (e.g., specific datasets, model parameters, number of seeds). Most scripts support `argparse` to adjust parameters.
 
 4.  **Results:**
-    Raw results are saved to `results/` and plots to `plots/`
+    Raw results are saved to `results/` and plots to `docs/figures/`
 
 5.  **Case Study:**
 
