@@ -398,19 +398,23 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
                     # Calculate statistics if values were found
                     if values_for_metric:
                         max_runs = max(max_runs, len(values_for_metric))
-                        # Filter out potential non-numeric string placeholders like '-' before np.mean/std
-                        numeric_values = [v for v in values_for_metric if isinstance(v, (int, float)) and np.isfinite(v)]
+                        # Filter out non-numeric string placeholders like '-', but keep inf values
+                        numeric_values = [v for v in values_for_metric if isinstance(v, (int, float))]
                         if numeric_values:
+                            n_inf = sum(1 for v in numeric_values if isinstance(v, float) and np.isinf(v))
                             mean_val = float(np.mean(numeric_values))
-                            std_val = float(np.std(numeric_values))
+                            # std of inf values is undefined (inf-inf=nan), set to nan directly
+                            std_val = np.nan if n_inf > 0 else float(np.std(numeric_values))
                             data[dataset][method] = {
                                 'mean': mean_val,
                                 'std': std_val,
-                                'values': numeric_values # Store cleaned numeric values
+                                'values': numeric_values,
+                                'n_inf': n_inf,
+                                'n_total': len(numeric_values),
                             }
                         else:
                             # print(f"    No numeric values found for method {method}, metric {metric}, dataset {dataset} from {source_description}")
-                            data[dataset][method] = {'mean': np.nan, 'std': np.nan, 'values': []}
+                            data[dataset][method] = {'mean': np.nan, 'std': np.nan, 'values': [], 'n_inf': 0, 'n_total': 0}
                     else:
                         # This case means values_for_metric remained empty
                         # print(f"    No data rows found for method {method}, metric {metric}, dataset {dataset} from {source_description}")
@@ -449,16 +453,25 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
         if metric != "picp":
             caption += r"Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. "
     
+        # Check if any method/dataset has inf values for this metric
+        has_inf = any(
+            np.isinf(data[ds][m].get('mean', 0))
+            for ds in data for m in data[ds]
+        )
+        inf_note = " $+\\infty$ indicates diverged predictions; the superscript denotes the number of affected seeds out of the total." if has_inf else ""
+
         # Add bold/underline explanation only if the metric is not PICP
         if metric != "picp":
             if higher_is_better:
                 caption += "\\textbf{Bold} values (desirable) are the maximum for that dataset and metric"
                 caption += ", while the \\underline{underlined} values indicate the second-best result."
                 caption += " \\textcolor{red}{Red} values are more than 33\\% worse than the best result."
+                caption += inf_note
             else:
                 caption += "\\textbf{Bold} values (desirable) are the minimum for that dataset and metric"
                 caption += ", while the \\underline{underlined} values indicate the second-best result."
                 caption += " \\textcolor{red}{Red} values are more than 33\\% worse than the best result."
+                caption += inf_note
                 
         table_lines = [
             "\\begin{table}[!htbp]",
@@ -491,9 +504,9 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
                 for method_key in methods: # Use method_key consistently
                     if method_key in data[dataset] and 'mean' in data[dataset][method_key]: # Check if 'mean' exists
                         mean_val_current = data[dataset][method_key]['mean'] # Use a different var name
-                        if not np.isnan(mean_val_current): # Ensure value is not NaN
+                        if np.isfinite(mean_val_current): # Ensure value is not NaN or inf
                            values_methods.append((mean_val_current, method_key))
-                
+
                 # Sort by value (descending for higher_is_better)
                 values_methods.sort(key=lambda x: x[0], reverse=True) # Sort by value
                 
@@ -512,9 +525,9 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
                         # but allow non-positive for finding the best if that's what data contains.
                         # The original `if mean_val > 0:` might be too restrictive if all values are negative or zero.
                         # Let's keep it for now, but note if it causes issues. Original: if mean_val_current > 0 and not np.isnan(mean_val_current):
-                        if not np.isnan(mean_val_current): 
+                        if np.isfinite(mean_val_current):
                             values_methods.append((mean_val_current, method_key))
-                
+
                 # Sort by value (ascending for lower_is_better)
                 values_methods.sort(key=lambda x: x[0]) # Sort by value
                 
@@ -528,7 +541,20 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
                 if method in data[dataset]:
                     mean_val = data[dataset][method]['mean']
                     std_val = data[dataset][method]['std']
-                    
+
+                    # Handle non-finite mean values
+                    if not np.isfinite(mean_val):
+                        if np.isinf(mean_val):
+                            n_inf = data[dataset][method].get('n_inf', 0)
+                            n_total = data[dataset][method].get('n_total', 0)
+                            if n_inf > 0 and n_total > 0:
+                                row.append(f"$+\\infty$\\textsuperscript{{{n_inf}/{n_total}}}")
+                            else:
+                                row.append("$+\\infty$")
+                        else:
+                            row.append("-")
+                        continue
+
                     # For PICP, never use scientific notation
                     if metric == "picp":
                         use_scientific = False
@@ -563,7 +589,7 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
                             cell_content = f"\\underline{{{cell_content}}}"
                         # Add red color for values > 33% worse than best, if not best or second best
                         # and ensure best_val and mean_val are not NaN
-                        elif not np.isnan(best_val) and not np.isnan(mean_val):
+                        elif np.isfinite(best_val) and np.isfinite(mean_val):
                             if higher_is_better: # Higher is better, so "worse" means significantly lower
                                 # Avoid division by zero if best_val is 0
                                 if best_val != 0 and mean_val < best_val * 0.77:
@@ -635,7 +661,7 @@ def combine_gamma_lambda_tables(input_dir, output_dir, coverage=90, source_csv_d
     
     # Determine which method to use for lambda and gamma values
     # When method_set is 'final', we are interested in the parameters of what's displayed as 'CLEAR'
-    # which is internally 'clear_residual'.
+    # which is internally 'clear'.
     if method_set == 'final':
         method_for_params = 'clear'
     elif method_set == 'residual':
@@ -1022,7 +1048,7 @@ def generate_uncertainty_metrics_table(datasets, output_dir, coverage=90, source
         models = [
             ('clear', 'CLEAR')
         ]
-        print(f"DEBUG: Uncertainty Table - Variant Mode (Variant: {current_variant_label}), showing only CLEAR (clear_residual).")
+        print(f"DEBUG: Uncertainty Table - Variant Mode (Variant: {current_variant_label}), showing only CLEAR (clear).")
     else:
         # Standard mode: Show multiple CLEAR versions
         models = [
@@ -1522,4 +1548,4 @@ if __name__ == "__main__":
 ## To get the all table of the results at once
 # python combine_real_benchmark_results.py --method_set final --coverage 95 --process_variants
 # To get the variant c table with UACQR-S and UACQR-P
-# python combine_real_benchmark_results.py --process_variants --coverage 95 --uacqr_agg_csv ../../results/uacqr_benchmark_results.csv
+# python combine_real_benchmark_results.py --process_variants --coverage 95 --uacqr_agg_csv ../../results/uacqr/uacqr_benchmark_results_standard.csv

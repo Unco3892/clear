@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Variant (a) Quantile Loss at 95\% prediction intervals, aggregated across 10 seeds.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result.}
+\label{tab:combined_quantileloss_95_final_standard_variant_a}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+Dataset & CLEAR & ALEATORIC & ALEATORIC-R & PCS-EPISTEMIC & Naive & $\gamma_1=1$ & $\lambda=1$ \\
+\midrule
+ailerons & 9.2e-06 $\pm$ 2.3e-07 & 1.0e-05 $\pm$ 2.8e-07 & 9.7e-06 $\pm$ 2.8e-07 & 1.0e-05 $\pm$ 2.2e-07 & 1.1e-05 $\pm$ 3.7e-07 & \underline{9.2e-06 $\pm$ 2.3e-07} & \textbf{9.2e-06 $\pm$ 2.3e-07} \\
+airfoil & \textbf{0.109 $\pm$ 0.011} & \textcolor{red}{0.183 $\pm$ 0.013} & 0.123 $\pm$ 0.016 & 0.117 $\pm$ 0.012 & \textcolor{red}{0.147 $\pm$ 0.019} & \underline{0.109 $\pm$ 0.011} & 0.109 $\pm$ 0.011 \\
+allstate & \textbf{1.1e+02 $\pm$ 7.835} & 1.3e+02 $\pm$ 8.197 & 1.3e+02 $\pm$ 7.925 & 1.2e+02 $\pm$ 7.770 & \textcolor{red}{1.7e+02 $\pm$ 13.696} & 1.1e+02 $\pm$ 7.563 & \underline{1.1e+02 $\pm$ 7.631} \\
+ca\textunderscore housing & \textbf{2.8e+03 $\pm$ 59.700} & \textcolor{red}{4.8e+03 $\pm$ 25.753} & 3.0e+03 $\pm$ 73.283 & 3.2e+03 $\pm$ 93.396 & \textcolor{red}{4.0e+03 $\pm$ 1.2e+02} & \underline{2.8e+03 $\pm$ 66.414} & 2.8e+03 $\pm$ 70.545 \\
+computer & \underline{0.147 $\pm$ 0.022} & 0.150 $\pm$ 0.012 & 0.160 $\pm$ 0.029 & \textcolor{red}{22.643 $\pm$ 14.662} & 0.192 $\pm$ 0.010 & \textbf{0.146 $\pm$ 0.020} & 0.147 $\pm$ 0.023 \\
+concrete & 0.338 $\pm$ 0.040 & \textcolor{red}{0.546 $\pm$ 0.061} & 0.359 $\pm$ 0.053 & \textbf{0.327 $\pm$ 0.036} & 0.376 $\pm$ 0.058 & \underline{0.330 $\pm$ 0.037} & 0.331 $\pm$ 0.037 \\
+elevator & 1.5e-04 $\pm$ 2.0e-06 & \textbf{1.4e-04 $\pm$ 2.9e-06} & \underline{1.5e-04 $\pm$ 2.4e-06} & 1.7e-04 $\pm$ 5.6e-06 & 1.6e-04 $\pm$ 5.1e-06 & 1.5e-04 $\pm$ 2.4e-06 & 1.5e-04 $\pm$ 2.0e-06 \\
+energy\textunderscore efficiency & \textbf{0.031 $\pm$ 0.004} & \textcolor{red}{0.102 $\pm$ 0.008} & 0.033 $\pm$ 0.005 & 0.038 $\pm$ 0.003 & 0.041 $\pm$ 0.005 & \underline{0.033 $\pm$ 0.003} & 0.034 $\pm$ 0.003 \\
+insurance & \textbf{3.5e+02 $\pm$ 61.616} & 3.6e+02 $\pm$ 39.928 & 3.6e+02 $\pm$ 54.512 & \textcolor{red}{5.8e+02 $\pm$ 1.0e+02} & 4.4e+02 $\pm$ 38.440 & 3.6e+02 $\pm$ 68.243 & \underline{3.5e+02 $\pm$ 62.851} \\
+kin8nm & 7.2e-03 $\pm$ 1.7e-04 & 9.5e-03 $\pm$ 1.6e-04 & 7.7e-03 $\pm$ 2.7e-04 & 7.6e-03 $\pm$ 9.7e-05 & 8.3e-03 $\pm$ 2.5e-04 & \underline{7.2e-03 $\pm$ 1.6e-04} & \textbf{7.2e-03 $\pm$ 1.7e-04} \\
+miami\textunderscore housing & 3.9e+03 $\pm$ 1.9e+02 & 5.1e+03 $\pm$ 3.1e+02 & \textcolor{red}{5.2e+03 $\pm$ 3.4e+02} & 4.2e+03 $\pm$ 1.6e+02 & \textcolor{red}{8.1e+03 $\pm$ 3.6e+02} & \textbf{3.9e+03 $\pm$ 1.9e+02} & \underline{3.9e+03 $\pm$ 1.8e+02} \\
+naval\textunderscore propulsion & \underline{1.5e-05 $\pm$ 2.1e-07} & 1.5e-05 $\pm$ 2.6e-07 & 1.5e-05 $\pm$ 2.6e-07 & 1.7e-05 $\pm$ 2.7e-07 & 1.6e-05 $\pm$ 3.5e-07 & 1.5e-05 $\pm$ 2.1e-07 & \textbf{1.5e-05 $\pm$ 2.3e-07} \\
+parkinsons & \textbf{0.178 $\pm$ 0.010} & 0.202 $\pm$ 0.007 & 0.215 $\pm$ 0.012 & 0.224 $\pm$ 0.012 & \textcolor{red}{0.251 $\pm$ 0.014} & 0.185 $\pm$ 0.011 & \underline{0.178 $\pm$ 0.010} \\
+powerplant & \textbf{0.212 $\pm$ 0.012} & 0.228 $\pm$ 0.011 & 0.220 $\pm$ 0.011 & 0.221 $\pm$ 0.012 & 0.231 $\pm$ 0.010 & 0.213 $\pm$ 0.012 & \underline{0.213 $\pm$ 0.012} \\
+qsar & \underline{0.049 $\pm$ 0.003} & 0.060 $\pm$ 0.003 & 0.052 $\pm$ 0.003 & 0.053 $\pm$ 0.003 & 0.057 $\pm$ 0.003 & \textbf{0.049 $\pm$ 0.003} & 0.049 $\pm$ 0.003 \\
+sulfur & 2.0e-03 $\pm$ 1.4e-04 & 2.1e-03 $\pm$ 1.3e-04 & 2.3e-03 $\pm$ 1.1e-04 & 2.3e-03 $\pm$ 1.9e-04 & \textcolor{red}{3.5e-03 $\pm$ 2.0e-04} & \underline{2.0e-03 $\pm$ 1.4e-04} & \textbf{2.0e-03 $\pm$ 1.4e-04} \\
+superconductor & \underline{0.490 $\pm$ 0.018} & 0.511 $\pm$ 0.014 & 0.538 $\pm$ 0.023 & 0.608 $\pm$ 0.023 & \textcolor{red}{0.861 $\pm$ 0.036} & \textbf{0.490 $\pm$ 0.018} & 0.491 $\pm$ 0.018 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -211,16 +211,27 @@ def load_uacqr_data_for_metric(uacqr_csv, metric, methods, coverage=95):
                     data[dataset][method] = {'values': []}
                 data[dataset][method]['values'].append(float(val))
 
-    # Compute mean/std
+    # Compute mean/std (inf values propagate to mean, displayed as +infty)
     for dataset in data:
         for method in list(data[dataset].keys()):
             vals = data[dataset][method]['values']
             if vals:
-                data[dataset][method]['mean'] = float(np.mean(vals))
-                data[dataset][method]['std'] = float(np.std(vals))
+                n_inf = sum(1 for v in vals if np.isinf(v))
+                mean_val = float(np.mean(vals))
+                # std of inf values is undefined (inf-inf=nan), set to nan directly
+                if n_inf > 0:
+                    std_val = np.nan
+                else:
+                    std_val = float(np.std(vals))
+                data[dataset][method]['mean'] = mean_val
+                data[dataset][method]['std'] = std_val
+                data[dataset][method]['n_inf'] = n_inf
+                data[dataset][method]['n_total'] = len(vals)
             else:
                 data[dataset][method]['mean'] = np.nan
                 data[dataset][method]['std'] = np.nan
+                data[dataset][method]['n_inf'] = 0
+                data[dataset][method]['n_total'] = 0
 
     return data
 
@@ -330,6 +341,12 @@ def _generate_conformalized_metric_table(
             vals = combined_data[dataset][method_display].get('values', [])
             max_runs = max(max_runs, len(vals))
 
+    # Check if any method/dataset has inf values for this metric
+    has_inf = any(
+        np.isinf(combined_data[ds][m].get('mean', 0))
+        for ds in combined_data for m in combined_data[ds]
+    )
+
     caption = (
         f"Conformalized Variant ({variant_label}) {formatted_metric} at "
         f"{COVERAGE}\\% prediction intervals, aggregated across {max_runs} seeds. "
@@ -343,13 +360,17 @@ def _generate_conformalized_metric_table(
             "Values $\\geq 100$ or $< 0.01$ are presented in scientific notation "
             "with 1 decimal place. "
         )
+        inf_note = (
+            " $+\\infty$ indicates diverged predictions; the superscript "
+            "denotes the number of affected seeds out of the total."
+        ) if has_inf else ""
         if higher_is_better:
             caption += (
                 "\\textbf{Bold} values (desirable) are the maximum for that "
                 "dataset and metric, while the \\underline{underlined} values "
                 "indicate the second-best result. "
                 "\\textcolor{red}{Red} values are more than 33\\% worse than "
-                "the best result."
+                "the best result." + inf_note
             )
         else:
             caption += (
@@ -357,7 +378,7 @@ def _generate_conformalized_metric_table(
                 "dataset and metric, while the \\underline{underlined} values "
                 "indicate the second-best result. "
                 "\\textcolor{red}{Red} values are more than 33\\% worse than "
-                "the best result."
+                "the best result." + inf_note
             )
 
     method_display_names = [m[1] for m in method_info]
@@ -397,7 +418,15 @@ def _generate_conformalized_metric_table(
                 std_val = combined_data[dataset][display_name]['std']
 
                 if not np.isfinite(mean_val):
-                    row.append("-")
+                    if np.isinf(mean_val):
+                        n_inf = combined_data[dataset][display_name].get('n_inf', 0)
+                        n_total = combined_data[dataset][display_name].get('n_total', 0)
+                        if n_inf > 0 and n_total > 0:
+                            row.append(f"$+\\infty$\\textsuperscript{{{n_inf}/{n_total}}}")
+                        else:
+                            row.append("$+\\infty$")
+                    else:
+                        row.append("-")
                     continue
 
                 if metric == "picp":
@@ -607,7 +636,7 @@ def generate_conformalized_tables():
     print("=== Generating Conformalized PCS/CQR Tables ===")
     print("=" * 60)
 
-    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr_benchmark_results.csv')
+    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr', 'uacqr_benchmark_results_conformalized.csv')
     has_uacqr = os.path.exists(uacqr_csv)
 
     for i, (folder, label) in enumerate(zip(VARIANT_FOLDERS, VARIANT_LABELS)):
@@ -770,7 +799,7 @@ def generate_dataset_stats_table():
 def generate_uacqr_improvement_table(setting="standard"):
     """
     Generate a table showing CLEAR variant (c) percentage improvement over
-    UACQR-S and UACQR-P for NCIW, QuantileLoss, and IntervalScoreLoss.
+    UACQR-S and UACQR-P for Average Width (MPIW) and AISL (IntervalScoreLoss).
 
     Args:
         setting: "standard" or "conformalized". Controls which CLEAR data
@@ -782,9 +811,9 @@ def generate_uacqr_improvement_table(setting="standard"):
     print(f"=== Generating CLEAR vs UACQR Improvement Table ({setting}) ===")
     print("=" * 60)
 
-    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr_benchmark_results.csv')
+    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr', f'uacqr_benchmark_results_{setting}.csv')
     if not os.path.exists(uacqr_csv):
-        print("  UACQR results CSV not found, skipping.")
+        print(f"  UACQR results CSV not found ({uacqr_csv}), skipping.")
         return
 
     uacqr_df = pd.read_csv(uacqr_csv)
@@ -797,8 +826,9 @@ def generate_uacqr_improvement_table(setting="standard"):
     baselines = ['UACQR-S', 'UACQR-P']
     metrics = [
         ('NCIW', 'NCIW', 'nciw'),
-        ('QuantileLoss', 'QuantileLoss', 'quantileloss'),
-        ('IntervalScoreLoss', 'ScoreLoss', 'intervalscoreloss'),
+        ('IntervalScoreLoss', 'AISL', 'intervalscoreloss'),
+        ('MPIW', 'Width', 'mpiw'),
+        ('PICP', 'Coverage', 'picp'),
     ]
 
     datasets = sorted(uacqr_df[uacqr_df['Method'] == 'clear']['Dataset'].unique())
@@ -844,17 +874,41 @@ def generate_uacqr_improvement_table(setting="standard"):
                 else:
                     pct = np.nan
 
+                # Track inf seeds for annotation
+                bl_vals = bl[uacqr_col].dropna().values
+                n_inf = sum(1 for v in bl_vals if np.isinf(v))
+                n_total = len(bl_vals)
+
                 table_data[dataset][(baseline, display_name)] = pct
+                table_data[dataset][(baseline, display_name, 'n_inf')] = n_inf
+                table_data[dataset][(baseline, display_name, 'n_total')] = n_total
 
     # Build LaTeX table
     setting_label = "standard" if setting == "standard" else "conformalized"
     clear_label = "CLEAR" if setting == "standard" else "CLEAR-c"
+
+    # Check if any entry has inf values
+    has_inf = any(
+        table_data[ds].get((bl, dn, 'n_inf'), 0) > 0
+        for ds in table_data for bl in baselines for _, dn, _ in metrics
+    )
 
     caption = (
         f"Improvement (\\%) of {setting_label} {clear_label} variant (c) over UACQR-S "
         f"and UACQR-P at {COVERAGE}\\% coverage across {len(datasets)} datasets. "
         f"\\textbf{{Bold values with +}} indicate {clear_label} outperforms the baseline."
     )
+    if has_inf and setting == "conformalized":
+        caption += (
+            f" $+\\infty$ indicates diverged baseline predictions; the superscript "
+            f"denotes the number of affected seeds out of the total."
+    )
+
+    metric_headers = " & ".join(d for _, d, _ in metrics)
+    n_metrics = len(metrics)
+    col_s_end = 1 + n_metrics
+    col_p_start = col_s_end + 1
+    col_p_end = col_p_start + n_metrics - 1
 
     table_lines = [
         "\\begin{table}[!htbp]",
@@ -862,11 +916,11 @@ def generate_uacqr_improvement_table(setting="standard"):
         f"\\caption{{{caption}}}",
         f"\\label{{tab:clear_vs_uacqr_detailed_{setting_label}}}",
         "\\resizebox{\\textwidth}{!}{%",
-        "\\begin{tabular}{lcccccc}",
+        f"\\begin{{tabular}}{{l{'c' * (n_metrics * len(baselines))}}}",
         "\\toprule",
-        "Dataset & \\multicolumn{3}{c}{UACQR-S} & \\multicolumn{3}{c}{UACQR-P} \\\\",
-        "\\cmidrule(lr){2-4} \\cmidrule(lr){5-7}",
-        " & NCIW & QuantileLoss & ScoreLoss & NCIW & QuantileLoss & ScoreLoss \\\\",
+        f"Dataset & \\multicolumn{{{n_metrics}}}{{c}}{{UACQR-S}} & \\multicolumn{{{n_metrics}}}{{c}}{{UACQR-P}} \\\\",
+        f"\\cmidrule(lr){{2-{col_s_end}}} \\cmidrule(lr){{{col_p_start}-{col_p_end}}}",
+        f" & {metric_headers} & {metric_headers} \\\\",
         "\\midrule",
     ]
 
@@ -878,7 +932,15 @@ def generate_uacqr_improvement_table(setting="standard"):
             for _, display_name, _ in metrics:
                 pct = table_data[dataset].get((baseline, display_name), np.nan)
                 if not np.isfinite(pct):
-                    cells.append("--")
+                    if setting == "conformalized":
+                        n_inf = table_data[dataset].get((baseline, display_name, 'n_inf'), 0)
+                        n_total = table_data[dataset].get((baseline, display_name, 'n_total'), 0)
+                        if n_inf > 0 and n_total > 0:
+                            cells.append(f"$+\\infty$\\textsuperscript{{{n_inf}/{n_total}}}")
+                        else:
+                            cells.append("$+\\infty$")
+                    else:
+                        cells.append("$+\\infty$")
                 else:
                     if pct > 0:
                         cells.append(f"\\textbf{{+{pct:.1f}\\%}}")
@@ -926,8 +988,7 @@ def generate_plots():
     2. plot_simulation_results.py      - Simulation distance metric plots
     3. generate_uacqr_csv_plots.py     - UACQR comparison plots
 
-    Output goes to plots/ (matching the scripts' defaults), then is copied
-    to docs/figures/ mirroring the paper/overleaf/figures/ structure.
+    All scripts write directly to docs/figures/ (no intermediate plots/ directory).
     """
     print("\n" + "=" * 60)
     print("=== Generating Plots ===")
@@ -935,7 +996,17 @@ def generate_plots():
 
     status = 0
 
-    # 1. Real benchmark plots (standard) — default args
+    real_output_dir = os.path.join(FIGURES_OUTPUT, 'pcs_cqr', 'standard', 'real')
+    sim_output_dir = os.path.join(FIGURES_OUTPUT, 'pcs_cqr', 'standard', 'simulations')
+
+    # Clean up stale individual metric plots (only combined plots are generated)
+    if os.path.isdir(real_output_dir):
+        for stale in glob.glob(os.path.join(real_output_dir, '*_benchmark_plot_nciw.*')) + \
+                      glob.glob(os.path.join(real_output_dir, '*_benchmark_plot_quantile_loss.*')):
+            os.remove(stale)
+            print(f"  Removed stale individual plot: {os.path.basename(stale)}")
+
+    # 1. Real benchmark plots (standard) — default args write to docs/figures/
     print("\n--- Real benchmark plots (standard) ---")
     rc = _run_script("plot_real_benchmark_results.py")
     status |= rc
@@ -945,27 +1016,28 @@ def generate_plots():
     rc = _run_script("plot_real_benchmark_results.py", ["--compare_clear_variants"])
     status |= rc
 
-    # 2. Simulation plots
+    # 2. Simulation plots — default args read/write docs/figures/
     print("\n--- Simulation plots ---")
     rc = _run_script("plot_simulation_results.py")
     status |= rc
 
-    # 3. UACQR plots
+    # 3. UACQR plots (using standard results)
     print("\n--- UACQR plots ---")
-    uacqr_csv = os.path.join(RESULTS_DIR, "uacqr_benchmark_results.csv")
+    uacqr_csv = os.path.join(RESULTS_DIR, 'uacqr', "uacqr_benchmark_results_standard.csv")
+    uacqr_plot_dir = os.path.join(FIGURES_OUTPUT, 'uacqr')
+    uacqr_summary_dir = os.path.join(RESULTS_DIR, 'uacqr')
     rc = _run_script("generate_uacqr_csv_plots.py", [
         "--csv_path", uacqr_csv,
-        "--output_format", "both",
+        "--output_dir", uacqr_plot_dir,
+        "--summary_output_dir", uacqr_summary_dir,
+        "--output_format", "pdf",
     ])
     status |= rc
-
-    # Copy generated plots to docs/figures/ mirroring paper structure
-    _copy_plots_to_docs_figures()
 
     if status == 0:
         print("\n" + "=" * 60)
         print("All plots generated successfully!")
-        print(f"Output: plots/  and  {FIGURES_OUTPUT}")
+        print(f"Output: {FIGURES_OUTPUT}")
         print("=" * 60)
     else:
         print("\n" + "=" * 60)
@@ -973,39 +1045,6 @@ def generate_plots():
         print("=" * 60)
 
     return status
-
-
-def _copy_plots_to_docs_figures():
-    """Copy generated plots to docs/figures/ mirroring paper structure."""
-    print("\n--- Copying plots to docs/figures/ ---")
-
-    plots_dir = os.path.join(BASE_DIR, 'plots')
-    os.makedirs(FIGURES_OUTPUT, exist_ok=True)
-
-    # Real benchmark plots → docs/figures/pcs_cqr/standard/real/
-    real_src = os.path.join(plots_dir, 'real')
-    real_dst = os.path.join(FIGURES_OUTPUT, 'pcs_cqr', 'standard', 'real')
-    if os.path.isdir(real_src):
-        os.makedirs(real_dst, exist_ok=True)
-        for f in os.listdir(real_src):
-            shutil.copy2(os.path.join(real_src, f), os.path.join(real_dst, f))
-        print(f"  Copied real plots to {real_dst}")
-
-    # Simulation plots → docs/figures/pcs_cqr/standard/simulations/
-    sim_src = os.path.join(plots_dir, 'simulations')
-    sim_dst = os.path.join(FIGURES_OUTPUT, 'pcs_cqr', 'standard', 'simulations')
-    if os.path.isdir(sim_src):
-        shutil.copytree(sim_src, sim_dst, dirs_exist_ok=True)
-        print(f"  Copied simulation plots to {sim_dst}")
-
-    # UACQR plots → docs/figures/uacqr/
-    uacqr_src = os.path.join(BASE_DIR, 'plots_and_tables', 'uacqr_summary')
-    uacqr_dst = os.path.join(FIGURES_OUTPUT, 'uacqr')
-    if os.path.isdir(uacqr_src):
-        os.makedirs(uacqr_dst, exist_ok=True)
-        for f in os.listdir(uacqr_src):
-            shutil.copy2(os.path.join(uacqr_src, f), os.path.join(uacqr_dst, f))
-        print(f"  Copied UACQR plots to {uacqr_dst}")
 
 
 # ── main ───────────────────────────────────────────────────────────────────────

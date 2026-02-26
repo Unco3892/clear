@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Variant (a) MPIW at 95\% prediction intervals, aggregated across 10 seeds.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result.}
+\label{tab:combined_mpiw_95_final_standard_variant_a}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+Dataset & CLEAR & ALEATORIC & ALEATORIC-R & PCS-EPISTEMIC & Naive & $\gamma_1=1$ & $\lambda=1$ \\
+\midrule
+ailerons & 5.8e-04 $\pm$ 9.3e-06 & 6.2e-04 $\pm$ 8.7e-06 & 5.8e-04 $\pm$ 1.1e-05 & 6.4e-04 $\pm$ 1.3e-05 & 6.6e-04 $\pm$ 2.2e-05 & \underline{5.8e-04 $\pm$ 9.4e-06} & \textbf{5.8e-04 $\pm$ 9.1e-06} \\
+airfoil & 7.101 $\pm$ 0.481 & \textcolor{red}{12.540 $\pm$ 0.481} & 7.380 $\pm$ 0.683 & 7.357 $\pm$ 0.425 & 8.417 $\pm$ 0.955 & \textbf{7.023 $\pm$ 0.459} & \underline{7.037 $\pm$ 0.458} \\
+allstate & 6.4e+03 $\pm$ 3.8e+02 & 6.6e+03 $\pm$ 2.7e+02 & 6.4e+03 $\pm$ 3.0e+02 & 6.4e+03 $\pm$ 4.1e+02 & 8.0e+03 $\pm$ 2.9e+02 & \textbf{6.1e+03 $\pm$ 3.0e+02} & \underline{6.1e+03 $\pm$ 2.8e+02} \\
+ca\textunderscore housing & 1.6e+05 $\pm$ 4.5e+03 & \textcolor{red}{3.7e+05 $\pm$ 1.2e+03} & 1.7e+05 $\pm$ 3.9e+03 & 1.7e+05 $\pm$ 5.8e+03 & 2.1e+05 $\pm$ 1.0e+04 & \underline{1.6e+05 $\pm$ 3.5e+03} & \textbf{1.6e+05 $\pm$ 4.1e+03} \\
+computer & \underline{9.020 $\pm$ 0.752} & 9.805 $\pm$ 0.121 & 9.049 $\pm$ 0.996 & \textcolor{red}{1.8e+03 $\pm$ 1.2e+03} & 11.382 $\pm$ 0.706 & \textbf{8.990 $\pm$ 0.984} & 9.047 $\pm$ 0.706 \\
+concrete & \textbf{18.917 $\pm$ 1.985} & \textcolor{red}{36.875 $\pm$ 2.073} & 20.130 $\pm$ 2.301 & \underline{18.918 $\pm$ 1.299} & 19.975 $\pm$ 2.229 & 19.049 $\pm$ 1.797 & 19.163 $\pm$ 1.907 \\
+elevator & 9.6e-03 $\pm$ 1.5e-04 & \underline{8.9e-03 $\pm$ 1.4e-04} & 9.3e-03 $\pm$ 1.0e-04 & 0.011 $\pm$ 0.000 & \textbf{8.9e-03 $\pm$ 1.9e-04} & 9.7e-03 $\pm$ 1.7e-04 & 9.9e-03 $\pm$ 1.1e-04 \\
+energy\textunderscore efficiency & \textbf{1.713 $\pm$ 0.193} & \textcolor{red}{7.732 $\pm$ 0.565} & \underline{1.833 $\pm$ 0.259} & 2.249 $\pm$ 0.231 & 2.265 $\pm$ 0.469 & 1.874 $\pm$ 0.165 & 1.926 $\pm$ 0.160 \\
+insurance & \underline{1.8e+04 $\pm$ 1.6e+03} & 1.9e+04 $\pm$ 2.9e+03 & 1.9e+04 $\pm$ 3.1e+03 & \textcolor{red}{3.3e+04 $\pm$ 1.0e+04} & \textcolor{red}{2.7e+04 $\pm$ 4.7e+03} & 1.9e+04 $\pm$ 4.0e+03 & \textbf{1.7e+04 $\pm$ 2.4e+03} \\
+kin8nm & 0.496 $\pm$ 0.007 & \textcolor{red}{0.676 $\pm$ 0.013} & 0.516 $\pm$ 0.010 & 0.515 $\pm$ 0.007 & 0.548 $\pm$ 0.015 & \textbf{0.496 $\pm$ 0.006} & \underline{0.496 $\pm$ 0.006} \\
+miami\textunderscore housing & \underline{2.2e+05 $\pm$ 4.9e+03} & 2.7e+05 $\pm$ 2.1e+03 & 2.2e+05 $\pm$ 8.8e+03 & 2.5e+05 $\pm$ 6.8e+03 & \textcolor{red}{3.2e+05 $\pm$ 1.6e+04} & \textbf{2.2e+05 $\pm$ 4.2e+03} & 2.2e+05 $\pm$ 4.8e+03 \\
+naval\textunderscore propulsion & 1.1e-03 $\pm$ 1.0e-05 & 1.1e-03 $\pm$ 1.1e-05 & \underline{1.1e-03 $\pm$ 1.1e-05} & 1.3e-03 $\pm$ 2.3e-05 & \textbf{1.1e-03 $\pm$ 1.2e-05} & 1.1e-03 $\pm$ 9.4e-06 & 1.1e-03 $\pm$ 9.3e-06 \\
+parkinsons & \underline{10.917 $\pm$ 0.486} & \textcolor{red}{15.391 $\pm$ 0.618} & 11.939 $\pm$ 0.654 & \textcolor{red}{14.996 $\pm$ 1.028} & \textcolor{red}{14.537 $\pm$ 1.054} & 10.949 $\pm$ 0.360 & \textbf{10.799 $\pm$ 0.402} \\
+powerplant & \textbf{12.232 $\pm$ 0.274} & 14.097 $\pm$ 0.258 & 12.959 $\pm$ 0.354 & 12.799 $\pm$ 0.448 & 13.169 $\pm$ 0.170 & 12.447 $\pm$ 0.272 & \underline{12.383 $\pm$ 0.291} \\
+qsar & 3.094 $\pm$ 0.095 & \textcolor{red}{4.156 $\pm$ 0.096} & 3.298 $\pm$ 0.073 & 3.302 $\pm$ 0.106 & 3.581 $\pm$ 0.071 & \underline{3.084 $\pm$ 0.098} & \textbf{3.084 $\pm$ 0.107} \\
+sulfur & 0.099 $\pm$ 0.004 & 0.102 $\pm$ 0.003 & \textbf{0.098 $\pm$ 0.004} & 0.119 $\pm$ 0.009 & 0.111 $\pm$ 0.007 & \underline{0.098 $\pm$ 0.005} & 0.098 $\pm$ 0.005 \\
+superconductor & 28.172 $\pm$ 0.513 & 33.637 $\pm$ 0.364 & 28.274 $\pm$ 0.879 & 35.692 $\pm$ 1.013 & \textcolor{red}{47.360 $\pm$ 1.229} & \underline{28.014 $\pm$ 0.542} & \textbf{27.945 $\pm$ 0.448} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

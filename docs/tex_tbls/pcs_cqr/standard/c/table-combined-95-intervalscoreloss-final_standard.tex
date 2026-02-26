@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Variant (c) Interval Score Loss at 95\% prediction intervals, aggregated across 10 seeds.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result.}
+\label{tab:combined_intervalscoreloss_95_final_standard_variant_c}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+Dataset & CLEAR & ALEATORIC & ALEATORIC-R & PCS-EPISTEMIC & Naive & $\gamma_1=1$ & $\lambda=1$ \\
+\midrule
+ailerons & \textbf{7.7e-04 $\pm$ 2.3e-05} & 8.2e-04 $\pm$ 2.2e-05 & 7.9e-04 $\pm$ 2.9e-05 & 8.5e-04 $\pm$ 2.2e-05 & 9.4e-04 $\pm$ 3.0e-05 & \underline{7.7e-04 $\pm$ 2.3e-05} & 7.7e-04 $\pm$ 2.3e-05 \\
+airfoil & \textbf{8.569 $\pm$ 1.099} & 11.217 $\pm$ 0.549 & 10.341 $\pm$ 1.548 & 8.799 $\pm$ 1.034 & 10.361 $\pm$ 1.499 & 8.675 $\pm$ 1.116 & \underline{8.624 $\pm$ 1.105} \\
+allstate & \textbf{9.2e+03 $\pm$ 5.5e+02} & 9.6e+03 $\pm$ 4.0e+02 & 1.0e+04 $\pm$ 1.6e+03 & 1.1e+04 $\pm$ 7.8e+02 & \textcolor{red}{1.3e+04 $\pm$ 8.5e+02} & \underline{9.2e+03 $\pm$ 5.9e+02} & 9.3e+03 $\pm$ 5.9e+02 \\
+ca\textunderscore housing & \textbf{2.2e+05 $\pm$ 7.4e+03} & 2.5e+05 $\pm$ 5.7e+03 & 2.5e+05 $\pm$ 8.1e+03 & 2.3e+05 $\pm$ 7.0e+03 & 2.9e+05 $\pm$ 9.7e+03 & \underline{2.2e+05 $\pm$ 7.1e+03} & 2.2e+05 $\pm$ 7.0e+03 \\
+computer & \textbf{10.978 $\pm$ 0.911} & 12.134 $\pm$ 1.001 & 12.827 $\pm$ 0.945 & 11.204 $\pm$ 0.996 & 13.130 $\pm$ 1.051 & \underline{10.986 $\pm$ 0.873} & 11.030 $\pm$ 0.866 \\
+concrete & 26.928 $\pm$ 2.529 & 29.955 $\pm$ 3.544 & 30.449 $\pm$ 4.693 & \textbf{26.855 $\pm$ 2.535} & 30.720 $\pm$ 4.505 & \underline{26.882 $\pm$ 2.568} & 26.962 $\pm$ 2.581 \\
+elevator & 0.010 $\pm$ 0.000 & 0.014 $\pm$ 0.000 & 0.012 $\pm$ 0.000 & 0.011 $\pm$ 0.000 & 0.013 $\pm$ 0.000 & \underline{0.010 $\pm$ 0.000} & \textbf{0.010 $\pm$ 0.000} \\
+energy\textunderscore efficiency & \textbf{2.348 $\pm$ 0.554} & \textcolor{red}{5.407 $\pm$ 0.418} & 2.759 $\pm$ 0.822 & 2.397 $\pm$ 0.573 & 2.756 $\pm$ 0.822 & \underline{2.392 $\pm$ 0.564} & 2.395 $\pm$ 0.588 \\
+insurance & 3.4e+04 $\pm$ 6.4e+03 & \textbf{3.1e+04 $\pm$ 2.7e+03} & \underline{3.2e+04 $\pm$ 4.3e+03} & 3.5e+04 $\pm$ 5.2e+03 & 3.3e+04 $\pm$ 3.3e+03 & 3.4e+04 $\pm$ 6.2e+03 & 3.6e+04 $\pm$ 5.4e+03 \\
+kin8nm & \textbf{0.534 $\pm$ 0.014} & 0.673 $\pm$ 0.021 & 0.544 $\pm$ 0.015 & 0.552 $\pm$ 0.017 & 0.591 $\pm$ 0.022 & 0.536 $\pm$ 0.013 & \underline{0.535 $\pm$ 0.013} \\
+miami\textunderscore housing & \textbf{2.9e+05 $\pm$ 1.1e+04} & 3.3e+05 $\pm$ 9.5e+03 & \textcolor{red}{5.9e+05 $\pm$ 3.4e+04} & \underline{3.0e+05 $\pm$ 9.6e+03} & \textcolor{red}{6.1e+05 $\pm$ 3.4e+04} & 3.2e+05 $\pm$ 1.9e+04 & 3.2e+05 $\pm$ 1.9e+04 \\
+naval\textunderscore propulsion & \textbf{3.2e-03 $\pm$ 8.4e-05} & \textcolor{red}{7.6e-03 $\pm$ 1.7e-04} & 3.9e-03 $\pm$ 1.3e-04 & 3.4e-03 $\pm$ 9.6e-05 & \textcolor{red}{4.6e-03 $\pm$ 9.6e-05} & \underline{3.2e-03 $\pm$ 9.3e-05} & 3.6e-03 $\pm$ 1.3e-04 \\
+parkinsons & \textbf{15.149 $\pm$ 0.518} & 19.899 $\pm$ 0.576 & 17.316 $\pm$ 0.634 & 15.312 $\pm$ 0.459 & 17.596 $\pm$ 0.621 & \underline{15.150 $\pm$ 0.499} & 15.161 $\pm$ 0.537 \\
+powerplant & 16.243 $\pm$ 0.985 & 17.062 $\pm$ 1.128 & 16.673 $\pm$ 0.987 & 16.846 $\pm$ 1.029 & 16.874 $\pm$ 0.975 & \textbf{16.231 $\pm$ 0.984} & \underline{16.231 $\pm$ 0.983} \\
+qsar & \textbf{3.877 $\pm$ 0.176} & 4.521 $\pm$ 0.225 & 4.086 $\pm$ 0.193 & 4.334 $\pm$ 0.125 & 4.390 $\pm$ 0.205 & 3.927 $\pm$ 0.146 & \underline{3.892 $\pm$ 0.151} \\
+sulfur & \textbf{0.143 $\pm$ 0.005} & 0.156 $\pm$ 0.010 & \textcolor{red}{0.213 $\pm$ 0.013} & 0.146 $\pm$ 0.005 & \textcolor{red}{0.228 $\pm$ 0.013} & \underline{0.143 $\pm$ 0.005} & 0.145 $\pm$ 0.006 \\
+superconductor & \textbf{39.104 $\pm$ 1.604} & 44.230 $\pm$ 1.428 & 45.479 $\pm$ 3.358 & 45.456 $\pm$ 2.039 & \textcolor{red}{63.347 $\pm$ 2.824} & 39.224 $\pm$ 1.613 & \underline{39.119 $\pm$ 1.642} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

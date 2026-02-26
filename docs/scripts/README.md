@@ -53,13 +53,13 @@ The UACQR improvement tables compare CLEAR variant (c) against UACQR-S/UACQR-P. 
 
 ### Plots
 
-```
-plots/real/                          # Real benchmark bar plots
-plots/simulations/                   # Simulation distance metric plots
-plots_and_tables/uacqr_summary/     # UACQR comparison plots
-```
+All plots are saved directly to `docs/figures/` mirroring `paper/overleaf/figures/`:
 
-Also copied to `docs/figures/` mirroring `paper/overleaf/figures/`.
+```
+docs/figures/pcs_cqr/standard/real/         # Real benchmark bar plots
+docs/figures/pcs_cqr/standard/simulations/  # Simulation distance metric plots
+docs/figures/uacqr/                         # UACQR comparison plots
+```
 
 ## Scripts
 
@@ -78,6 +78,6 @@ Also copied to `docs/figures/` mirroring `paper/overleaf/figures/`.
 - `results/standard/` -- Standard PCS/CQR benchmark CSVs (variants a, b, c)
 - `results/conformalized/` -- Conformalized benchmark CSVs
 - `results/de_sqr/` -- DE/SQR comparison CSVs
-- `results/uacqr_benchmark_results.csv` -- UACQR aggregated results
-- `plots/simulations/` -- Simulation CSV data (coverage + width results)
+- `results/uacqr/` -- UACQR aggregated results (standard and conformalized CSVs, summary)
+- `docs/figures/pcs_cqr/standard/simulations/` -- Simulation CSV data (coverage + width results)
 - `data/` -- Raw dataset CSVs (for dataset statistics table)

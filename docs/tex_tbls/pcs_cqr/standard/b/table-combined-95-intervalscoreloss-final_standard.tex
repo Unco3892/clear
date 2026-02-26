@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Variant (b) Interval Score Loss at 95\% prediction intervals, aggregated across 10 seeds.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result.}
+\label{tab:combined_intervalscoreloss_95_final_standard_variant_b}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+Dataset & CLEAR & ALEATORIC & ALEATORIC-R & PCS-EPISTEMIC & Naive & $\gamma_1=1$ & $\lambda=1$ \\
+\midrule
+ailerons & 7.4e-04 $\pm$ 1.8e-05 & 8.1e-04 $\pm$ 2.2e-05 & 7.8e-04 $\pm$ 2.2e-05 & 8.0e-04 $\pm$ 1.8e-05 & 9.1e-04 $\pm$ 2.9e-05 & \underline{7.4e-04 $\pm$ 1.8e-05} & \textbf{7.4e-04 $\pm$ 1.8e-05} \\
+airfoil & \textbf{8.717 $\pm$ 0.870} & \textcolor{red}{14.669 $\pm$ 1.007} & 9.843 $\pm$ 1.249 & 9.397 $\pm$ 0.977 & \textcolor{red}{11.761 $\pm$ 1.548} & \underline{8.727 $\pm$ 0.902} & 8.730 $\pm$ 0.892 \\
+allstate & \textbf{9.2e+03 $\pm$ 5.9e+02} & 1.1e+04 $\pm$ 6.7e+02 & 1.0e+04 $\pm$ 6.4e+02 & 1.0e+04 $\pm$ 6.8e+02 & \textcolor{red}{1.3e+04 $\pm$ 8.6e+02} & 9.3e+03 $\pm$ 6.0e+02 & \underline{9.3e+03 $\pm$ 6.2e+02} \\
+ca\textunderscore housing & \textbf{2.2e+05 $\pm$ 4.8e+03} & \textcolor{red}{3.9e+05 $\pm$ 2.1e+03} & 2.4e+05 $\pm$ 5.9e+03 & 2.6e+05 $\pm$ 7.5e+03 & \textcolor{red}{3.2e+05 $\pm$ 9.7e+03} & \underline{2.2e+05 $\pm$ 5.3e+03} & 2.2e+05 $\pm$ 5.6e+03 \\
+computer & \underline{12.707 $\pm$ 0.575} & \textcolor{red}{17.102 $\pm$ 3.298} & 16.503 $\pm$ 1.199 & 16.547 $\pm$ 0.692 & \textcolor{red}{18.684 $\pm$ 1.517} & \textbf{12.707 $\pm$ 0.591} & 12.897 $\pm$ 0.602 \\
+concrete & 27.020 $\pm$ 3.202 & \textcolor{red}{43.690 $\pm$ 4.842} & 28.684 $\pm$ 4.251 & \textbf{26.165 $\pm$ 2.857} & 30.054 $\pm$ 4.640 & \underline{26.365 $\pm$ 2.976} & 26.445 $\pm$ 2.996 \\
+elevator & \textbf{0.011 $\pm$ 0.000} & 0.014 $\pm$ 0.000 & 0.013 $\pm$ 0.000 & 0.015 $\pm$ 0.000 & \textcolor{red}{0.017 $\pm$ 0.000} & \underline{0.012 $\pm$ 0.000} & 0.012 $\pm$ 0.000 \\
+energy\textunderscore efficiency & \textbf{2.465 $\pm$ 0.347} & \textcolor{red}{8.199 $\pm$ 0.672} & 2.671 $\pm$ 0.416 & 3.058 $\pm$ 0.217 & 3.253 $\pm$ 0.388 & \underline{2.667 $\pm$ 0.280} & 2.721 $\pm$ 0.270 \\
+insurance & \textbf{2.6e+04 $\pm$ 2.5e+03} & 3.1e+04 $\pm$ 3.0e+03 & 3.0e+04 $\pm$ 2.8e+03 & \textcolor{red}{3.9e+04 $\pm$ 7.1e+03} & \textcolor{red}{3.5e+04 $\pm$ 2.7e+03} & 3.0e+04 $\pm$ 5.0e+03 & \underline{2.8e+04 $\pm$ 3.2e+03} \\
+kin8nm & 0.577 $\pm$ 0.014 & 0.760 $\pm$ 0.013 & 0.616 $\pm$ 0.021 & 0.607 $\pm$ 0.008 & 0.666 $\pm$ 0.020 & \underline{0.577 $\pm$ 0.013} & \textbf{0.577 $\pm$ 0.013} \\
+miami\textunderscore housing & 3.1e+05 $\pm$ 1.5e+04 & 4.1e+05 $\pm$ 2.5e+04 & \textcolor{red}{4.2e+05 $\pm$ 2.7e+04} & 3.3e+05 $\pm$ 1.3e+04 & \textcolor{red}{6.5e+05 $\pm$ 2.9e+04} & \textbf{3.1e+05 $\pm$ 1.5e+04} & \underline{3.1e+05 $\pm$ 1.5e+04} \\
+naval\textunderscore propulsion & \textbf{4.4e-03 $\pm$ 1.5e-04} & \textcolor{red}{0.391 $\pm$ 0.006} & 5.1e-03 $\pm$ 2.2e-04 & \textcolor{red}{0.014 $\pm$ 0.001} & \textcolor{red}{7.1e-03 $\pm$ 4.7e-04} & \underline{4.8e-03 $\pm$ 1.4e-04} & \textcolor{red}{6.0e-03 $\pm$ 2.2e-04} \\
+parkinsons & 16.697 $\pm$ 0.794 & \textcolor{red}{25.497 $\pm$ 0.692} & 18.270 $\pm$ 1.122 & 18.931 $\pm$ 0.600 & 21.220 $\pm$ 1.011 & \underline{16.688 $\pm$ 0.771} & \textbf{16.680 $\pm$ 0.750} \\
+powerplant & \textbf{16.993 $\pm$ 0.937} & 18.211 $\pm$ 0.897 & 17.577 $\pm$ 0.884 & 17.715 $\pm$ 0.965 & 18.501 $\pm$ 0.815 & 17.064 $\pm$ 0.951 & \underline{17.027 $\pm$ 0.954} \\
+qsar & 3.956 $\pm$ 0.218 & 4.802 $\pm$ 0.219 & 4.193 $\pm$ 0.227 & 4.270 $\pm$ 0.220 & 4.562 $\pm$ 0.217 & \underline{3.946 $\pm$ 0.222} & \textbf{3.946 $\pm$ 0.223} \\
+sulfur & \textbf{0.155 $\pm$ 0.008} & 0.174 $\pm$ 0.009 & 0.186 $\pm$ 0.012 & 0.180 $\pm$ 0.007 & \textcolor{red}{0.277 $\pm$ 0.020} & 0.156 $\pm$ 0.007 & \underline{0.155 $\pm$ 0.007} \\
+superconductor & \underline{41.801 $\pm$ 1.407} & 51.826 $\pm$ 1.568 & 45.860 $\pm$ 1.883 & 48.899 $\pm$ 2.037 & \textcolor{red}{71.323 $\pm$ 2.803} & \textbf{41.747 $\pm$ 1.460} & 41.821 $\pm$ 1.571 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

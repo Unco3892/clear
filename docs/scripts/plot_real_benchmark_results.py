@@ -522,10 +522,11 @@ def create_plot(df, output_file=None, metric_name="Quantile Loss", ordered_metho
             else:
                 # Use seaborn boxplot with simplified settings on filtered data
                 sns.boxplot(
-                    data=improvement_df_for_boxplot, x='Method_Display', y='relative_improvement', 
-                    ax=ax_inset, palette=current_palette, width=0.6, fliersize=0, # Set fliersize to 0 as whiskers will cover all points
-                    order=methods_for_boxplot, showmeans=False, meanprops={"marker":"o", "markerfacecolor":"white"},
-                    whis=[0, 100]  # Extend whiskers to min and max of the filtered data
+                    data=improvement_df_for_boxplot, x='Method_Display', y='relative_improvement',
+                    hue='Method_Display', ax=ax_inset, palette=current_palette, width=0.6, fliersize=0,
+                    order=methods_for_boxplot, hue_order=methods_for_boxplot,
+                    showmeans=False, meanprops={"marker":"o", "markerfacecolor":"white"},
+                    whis=[0, 100], legend=False
                 )
                 
                 # Compute and print whisker positions for proper label placement using accurate quantile calculation on filtered data
@@ -623,6 +624,7 @@ def create_plot(df, output_file=None, metric_name="Quantile Loss", ordered_metho
                 ax_inset.set_yticklabels([f"{int(y)}%" for y in yticks_inset], fontsize=font_size_inset_ticks)
                 ax_inset.xaxis.set_ticks_position('top')
                 ax_inset.xaxis.set_label_position('top')
+                ax_inset.set_xticks(range(len(methods_for_boxplot)))
                 ax_inset.set_xticklabels(methods_for_boxplot, fontsize=font_size_inset_ticks)
                 
                 # Special case for variant comparison
@@ -904,7 +906,7 @@ def create_combined_plot(data_qgloss, data_nciw, subdir_name, args,
         )
     
     # Save combined figure
-    figures_output_dir = os.path.join(project_base_dir, "plots", "real")
+    figures_output_dir = os.path.join(project_base_dir, args.output_dir)
     os.makedirs(figures_output_dir, exist_ok=True) # Ensure it exists
     
     combined_output_file_base = os.path.join(figures_output_dir, f"{subdir_name}_{args.output_file_prefix}_combined")
@@ -1160,7 +1162,7 @@ def create_combined_variant_plot(variant_sources_config, actual_method_to_extrac
         )
     
     # Save the combined figure
-    figures_output_dir = os.path.join(project_base_dir, "plots", "real")
+    figures_output_dir = os.path.join(project_base_dir, args.output_dir)
     os.makedirs(figures_output_dir, exist_ok=True)
     
     combined_output_file_base = os.path.join(figures_output_dir, f"clear_variants_{args.output_file_prefix}_combined")
@@ -1227,6 +1229,8 @@ def main():
                         help="Whether to show x-axis labels on the upper plot in combined plots. Default is False.")
     parser.add_argument("--use_consistent_dataset_order", action='store_true', default=False,
                         help="Whether to use the same dataset order (from qPCS_all_10seeds_all) for all plots. Default is True.")
+    parser.add_argument("--output_dir", type=str, default=os.path.join("docs", "figures", "pcs_cqr", "standard", "real"),
+                        help="Directory to save output plots, relative to project root.")
     
     args = parser.parse_args()
 
@@ -1272,7 +1276,7 @@ def main():
     overall_status = 0 # To track if any plot generation fails
 
     # Ensure the output directory for figures exists
-    figures_output_dir = os.path.join(project_base_dir, "plots", "real")
+    figures_output_dir = os.path.join(project_base_dir, args.output_dir)
     os.makedirs(figures_output_dir, exist_ok=True)
     print(f"  Saving plots to: {figures_output_dir}")
     
@@ -1329,83 +1333,74 @@ def main():
         # Create method display map for these variants
         variant_method_display_map = dict(zip(variant_internal_ids, variant_display_names))
 
-        for metric_key in metrics_to_plot:
-            metric_name_display = metric_display_names.get(metric_key, metric_key.replace("_", " ").title())
-            print(f"  Generating plot for metric: {metric_name_display}")
+        # Only generate individual variant metric plots when combined plot is disabled
+        if not args.generate_combined_plot:
+            for metric_key in metrics_to_plot:
+                metric_name_display = metric_display_names.get(metric_key, metric_key.replace("_", " ").title())
+                print(f"  Generating plot for metric: {metric_name_display}")
 
-            output_file_for_plot = os.path.join(figures_output_dir, f"clear_variants_{args.output_file_prefix}")
-            print(f"    Output file base for create_plot: {output_file_for_plot}")
+                output_file_for_plot = os.path.join(figures_output_dir, f"clear_variants_{args.output_file_prefix}")
+                print(f"    Output file base for create_plot: {output_file_for_plot}")
 
-            try:
-                # Load data for CLEAR variants
-                variant_data = load_clear_variant_data(
-                    variant_sources_config, 
-                    actual_method_to_extract, 
-                    results_base_dir, 
-                    metric_key, 
-                    args.coverage
-                )
+                try:
+                    variant_data = load_clear_variant_data(
+                        variant_sources_config,
+                        actual_method_to_extract,
+                        results_base_dir,
+                        metric_key,
+                        args.coverage
+                    )
 
-                if variant_data.empty:
-                    print(f"    WARNING: No data loaded for any CLEAR variants for metric {metric_key}. Skipping plot.")
-                    continue
-                
-                # Normalize data (baseline is one of the variants)
-                norm_variant_data = normalize_data(
-                    variant_data, 
-                    baseline_method=baseline_variant_internal_id, 
-                    method_display_map=variant_method_display_map
-                )
+                    if variant_data.empty:
+                        print(f"    WARNING: No data loaded for any CLEAR variants for metric {metric_key}. Skipping plot.")
+                        continue
 
-                if norm_variant_data.empty:
-                    print(f"    WARNING: Normalization of variant data failed for {metric_key}. Skipping plot.")
-                    continue
-                
-                # Use consistent dataset order if available, otherwise compute it from this data
-                if consistent_dataset_order is not None:
-                    # Filter to only include datasets that exist in both the reference and current data
-                    current_datasets = set(norm_variant_data['Dataset'].unique())
-                    valid_datasets = [d for d in consistent_dataset_order if d in current_datasets]
-                    
-                    if valid_datasets:
-                        print(f"    Using consistent dataset order: {valid_datasets}")
-                        sorted_variant_datasets = valid_datasets
+                    norm_variant_data = normalize_data(
+                        variant_data,
+                        baseline_method=baseline_variant_internal_id,
+                        method_display_map=variant_method_display_map
+                    )
+
+                    if norm_variant_data.empty:
+                        print(f"    WARNING: Normalization of variant data failed for {metric_key}. Skipping plot.")
+                        continue
+
+                    if consistent_dataset_order is not None:
+                        current_datasets = set(norm_variant_data['Dataset'].unique())
+                        valid_datasets = [d for d in consistent_dataset_order if d in current_datasets]
+                        if valid_datasets:
+                            sorted_variant_datasets = valid_datasets
+                        else:
+                            max_by_dataset = norm_variant_data.groupby('Dataset')['normalized_mean'].max().sort_values()
+                            sorted_variant_datasets = max_by_dataset.index.tolist()
                     else:
-                        # Fallback to computing order from current data if no overlap
                         max_by_dataset = norm_variant_data.groupby('Dataset')['normalized_mean'].max().sort_values()
                         sorted_variant_datasets = max_by_dataset.index.tolist()
-                        print(f"    No overlap with reference datasets. Using computed order: {sorted_variant_datasets}")
-                else:
-                    # Compute dataset order based on maximum values
-                    max_by_dataset = norm_variant_data.groupby('Dataset')['normalized_mean'].max().sort_values()
-                    sorted_variant_datasets = max_by_dataset.index.tolist()
-                    print(f"    Dataset order for variant plot: {sorted_variant_datasets}")
-                
-                # Create the plot
-                create_plot(
-                    norm_variant_data, 
-                    output_file_for_plot, 
-                    metric_name_display, 
-                    ordered_methods=variant_internal_ids, # Pass internal IDs for ordering
-                    y_axis_from_zero=args.y_axis_from_zero, 
-                    error_bar_type=args.error_bar_type,
-                    palette=variant_palette, # Pass the specific palette for variants
-                    baseline_internal_name=baseline_variant_internal_id, # Pass baseline for inset plot
-                    inset_label_min_padding=8, # Use larger min padding for variant plots
-                    save_fig_if_internal=True, # Explicitly true for this path
-                    set_styling_if_creating_fig=True, # Explicitly true
-                    output_format=args.output_format,
-                    predefined_dataset_order=sorted_variant_datasets,  # Use consistent dataset order
-                    subdirectory_name="clear_variants"  # Pass subdirectory name for label positioning
-                )
-                print(f"    Successfully generated CLEAR variant comparison plot for {metric_name_display}")
 
-            except Exception as e:
-                print(f"    ERROR: An unexpected error occurred while generating CLEAR variant plot for {metric_key}: {e}")
-                import traceback
-                traceback.print_exc()
-                overall_status = 1
-                
+                    create_plot(
+                        norm_variant_data,
+                        output_file_for_plot,
+                        metric_name_display,
+                        ordered_methods=variant_internal_ids,
+                        y_axis_from_zero=args.y_axis_from_zero,
+                        error_bar_type=args.error_bar_type,
+                        palette=variant_palette,
+                        baseline_internal_name=baseline_variant_internal_id,
+                        inset_label_min_padding=8,
+                        save_fig_if_internal=True,
+                        set_styling_if_creating_fig=True,
+                        output_format=args.output_format,
+                        predefined_dataset_order=sorted_variant_datasets,
+                        subdirectory_name="clear_variants"
+                    )
+                    print(f"    Successfully generated CLEAR variant comparison plot for {metric_name_display}")
+
+                except Exception as e:
+                    print(f"    ERROR: An unexpected error occurred while generating CLEAR variant plot for {metric_key}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    overall_status = 1
+
         # Generate combined variant plot with both metrics if requested
         if args.generate_combined_plot:
             try:
@@ -1472,74 +1467,62 @@ def main():
                 except ValueError as e:
                     print(f"    INFO: Value error for NCIW data for combined plot in {current_results_dir}: {e}.")
 
-            for metric_key in metrics_to_plot:
-                metric_name_display = metric_display_names.get(metric_key, metric_key.replace("_", " ").title())
-                
-                print(f"  Generating individual plot for metric: {metric_name_display}")
-                
-                # Construct a unique output file base for this specific plot
-                # e.g., paper/figures/qPCS_all_10seeds_benchmark_plot (metric and extension will be added by create_plot)
-                output_file_for_plot = os.path.join(figures_output_dir, f"{subdir_name}_{args.output_file_prefix}")
-                
-                print(f"    Output file base for create_plot: {output_file_for_plot}")
-                
-                try:
-                    data = load_benchmark_data(current_results_dir, metric_key, args.coverage)
-                    if data.empty:
-                        print(f"    WARNING: No data loaded for {metric_key} in {current_results_dir}. Skipping individual plot.")
-                        continue
-                    
-                    norm_data = normalize_data(data, baseline_method=args.baseline, method_display_map=method_display_map_from_args)
-                    if norm_data.empty:
-                        print(f"    WARNING: No normalized data for {metric_key} in {current_results_dir} (baseline '{args.baseline}' might be missing or no methods left after filtering). Skipping individual plot.")
-                        continue
-                    
-                    # Use consistent dataset order if available, otherwise compute it from this data
-                    if consistent_dataset_order is not None:
-                        # Filter to only include datasets that exist in both the reference and current data
-                        current_datasets = set(norm_data['Dataset'].unique())
-                        valid_datasets = [d for d in consistent_dataset_order if d in current_datasets]
-                        
-                        if valid_datasets:
-                            print(f"    Using consistent dataset order: {valid_datasets}")
-                            sorted_datasets = valid_datasets
+            # Only generate individual metric plots when combined plot is disabled
+            if not args.generate_combined_plot:
+                for metric_key in metrics_to_plot:
+                    metric_name_display = metric_display_names.get(metric_key, metric_key.replace("_", " ").title())
+                    print(f"  Generating individual plot for metric: {metric_name_display}")
+                    output_file_for_plot = os.path.join(figures_output_dir, f"{subdir_name}_{args.output_file_prefix}")
+
+                    try:
+                        data = load_benchmark_data(current_results_dir, metric_key, args.coverage)
+                        if data.empty:
+                            print(f"    WARNING: No data loaded for {metric_key} in {current_results_dir}. Skipping individual plot.")
+                            continue
+
+                        norm_data = normalize_data(data, baseline_method=args.baseline, method_display_map=method_display_map_from_args)
+                        if norm_data.empty:
+                            print(f"    WARNING: No normalized data for {metric_key} in {current_results_dir}. Skipping individual plot.")
+                            continue
+
+                        if consistent_dataset_order is not None:
+                            current_datasets = set(norm_data['Dataset'].unique())
+                            valid_datasets = [d for d in consistent_dataset_order if d in current_datasets]
+                            if valid_datasets:
+                                sorted_datasets = valid_datasets
+                            else:
+                                max_by_dataset = norm_data.groupby('Dataset')['normalized_mean'].max().sort_values()
+                                sorted_datasets = max_by_dataset.index.tolist()
                         else:
-                            # Fallback to computing order from current data if no overlap
                             max_by_dataset = norm_data.groupby('Dataset')['normalized_mean'].max().sort_values()
                             sorted_datasets = max_by_dataset.index.tolist()
-                            print(f"    No overlap with reference datasets. Using computed order: {sorted_datasets}")
-                    else:
-                        # Compute dataset order based on maximum normalized values for consistency
-                        max_by_dataset = norm_data.groupby('Dataset')['normalized_mean'].max().sort_values()
-                        sorted_datasets = max_by_dataset.index.tolist()
-                        print(f"    Dataset order for individual plot: {sorted_datasets}")
-                        
-                    create_plot(norm_data, output_file_for_plot, metric_name_display, 
-                                ordered_methods=methods_to_plot_internal, 
-                                y_axis_from_zero=args.y_axis_from_zero, 
-                                error_bar_type=args.error_bar_type,
-                                palette=standard_palette, # Pass standard palette
-                                baseline_internal_name=args.baseline,
-                                inset_label_min_padding=5,
-                                save_fig_if_internal=True, # Explicitly true
-                                set_styling_if_creating_fig=True, # Explicitly true
-                                output_format=args.output_format,
-                                predefined_dataset_order=sorted_datasets,  # Use consistent dataset order
-                                subdirectory_name=subdir_name  # Pass subdirectory name for label positioning
-                                )
-                    print(f"    Successfully generated individual plot for {metric_name_display} from {subdir_name}")
-                except FileNotFoundError as e:
-                    print(f"    ERROR: File not found while processing {metric_key} in {current_results_dir}. Details: {e}. Skipping plot for this metric/directory.")
-                    overall_status = 1
-                except ValueError as e:
-                    print(f"    ERROR: Value error (e.g., no data for metric, or issue during normalization) for {metric_key} in {current_results_dir}. Details: {e}. Skipping plot for this metric/directory.")
-                    overall_status = 1
-                except Exception as e:
-                    print(f"    ERROR: An unexpected error occurred while generating plot for {metric_key} from {subdir_name}: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    overall_status = 1
-            
+
+                        create_plot(norm_data, output_file_for_plot, metric_name_display,
+                                    ordered_methods=methods_to_plot_internal,
+                                    y_axis_from_zero=args.y_axis_from_zero,
+                                    error_bar_type=args.error_bar_type,
+                                    palette=standard_palette,
+                                    baseline_internal_name=args.baseline,
+                                    inset_label_min_padding=5,
+                                    save_fig_if_internal=True,
+                                    set_styling_if_creating_fig=True,
+                                    output_format=args.output_format,
+                                    predefined_dataset_order=sorted_datasets,
+                                    subdirectory_name=subdir_name
+                                    )
+                        print(f"    Successfully generated individual plot for {metric_name_display} from {subdir_name}")
+                    except FileNotFoundError as e:
+                        print(f"    ERROR: File not found while processing {metric_key} in {current_results_dir}. Details: {e}. Skipping plot for this metric/directory.")
+                        overall_status = 1
+                    except ValueError as e:
+                        print(f"    ERROR: Value error for {metric_key} in {current_results_dir}. Details: {e}. Skipping plot.")
+                        overall_status = 1
+                    except Exception as e:
+                        print(f"    ERROR: An unexpected error occurred while generating plot for {metric_key} from {subdir_name}: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        overall_status = 1
+
             # Generate combined plot if requested and data is available
             if args.generate_combined_plot:
                 if data_for_combined_qgloss is not None and not data_for_combined_qgloss.empty and \
@@ -1566,37 +1549,7 @@ def main():
                 else:
                     print(f"    Skipping combined plot for {subdir_name} due to missing data for Quantile Loss or NCIW.")
 
-    # Save all collected normalized data to a CSV file
-    if _ALL_NORMALIZED_DATA_FOR_CSV:
-        print("\nConsolidating and saving normalized data with improvements to CSV...")
-        try:
-            final_csv_df = pd.concat(_ALL_NORMALIZED_DATA_FOR_CSV, ignore_index=True)
-            
-            cols_to_keep = [
-                'Dataset', 'Method', 'Method_Display', 
-                'mean', 'std', 
-                'normalized_mean', 'normalized_std', 
-                'relative_improvement'
-            ]
-            
-            # Ensure all desired columns exist in the DataFrame, fill with NaN if not
-            for col in cols_to_keep:
-                if col not in final_csv_df.columns:
-                    final_csv_df[col] = np.nan # numpy as np should be imported
-            
-            final_csv_df = final_csv_df[cols_to_keep]
-            final_csv_df.drop_duplicates(keep='first', inplace=True)
-            
-            csv_filename = f"{args.output_file_prefix}_all_normalized_data.csv"
-            csv_output_path = os.path.join(figures_output_dir, csv_filename) 
-            
-            final_csv_df.to_csv(csv_output_path, index=False, float_format='%.4f')
-            print(f"Normalized data and relative improvements saved to: {csv_output_path}")
-        except Exception as e:
-            print(f"ERROR: Could not save improvements CSV to {csv_output_path}: {e}")
-            overall_status = 1 # Indicate an error occurred during CSV saving
-        finally:
-            _ALL_NORMALIZED_DATA_FOR_CSV.clear() # Clear the global list for hygiene
+    _ALL_NORMALIZED_DATA_FOR_CSV.clear()
 
     if overall_status == 0:
         print("\nAll plots generated successfully.")

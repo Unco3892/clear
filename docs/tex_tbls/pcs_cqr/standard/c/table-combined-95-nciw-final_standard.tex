@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Variant (c) NCIW at 95\% prediction intervals, aggregated across 10 seeds.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result.}
+\label{tab:combined_nciw_95_final_standard_variant_c}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+Dataset & CLEAR & ALEATORIC & ALEATORIC-R & PCS-EPISTEMIC & Naive & $\gamma_1=1$ & $\lambda=1$ \\
+\midrule
+ailerons & 0.210 $\pm$ 0.020 & 0.231 $\pm$ 0.023 & \textbf{0.204 $\pm$ 0.021} & 0.239 $\pm$ 0.021 & 0.230 $\pm$ 0.021 & \underline{0.209 $\pm$ 0.020} & 0.210 $\pm$ 0.019 \\
+airfoil & \underline{0.188 $\pm$ 0.014} & \textcolor{red}{0.258 $\pm$ 0.034} & 0.204 $\pm$ 0.017 & 0.199 $\pm$ 0.013 & 0.204 $\pm$ 0.014 & 0.190 $\pm$ 0.012 & \textbf{0.188 $\pm$ 0.010} \\
+allstate & 0.277 $\pm$ 0.056 & 0.316 $\pm$ 0.065 & 0.281 $\pm$ 0.041 & 0.305 $\pm$ 0.070 & 0.319 $\pm$ 0.051 & \underline{0.271 $\pm$ 0.054} & \textbf{0.270 $\pm$ 0.053} \\
+ca\textunderscore housing & 0.311 $\pm$ 0.010 & \textcolor{red}{0.419 $\pm$ 0.014} & 0.343 $\pm$ 0.010 & 0.329 $\pm$ 0.009 & 0.401 $\pm$ 0.018 & \textbf{0.309 $\pm$ 0.009} & \underline{0.309 $\pm$ 0.009} \\
+computer & 0.081 $\pm$ 0.004 & 0.104 $\pm$ 0.007 & 0.090 $\pm$ 0.004 & 0.084 $\pm$ 0.005 & 0.092 $\pm$ 0.005 & \textbf{0.079 $\pm$ 0.004} & \underline{0.080 $\pm$ 0.004} \\
+concrete & 0.259 $\pm$ 0.032 & 0.303 $\pm$ 0.054 & 0.263 $\pm$ 0.029 & \textbf{0.257 $\pm$ 0.031} & 0.265 $\pm$ 0.027 & \underline{0.258 $\pm$ 0.033} & 0.259 $\pm$ 0.032 \\
+elevator & \textbf{0.126 $\pm$ 0.008} & \textcolor{red}{0.192 $\pm$ 0.008} & 0.138 $\pm$ 0.008 & 0.151 $\pm$ 0.011 & 0.144 $\pm$ 0.010 & \underline{0.127 $\pm$ 0.007} & 0.127 $\pm$ 0.007 \\
+energy\textunderscore efficiency & \textbf{0.041 $\pm$ 0.006} & \textcolor{red}{0.116 $\pm$ 0.015} & 0.048 $\pm$ 0.005 & 0.043 $\pm$ 0.005 & 0.049 $\pm$ 0.005 & 0.042 $\pm$ 0.006 & \underline{0.042 $\pm$ 0.006} \\
+insurance & \underline{0.345 $\pm$ 0.078} & 0.413 $\pm$ 0.043 & 0.424 $\pm$ 0.074 & \textbf{0.343 $\pm$ 0.087} & 0.385 $\pm$ 0.112 & 0.367 $\pm$ 0.100 & 0.407 $\pm$ 0.137 \\
+kin8nm & \textbf{0.323 $\pm$ 0.008} & 0.420 $\pm$ 0.018 & 0.327 $\pm$ 0.008 & 0.331 $\pm$ 0.010 & 0.341 $\pm$ 0.012 & 0.325 $\pm$ 0.009 & \underline{0.324 $\pm$ 0.009} \\
+miami\textunderscore housing & 0.088 $\pm$ 0.002 & \textcolor{red}{0.113 $\pm$ 0.004} & \textcolor{red}{0.111 $\pm$ 0.007} & 0.094 $\pm$ 0.003 & \textcolor{red}{0.122 $\pm$ 0.007} & \underline{0.077 $\pm$ 0.003} & \textbf{0.076 $\pm$ 0.003} \\
+naval\textunderscore propulsion & \underline{1.6e-03 $\pm$ 5.0e-05} & \textcolor{red}{4.0e-03 $\pm$ 2.4e-04} & 1.6e-03 $\pm$ 4.1e-05 & 1.7e-03 $\pm$ 4.7e-05 & 1.8e-03 $\pm$ 5.8e-05 & \textbf{1.6e-03 $\pm$ 5.2e-05} & 1.6e-03 $\pm$ 6.2e-05 \\
+parkinsons & \underline{0.250 $\pm$ 0.012} & \textcolor{red}{0.366 $\pm$ 0.017} & 0.279 $\pm$ 0.013 & 0.259 $\pm$ 0.009 & 0.284 $\pm$ 0.013 & 0.251 $\pm$ 0.011 & \textbf{0.250 $\pm$ 0.011} \\
+powerplant & \textbf{0.161 $\pm$ 0.007} & 0.176 $\pm$ 0.009 & 0.163 $\pm$ 0.008 & 0.171 $\pm$ 0.008 & 0.166 $\pm$ 0.007 & 0.161 $\pm$ 0.007 & \underline{0.161 $\pm$ 0.007} \\
+qsar & \textbf{0.348 $\pm$ 0.118} & \textcolor{red}{0.465 $\pm$ 0.156} & 0.361 $\pm$ 0.124 & 0.407 $\pm$ 0.142 & 0.395 $\pm$ 0.134 & 0.359 $\pm$ 0.124 & \underline{0.354 $\pm$ 0.122} \\
+sulfur & 0.109 $\pm$ 0.008 & 0.124 $\pm$ 0.008 & 0.108 $\pm$ 0.006 & 0.124 $\pm$ 0.008 & 0.115 $\pm$ 0.007 & \underline{0.104 $\pm$ 0.007} & \textbf{0.102 $\pm$ 0.007} \\
+superconductor & 0.192 $\pm$ 0.019 & 0.251 $\pm$ 0.025 & 0.206 $\pm$ 0.027 & 0.232 $\pm$ 0.025 & \textcolor{red}{0.297 $\pm$ 0.029} & \textbf{0.191 $\pm$ 0.019} & \underline{0.191 $\pm$ 0.019} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

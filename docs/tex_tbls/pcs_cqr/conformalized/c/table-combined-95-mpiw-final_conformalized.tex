@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Conformalized Variant (c) MPIW at 95\% prediction intervals, aggregated across 10 seeds. Methods with suffix `-c' denote conformalized variants obtained using the validation set divided into two parts, one for validation and one for calibration.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result. $+\infty$ indicates diverged predictions; the superscript denotes the number of affected seeds out of the total.}
+\label{tab:combined_mpiw_95_final_conformalized_variant_c}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Dataset & CLEAR-c & PCS-EPISTEMIC-c & ALEATORIC-R-c & CLEAR & UACQR-P & UACQR-S \\
+\midrule
+ailerons & 6.2e-04 $\pm$ 2.0e-05 & \textcolor{red}{7.2e-04 $\pm$ 3.5e-05} & \underline{6.0e-04 $\pm$ 1.5e-05} & 6.2e-04 $\pm$ 1.1e-05 & \textbf{5.3e-04 $\pm$ 1.5e-05} & 6.2e-04 $\pm$ 8.3e-06 \\
+airfoil & \underline{7.177 $\pm$ 0.725} & 7.260 $\pm$ 0.891 & 7.897 $\pm$ 1.431 & \textbf{6.822 $\pm$ 0.602} & \textcolor{red}{12.682 $\pm$ 1.175} & \textcolor{red}{13.603 $\pm$ 1.033} \\
+allstate & \underline{6.9e+03 $\pm$ 4.7e+02} & 7.1e+03 $\pm$ 3.7e+02 & 6.9e+03 $\pm$ 7.9e+02 & \textbf{6.8e+03 $\pm$ 2.9e+02} & 7.0e+03 $\pm$ 4.5e+02 & 7.4e+03 $\pm$ 4.7e+02 \\
+ca\textunderscore housing & \underline{1.5e+05 $\pm$ 4.9e+03} & 1.6e+05 $\pm$ 7.1e+03 & 1.7e+05 $\pm$ 5.4e+03 & \textbf{1.5e+05 $\pm$ 5.3e+03} & 1.8e+05 $\pm$ 3.7e+03 & 2.0e+05 $\pm$ 1.7e+03 \\
+computer & \textbf{7.857 $\pm$ 0.310} & 8.185 $\pm$ 0.322 & 8.725 $\pm$ 0.352 & \underline{7.954 $\pm$ 0.388} & 8.332 $\pm$ 0.462 & 10.080 $\pm$ 0.120 \\
+concrete & 21.993 $\pm$ 2.873 & \textbf{20.734 $\pm$ 2.472} & 21.780 $\pm$ 2.774 & \underline{21.075 $\pm$ 2.217} & \textcolor{red}{27.981 $\pm$ 2.326} & \textcolor{red}{30.391 $\pm$ 1.982} \\
+elevator & \textbf{7.8e-03 $\pm$ 2.2e-04} & 9.5e-03 $\pm$ 2.3e-04 & 8.4e-03 $\pm$ 2.8e-04 & \underline{7.9e-03 $\pm$ 1.3e-04} & 9.8e-03 $\pm$ 3.1e-04 & \textcolor{red}{0.012 $\pm$ 0.000} \\
+energy\textunderscore efficiency & 1.905 $\pm$ 0.269 & \underline{1.581 $\pm$ 0.284} & 1.929 $\pm$ 0.252 & \textbf{1.577 $\pm$ 0.261} & $+\infty$\textsuperscript{2/10} & \textcolor{red}{6.338 $\pm$ 1.044} \\
+insurance & 2.3e+04 $\pm$ 5.0e+03 & 2.2e+04 $\pm$ 7.8e+03 & \textcolor{red}{2.5e+04 $\pm$ 5.3e+03} & 2.3e+04 $\pm$ 6.2e+03 & \textbf{1.8e+04 $\pm$ 4.2e+03} & \underline{1.9e+04 $\pm$ 4.6e+03} \\
+kin8nm & 0.453 $\pm$ 0.017 & \underline{0.451 $\pm$ 0.011} & 0.452 $\pm$ 0.017 & \textbf{0.448 $\pm$ 0.012} & \textcolor{red}{0.608 $\pm$ 0.026} & \textcolor{red}{0.623 $\pm$ 0.021} \\
+miami\textunderscore housing & \underline{2.3e+05 $\pm$ 7.6e+03} & 2.5e+05 $\pm$ 1.4e+04 & 2.9e+05 $\pm$ 4.7e+04 & \textbf{2.3e+05 $\pm$ 3.6e+03} & 2.7e+05 $\pm$ 1.2e+04 & 2.9e+05 $\pm$ 8.0e+03 \\
+naval\textunderscore propulsion & \underline{2.8e-03 $\pm$ 6.2e-05} & 3.0e-03 $\pm$ 1.2e-04 & 2.9e-03 $\pm$ 8.5e-05 & \textbf{2.8e-03 $\pm$ 5.6e-05} & 3.0e-03 $\pm$ 1.5e-04 & \textcolor{red}{6.2e-03 $\pm$ 1.4e-04} \\
+parkinsons & \textbf{11.986 $\pm$ 0.700} & 12.564 $\pm$ 0.455 & 13.500 $\pm$ 0.725 & \underline{11.990 $\pm$ 0.335} & 12.928 $\pm$ 0.871 & 15.093 $\pm$ 0.926 \\
+powerplant & \underline{11.348 $\pm$ 0.593} & 12.228 $\pm$ 0.285 & 11.666 $\pm$ 0.409 & \textbf{11.293 $\pm$ 0.302} & 14.219 $\pm$ 0.611 & 14.818 $\pm$ 0.522 \\
+qsar & 3.005 $\pm$ 0.107 & 3.392 $\pm$ 0.205 & \underline{2.978 $\pm$ 0.110} & \textbf{2.931 $\pm$ 0.130} & 3.520 $\pm$ 0.102 & 3.831 $\pm$ 0.081 \\
+sulfur & 0.102 $\pm$ 0.007 & 0.115 $\pm$ 0.004 & \textbf{0.098 $\pm$ 0.010} & \underline{0.101 $\pm$ 0.004} & 0.105 $\pm$ 0.005 & 0.117 $\pm$ 0.006 \\
+superconductor & \underline{28.316 $\pm$ 0.894} & 33.797 $\pm$ 1.156 & 30.043 $\pm$ 1.962 & \textbf{28.088 $\pm$ 0.812} & 31.266 $\pm$ 0.772 & 33.300 $\pm$ 0.659 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

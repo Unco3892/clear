@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Variant (c) MPIW at 95\% prediction intervals, aggregated across 10 seeds.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result.}
+\label{tab:combined_mpiw_95_final_standard_variant_c}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccccc}
+\toprule
+Dataset & CLEAR & ALEATORIC & ALEATORIC-R & PCS-EPISTEMIC & Naive & $\gamma_1=1$ & $\lambda=1$ \\
+\midrule
+ailerons & \underline{6.2e-04 $\pm$ 1.1e-05} & 6.8e-04 $\pm$ 8.6e-06 & \textbf{6.1e-04 $\pm$ 1.5e-05} & 7.1e-04 $\pm$ 4.2e-05 & 6.9e-04 $\pm$ 2.6e-05 & 6.2e-04 $\pm$ 1.0e-05 & 6.2e-04 $\pm$ 1.4e-05 \\
+airfoil & \textbf{6.822 $\pm$ 0.602} & \textcolor{red}{9.769 $\pm$ 0.374} & 7.629 $\pm$ 0.856 & 6.996 $\pm$ 0.792 & 7.328 $\pm$ 0.819 & 7.031 $\pm$ 0.799 & \underline{6.915 $\pm$ 0.682} \\
+allstate & 6.8e+03 $\pm$ 2.9e+02 & 7.7e+03 $\pm$ 3.3e+02 & 6.8e+03 $\pm$ 5.3e+02 & 7.3e+03 $\pm$ 5.5e+02 & 7.7e+03 $\pm$ 3.1e+02 & \underline{6.7e+03 $\pm$ 2.8e+02} & \textbf{6.7e+03 $\pm$ 2.7e+02} \\
+ca\textunderscore housing & 1.5e+05 $\pm$ 5.3e+03 & \textcolor{red}{2.0e+05 $\pm$ 2.0e+03} & 1.7e+05 $\pm$ 7.0e+03 & 1.6e+05 $\pm$ 5.7e+03 & 1.9e+05 $\pm$ 8.6e+03 & \underline{1.5e+05 $\pm$ 4.4e+03} & \textbf{1.5e+05 $\pm$ 4.5e+03} \\
+computer & 7.954 $\pm$ 0.388 & 10.142 $\pm$ 0.125 & 8.798 $\pm$ 0.351 & 8.322 $\pm$ 0.399 & 8.994 $\pm$ 0.616 & \underline{7.805 $\pm$ 0.385} & \textbf{7.737 $\pm$ 0.391} \\
+concrete & 21.075 $\pm$ 2.217 & 23.851 $\pm$ 1.426 & 21.514 $\pm$ 2.139 & \textbf{20.742 $\pm$ 2.416} & \underline{20.936 $\pm$ 2.236} & 21.192 $\pm$ 2.281 & 21.317 $\pm$ 2.276 \\
+elevator & 7.9e-03 $\pm$ 1.3e-04 & \textcolor{red}{0.012 $\pm$ 0.000} & 8.5e-03 $\pm$ 1.6e-04 & 9.4e-03 $\pm$ 1.7e-04 & 8.9e-03 $\pm$ 2.7e-04 & \underline{7.9e-03 $\pm$ 1.1e-04} & \textbf{7.9e-03 $\pm$ 9.6e-05} \\
+energy\textunderscore efficiency & \textbf{1.577 $\pm$ 0.261} & \textcolor{red}{5.028 $\pm$ 0.241} & 1.843 $\pm$ 0.188 & \underline{1.654 $\pm$ 0.254} & 1.773 $\pm$ 0.184 & 1.695 $\pm$ 0.255 & 1.677 $\pm$ 0.261 \\
+insurance & \underline{2.3e+04 $\pm$ 6.2e+03} & 2.4e+04 $\pm$ 1.4e+03 & 2.6e+04 $\pm$ 3.6e+03 & \textbf{2.3e+04 $\pm$ 6.0e+03} & 2.4e+04 $\pm$ 5.6e+03 & 2.5e+04 $\pm$ 5.6e+03 & 2.7e+04 $\pm$ 6.3e+03 \\
+kin8nm & \textbf{0.448 $\pm$ 0.012} & 0.573 $\pm$ 0.015 & 0.456 $\pm$ 0.015 & 0.455 $\pm$ 0.011 & 0.474 $\pm$ 0.012 & 0.452 $\pm$ 0.014 & \underline{0.450 $\pm$ 0.013} \\
+miami\textunderscore housing & 2.3e+05 $\pm$ 3.6e+03 & \textcolor{red}{2.9e+05 $\pm$ 5.1e+03} & \textcolor{red}{2.9e+05 $\pm$ 2.0e+04} & 2.4e+05 $\pm$ 6.1e+03 & \textcolor{red}{3.2e+05 $\pm$ 2.1e+04} & \textbf{2.0e+05 $\pm$ 5.6e+03} & \underline{2.0e+05 $\pm$ 5.7e+03} \\
+naval\textunderscore propulsion & \underline{2.8e-03 $\pm$ 5.6e-05} & \textcolor{red}{7.2e-03 $\pm$ 1.6e-04} & 2.9e-03 $\pm$ 7.3e-05 & 3.1e-03 $\pm$ 9.7e-05 & 3.1e-03 $\pm$ 6.8e-05 & \textbf{2.8e-03 $\pm$ 3.3e-05} & 2.9e-03 $\pm$ 5.1e-05 \\
+parkinsons & \underline{11.990 $\pm$ 0.335} & \textcolor{red}{17.828 $\pm$ 0.524} & 13.466 $\pm$ 0.512 & 12.459 $\pm$ 0.407 & 13.665 $\pm$ 0.471 & 12.061 $\pm$ 0.376 & \textbf{11.882 $\pm$ 0.346} \\
+powerplant & \textbf{11.293 $\pm$ 0.302} & 12.624 $\pm$ 0.375 & 11.607 $\pm$ 0.320 & 12.140 $\pm$ 0.277 & 11.791 $\pm$ 0.259 & 11.357 $\pm$ 0.316 & \underline{11.344 $\pm$ 0.305} \\
+qsar & \textbf{2.931 $\pm$ 0.130} & \textcolor{red}{3.964 $\pm$ 0.086} & 3.015 $\pm$ 0.110 & 3.383 $\pm$ 0.185 & 3.280 $\pm$ 0.172 & 2.992 $\pm$ 0.126 & \underline{2.939 $\pm$ 0.121} \\
+sulfur & 0.101 $\pm$ 0.004 & 0.113 $\pm$ 0.004 & 0.099 $\pm$ 0.006 & 0.113 $\pm$ 0.003 & 0.104 $\pm$ 0.006 & \underline{0.096 $\pm$ 0.002} & \textbf{0.094 $\pm$ 0.003} \\
+superconductor & 28.088 $\pm$ 0.812 & 36.044 $\pm$ 0.523 & 30.215 $\pm$ 1.595 & 33.859 $\pm$ 1.241 & \textcolor{red}{44.356 $\pm$ 1.361} & \underline{27.884 $\pm$ 0.914} & \textbf{27.881 $\pm$ 0.857} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

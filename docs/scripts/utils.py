@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import re
+import time
 
 def format_metric_name(metric):
     if metric == "quantile_loss" or metric == "quantileloss":
@@ -54,8 +55,18 @@ def write_latex_table(table_lines, output_file, landscape_mode=False):
                     break
     
     # Write table lines to file (use newline='\n' for consistent LF line endings)
-    with open(output_file, 'w', encoding="utf-8", newline='\n') as f:
-        f.write("\n".join(table_lines))
+    # Retry on Windows transient file lock errors (OSError errno 22)
+    content = "\n".join(table_lines)
+    for attempt in range(3):
+        try:
+            with open(output_file, 'w', encoding="utf-8", newline='\n') as f:
+                f.write(content)
+            break
+        except OSError:
+            if attempt < 2:
+                time.sleep(0.5)
+            else:
+                raise
 
 def extract_data_from_table(file_path, pattern):
     """

@@ -296,9 +296,10 @@ def create_plot(df, metric_name, ordered_methods_display, palette, baseline_meth
             ax_inset.set_ylim(y_min_inset, y_max_inset_initial)
             
             sns.boxplot(
-                data=improvement_df_for_boxplot, x='Method_Display', y='relative_improvement', 
-                ax=ax_inset, palette=palette, width=0.6, fliersize=0,
-                order=methods_for_boxplot_display, showmeans=False, whis=[0, 100]
+                data=improvement_df_for_boxplot, x='Method_Display', y='relative_improvement',
+                hue='Method_Display', ax=ax_inset, palette=palette, width=0.6, fliersize=0,
+                order=methods_for_boxplot_display, hue_order=methods_for_boxplot_display,
+                showmeans=False, whis=[0, 100], legend=False
             )
             
             # Simplified inset label positioning
@@ -323,9 +324,11 @@ def create_plot(df, metric_name, ordered_methods_display, palette, baseline_meth
             font_size_inset_note = 12 if not current_inset_placement.get('is_part_of_combined') else 12
 
             yticks_inset = ax_inset.get_yticks()
+            ax_inset.set_yticks(yticks_inset)
             ax_inset.set_yticklabels([f"{int(y)}%" for y in yticks_inset], fontsize=font_size_inset_ticks)
             ax_inset.xaxis.set_ticks_position('top')
             ax_inset.xaxis.set_label_position('top')
+            ax_inset.set_xticks(range(len(methods_for_boxplot_display)))
             ax_inset.set_xticklabels(methods_for_boxplot_display, fontsize=font_size_inset_ticks)
             
             note_text = f"Relative increase over    {baseline_method_display_name} (%)"
@@ -540,13 +543,15 @@ def generate_all_metrics_summary_table(csv_path, coverage_target_float, output_t
 
 def main():
     parser = argparse.ArgumentParser(description="Generate plots and tables from uacqr_benchmark_results.csv.")
-    parser.add_argument("--csv_path", type=str, default="results/uacqr_benchmark_results.csv",
+    parser.add_argument("--csv_path", type=str, default="results/uacqr/uacqr_benchmark_results_standard.csv",
                         help="Path to the uacqr_benchmark_results.csv file.")
-    parser.add_argument("--output_dir", type=str, default="plots_and_tables/uacqr_summary",
-                        help="Directory to save output plots and tables.")
+    parser.add_argument("--output_dir", type=str, default="docs/figures/uacqr",
+                        help="Directory to save output plots.")
+    parser.add_argument("--summary_output_dir", type=str, default=None,
+                        help="Directory to save the summary CSV. Defaults to --output_dir if not set.")
     parser.add_argument("--alpha", type=float, default=0.05,
                         help="Alpha level for confidence intervals (e.g., 0.05 for 95%% coverage).")
-    parser.add_argument("--output_format", type=str, default="png", choices=["pdf", "png", "both"],
+    parser.add_argument("--output_format", type=str, default="pdf", choices=["pdf", "png", "both"],
                         help="Output format for saving figures.")
     parser.add_argument("--upper_plot_show_xlabels", action='store_true', default=False,
                         help="Show x-axis labels on the upper plot in combined plots.")
@@ -558,18 +563,18 @@ def main():
     # Define methods, display names, and palette
     # Ensure internal names match those in the CSV's 'Method' column for loading
     # And ensure lowercase versions are used for map keys if normalize_data uses lowercase
-    ordered_methods_internal = ['clear_residual', 'UACQR-P', 'UACQR-S']
+    ordered_methods_internal = ['clear', 'UACQR-P', 'UACQR-S']
     method_display_map = {
-        'clear_residual': 'CLEAR', # Baseline
+        'clear': 'CLEAR',            # Baseline (CSV Method column: 'clear')
         'uacqr-p': 'UACQR-P',       # Note: CSV has 'UACQR-P', normalize_data converts to 'uacqr-p' for map key
-        'uacqr-s': 'UACQR-S'      # Note: CSV has 'UACQR-S', normalize_data converts to 'uacqr-s' for map key
+        'uacqr-s': 'UACQR-S'        # Note: CSV has 'UACQR-S', normalize_data converts to 'uacqr-s' for map key
     }
     palette = {
         'CLEAR': '#4C72B0',      # Seaborn Blue
         'UACQR-P': '#D62728',     # Tableau Red
         'UACQR-S': '#009E73'    # Bluish Green
     }
-    baseline_method_internal = 'clear_residual' # This is the key used internally for normalization
+    baseline_method_internal = 'clear' # Matches the Method column in the CSV
 
     # Create combined plot
     create_combined_uacqr_plot(
@@ -586,14 +591,6 @@ def main():
         y_axis_from_zero=False,
         output_format=args.output_format,
         upper_plot_show_xlabels=args.upper_plot_show_xlabels
-    )
-
-    # Generate all metrics summary table
-    summary_table_path = os.path.join(args.output_dir, f"all_metrics_summary_alpha{int(args.alpha*100)}.csv")
-    generate_all_metrics_summary_table(
-        csv_path=args.csv_path,
-        coverage_target_float=coverage_val,
-        output_table_csv_path=summary_table_path
     )
 
     print("\nScript execution finished.")

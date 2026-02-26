@@ -117,13 +117,10 @@ def plot_1d_simulation_results_symmetric_from_csv(
         os.makedirs(output_dir)
         print(f"Created output directory: {output_dir}")
 
-    png_output_path = output_path_base + ".png"
     pdf_output_path = output_path_base + ".pdf"
 
     plt.savefig(pdf_output_path, format='pdf')
     print(f"Saved 1D-style PDF plot: {pdf_output_path}")
-    plt.savefig(png_output_path, dpi=800)
-    print(f"Saved 1D-style PNG plot: {png_output_path}")
     plt.close(fig)
 
 def plot_multivariate_results_from_csv(
@@ -181,21 +178,18 @@ def plot_multivariate_results_from_csv(
         os.makedirs(output_dir)
         print(f"Created output directory: {output_dir}")
 
-    png_output_path = output_path_base + ".png"
     pdf_output_path = output_path_base + ".pdf"
 
     plt.savefig(pdf_output_path, format='pdf')
     print(f"Saved multivariate PDF plot: {pdf_output_path}")
-    plt.savefig(png_output_path, dpi=800)
-    print(f"Saved multivariate PNG plot: {png_output_path}")
     plt.close(fig)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot benchmark simulation results from CSV files for predefined scenarios.")
-    parser.add_argument('--sim_results_dir', type=str, default="plots/simulations",
+    parser.add_argument('--sim_results_dir', type=str, default=os.path.join("results", "simulations"),
                         help='Base directory where simulation CSV files are located, relative to project root.')
-    parser.add_argument('--plot_output_dir', type=str, default="plots/simulations",
+    parser.add_argument('--plot_output_dir', type=str, default=os.path.join("docs", "figures", "pcs_cqr", "standard", "simulations"),
                         help='Base directory where generated plots will be saved, relative to project root.')
     parser.add_argument('--target_coverage', type=float, default=0.90,
                         help='Target coverage level for the plots.')
@@ -277,8 +271,6 @@ if __name__ == "__main__":
             coverage_df = pd.read_csv(coverage_csv_path)
             width_df = pd.read_csv(width_csv_path)
         except FileNotFoundError:
-            print(f"Warning: CSV files not found for scenario {scenario}. Skipping.")
-            print(f"  Tried paths: {coverage_csv_path} and {width_csv_path}")
             continue
         except Exception as e:
             print(f"Warning: Error reading CSV files for scenario {scenario}: {e}. Skipping.")

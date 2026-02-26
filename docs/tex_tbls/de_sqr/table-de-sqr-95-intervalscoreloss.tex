@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{DE-SQR Interval Score Loss at 95\% prediction intervals, aggregated across 10 seeds. CLEAR consists of the deep ensemble (DE) and the simultaneous quantile regressor (SQR). DE-conformal is the conformalized (calibrated) deep ensemble and SQR-conformal is the conformalized simultaneous quantile regressor. Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values are the minimum (best) for that dataset, while \underline{underlined} values indicate the second-best result.}
+\label{tab:de_sqr_intervalscoreloss_95}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccccc}
+\toprule
+Dataset & CLEAR & DE & SQR & DE\text{-}conformal & SQR\text{-}conformal \\
+\midrule
+ailerons & 7.7e-04 $\pm$ 2.5e-05 & 1.0e-03 $\pm$ 2.8e-05 & \underline{7.7e-04 $\pm$ 3.2e-05} & 1.0e-03 $\pm$ 2.8e-05 & \textbf{7.6e-04 $\pm$ 2.9e-05} \\
+airfoil & \textbf{7.761 $\pm$ 0.546} & \underline{9.368 $\pm$ 0.826} & 12.937 $\pm$ 1.386 & 9.370 $\pm$ 0.813 & 12.279 $\pm$ 1.418 \\
+allstate & \textbf{1.1e+04 $\pm$ 7.5e+02} & 1.2e+04 $\pm$ 6.5e+02 & 1.2e+04 $\pm$ 7.4e+02 & 1.2e+04 $\pm$ 6.5e+02 & \underline{1.2e+04 $\pm$ 6.7e+02} \\
+ca\_housing & 2.4e+05 $\pm$ 5.1e+03 & 3.1e+05 $\pm$ 9.2e+03 & \underline{2.4e+05 $\pm$ 4.4e+03} & 3.1e+05 $\pm$ 9.2e+03 & \textbf{2.4e+05 $\pm$ 4.2e+03} \\
+computer & \textbf{11.669 $\pm$ 0.436} & 14.633 $\pm$ 0.543 & 12.938 $\pm$ 0.662 & 14.634 $\pm$ 0.545 & \underline{12.926 $\pm$ 0.634} \\
+concrete & \textbf{27.850 $\pm$ 3.946} & \underline{34.179 $\pm$ 4.507} & 37.343 $\pm$ 2.464 & 34.203 $\pm$ 4.564 & 36.678 $\pm$ 4.051 \\
+elevator & 9.2e-03 $\pm$ 1.5e-04 & 0.013 $\pm$ 2.8e-04 & \underline{9.0e-03 $\pm$ 2.0e-04} & 0.013 $\pm$ 2.8e-04 & \textbf{9.0e-03 $\pm$ 1.9e-04} \\
+energy\_efficiency & \textbf{4.154 $\pm$ 0.758} & \underline{5.369 $\pm$ 0.965} & 17.719 $\pm$ 1.871 & 5.387 $\pm$ 0.974 & 15.020 $\pm$ 1.595 \\
+insurance & 3.1e+04 $\pm$ 3.4e+03 & 4.2e+04 $\pm$ 7.8e+03 & \textbf{3.1e+04 $\pm$ 3.0e+03} & 4.3e+04 $\pm$ 7.5e+03 & \underline{3.1e+04 $\pm$ 3.6e+03} \\
+kin8nm & \textbf{0.327 $\pm$ 3.5e-03} & 0.417 $\pm$ 6.5e-03 & 0.358 $\pm$ 4.6e-03 & 0.417 $\pm$ 6.6e-03 & \underline{0.340 $\pm$ 5.7e-03} \\
+miami\_housing & 3.6e+05 $\pm$ 1.7e+04 & 4.3e+05 $\pm$ 1.4e+04 & \underline{3.5e+05 $\pm$ 9.5e+03} & 4.3e+05 $\pm$ 1.4e+04 & \textbf{3.5e+05 $\pm$ 9.5e+03} \\
+naval\_propulsion & \textbf{2.9e-03 $\pm$ 7.5e-04} & 0.011 $\pm$ 2.2e-03 & 6.5e-03 $\pm$ 2.3e-04 & 0.011 $\pm$ 2.2e-03 & \underline{3.5e-03 $\pm$ 3.5e-04} \\
+parkinsons & 23.860 $\pm$ 1.124 & 27.437 $\pm$ 0.787 & \underline{23.297 $\pm$ 0.456} & 27.449 $\pm$ 0.784 & \textbf{23.159 $\pm$ 0.461} \\
+powerplant & \textbf{18.145 $\pm$ 1.005} & 24.110 $\pm$ 1.141 & 18.714 $\pm$ 0.990 & 24.106 $\pm$ 1.140 & \underline{18.706 $\pm$ 1.002} \\
+qsar & \textbf{4.419 $\pm$ 0.255} & 5.152 $\pm$ 0.278 & 4.875 $\pm$ 0.294 & 5.154 $\pm$ 0.278 & \underline{4.800 $\pm$ 0.286} \\
+sulfur & \textbf{0.134 $\pm$ 8.1e-03} & 0.213 $\pm$ 0.015 & \underline{0.144 $\pm$ 0.010} & 0.213 $\pm$ 0.015 & 0.144 $\pm$ 0.010 \\
+superconductor & \textbf{43.610 $\pm$ 1.937} & 56.594 $\pm$ 1.943 & 44.763 $\pm$ 1.388 & 56.591 $\pm$ 1.943 & \underline{44.731 $\pm$ 1.406} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

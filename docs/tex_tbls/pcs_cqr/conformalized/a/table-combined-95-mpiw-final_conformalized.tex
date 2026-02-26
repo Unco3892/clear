@@ -1,0 +1,31 @@
+\begin{table}[!htbp]
+\centering
+\caption{Conformalized Variant (a) MPIW at 95\% prediction intervals, aggregated across 10 seeds. Methods with suffix `-c' denote conformalized variants obtained using the validation set divided into two parts, one for validation and one for calibration.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result.}
+\label{tab:combined_mpiw_95_final_conformalized_variant_a}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+Dataset & CLEAR-c & PCS-EPISTEMIC-c & ALEATORIC-R-c & CLEAR \\
+\midrule
+ailerons & \textbf{5.8e-04 $\pm$ 1.3e-05} & 6.5e-04 $\pm$ 2.3e-05 & 5.8e-04 $\pm$ 1.7e-05 & \underline{5.8e-04 $\pm$ 9.3e-06} \\
+airfoil & \underline{7.346 $\pm$ 0.715} & 7.438 $\pm$ 0.896 & 7.798 $\pm$ 1.239 & \textbf{7.101 $\pm$ 0.481} \\
+allstate & 6.6e+03 $\pm$ 2.5e+02 & 6.5e+03 $\pm$ 8.4e+02 & \textbf{6.4e+03 $\pm$ 4.6e+02} & \underline{6.4e+03 $\pm$ 3.8e+02} \\
+ca\textunderscore housing & \underline{1.6e+05 $\pm$ 3.8e+03} & 1.7e+05 $\pm$ 6.5e+03 & 1.7e+05 $\pm$ 4.7e+03 & \textbf{1.6e+05 $\pm$ 4.5e+03} \\
+computer & \textbf{8.982 $\pm$ 0.636} & \textcolor{red}{7.9e+02 $\pm$ 1.2e+03} & 9.349 $\pm$ 1.583 & \underline{9.020 $\pm$ 0.752} \\
+concrete & 20.614 $\pm$ 2.248 & \underline{19.706 $\pm$ 3.833} & 20.200 $\pm$ 2.955 & \textbf{18.917 $\pm$ 1.985} \\
+elevator & 9.7e-03 $\pm$ 2.0e-04 & 0.011 $\pm$ 0.001 & \textbf{9.2e-03 $\pm$ 2.5e-04} & \underline{9.6e-03 $\pm$ 1.5e-04} \\
+energy\textunderscore efficiency & 1.940 $\pm$ 0.324 & 2.117 $\pm$ 0.326 & \underline{1.922 $\pm$ 0.348} & \textbf{1.713 $\pm$ 0.193} \\
+insurance & \underline{1.9e+04 $\pm$ 2.0e+03} & \textcolor{red}{3.1e+04 $\pm$ 1.8e+04} & 2.2e+04 $\pm$ 5.7e+03 & \textbf{1.8e+04 $\pm$ 1.6e+03} \\
+kin8nm & \underline{0.500 $\pm$ 0.009} & 0.515 $\pm$ 0.011 & 0.510 $\pm$ 0.010 & \textbf{0.496 $\pm$ 0.007} \\
+miami\textunderscore housing & \underline{2.2e+05 $\pm$ 7.5e+03} & 2.5e+05 $\pm$ 5.8e+03 & 2.2e+05 $\pm$ 1.3e+04 & \textbf{2.2e+05 $\pm$ 4.9e+03} \\
+naval\textunderscore propulsion & 1.1e-03 $\pm$ 9.8e-06 & 1.3e-03 $\pm$ 2.8e-05 & \textbf{1.1e-03 $\pm$ 1.7e-05} & \underline{1.1e-03 $\pm$ 1.0e-05} \\
+parkinsons & \textbf{10.881 $\pm$ 0.794} & \textcolor{red}{15.123 $\pm$ 1.628} & 12.136 $\pm$ 0.960 & \underline{10.917 $\pm$ 0.486} \\
+powerplant & \underline{12.309 $\pm$ 0.560} & 12.897 $\pm$ 0.433 & 13.152 $\pm$ 0.343 & \textbf{12.232 $\pm$ 0.274} \\
+qsar & \underline{3.145 $\pm$ 0.145} & 3.300 $\pm$ 0.115 & 3.257 $\pm$ 0.099 & \textbf{3.094 $\pm$ 0.095} \\
+sulfur & 0.102 $\pm$ 0.003 & 0.124 $\pm$ 0.008 & \textbf{0.098 $\pm$ 0.004} & \underline{0.099 $\pm$ 0.004} \\
+superconductor & 28.456 $\pm$ 0.884 & 35.742 $\pm$ 1.250 & \textbf{28.155 $\pm$ 0.880} & \underline{28.172 $\pm$ 0.513} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
