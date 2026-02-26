@@ -540,7 +540,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark UACQR method on pre-processed datasets.")
     parser.add_argument("--data_dir", type=str, default="../../models/pcs_top1_pcs_10_standard",
                         help="Directory containing the dataset .pkl files (e.g., '../../models/pcs_top1_pcs_10_standard').")
-    parser.add_argument("--output_csv", type=str, default="../../results/uacqr_benchmark_results.csv",
+    parser.add_argument("--output_csv", type=str, default="../../results/uacqr/uacqr_benchmark_results_standard.csv",
                         help="Path to save the benchmark results CSV file.")
     parser.add_argument("--coverage", type=float, default=0.95,
                         help="Desired prediction interval coverage level (e.g., 0.90, 0.95).")

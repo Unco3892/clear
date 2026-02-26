@@ -143,7 +143,7 @@ def run_simulation(
         current_d_str = str(d_fixed)
         title_d_part = f"d={d_fixed}"
     output_subdir = f"d{current_d_str}/{noise_type}_{epistemic_mode_str}"
-    output_dir = os.path.join(base_path, "plots/simulations", output_subdir)
+    output_dir = os.path.join(base_path, "docs", "figures", "pcs_cqr", "standard", "simulations", output_subdir)
     os.makedirs(output_dir, exist_ok=True)
     print(f"--- Starting Simulation: {title_d_part}, noise='{noise_type}', epistemic='{epistemic_mode_str}' ---")
     print(f"Output directory: {output_dir}")
@@ -641,15 +641,17 @@ def run_simulation(
         
         plt.close(fig)
 
-    # Create and save DataFrames
+    # Create and save DataFrames to results/simulations/
     coverage_df = pd.DataFrame({'distance': distances, **avg_results})
     width_df = pd.DataFrame({'distance': distances, **avg_results_width})
     csv_filename_cov = f"coverage_results_d{current_d_str}_{noise_type}_{epistemic_mode_str}.csv"
     csv_filename_wid = f"width_results_d{current_d_str}_{noise_type}_{epistemic_mode_str}.csv"
-    coverage_df.to_csv(os.path.join(output_dir, csv_filename_cov), index=False)
-    width_df.to_csv(os.path.join(output_dir, csv_filename_wid), index=False)
-    print(f"Saved results CSV: {os.path.join(output_dir, csv_filename_cov)}")
-    print(f"Saved results CSV: {os.path.join(output_dir, csv_filename_wid)}")
+    csv_output_dir = os.path.join(base_path, "results", "simulations", output_subdir)
+    os.makedirs(csv_output_dir, exist_ok=True)
+    coverage_df.to_csv(os.path.join(csv_output_dir, csv_filename_cov), index=False)
+    width_df.to_csv(os.path.join(csv_output_dir, csv_filename_wid), index=False)
+    print(f"Saved results CSV: {os.path.join(csv_output_dir, csv_filename_cov)}")
+    print(f"Saved results CSV: {os.path.join(csv_output_dir, csv_filename_wid)}")
 
     return coverage_df, width_df
 
