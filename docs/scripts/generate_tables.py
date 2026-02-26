@@ -13,7 +13,8 @@ Output structure:
     ├── table-combined-dataset-stats.tex
     ├── de_sqr/
     │   ├── table-de-sqr-95-{metric}.tex  (9 metrics)
-    │   └── table-sqr-de-calibration-95.tex
+    │   ├── table-sqr-de-calibration-95.tex
+    │   └── table-clear-percentage-improvement-95.tex
     └── pcs_cqr/
         ├── standard/{a,b,c}/
         │   ├── table-combined-95-{metric}-final_standard.tex  (9 metrics)
@@ -58,6 +59,14 @@ from combine_improved_de_sqr import (
     generate_metric_table,
     generate_calibration_parameters_table,
     generate_summary_statistics,
+)
+from combine_improved_de_sqr_percentage import (
+    load_csvs,
+    collect_improvements,
+    summarise,
+    pivot_summary,
+    generate_percentage_table,
+    METHODS_MAPPING,
 )
 
 # ── constants ──────────────────────────────────────────────────────────────────
@@ -274,6 +283,18 @@ def generate_de_sqr_tables():
 
     generate_calibration_parameters_table(aggregated, COVERAGE, output_dir)
     generate_summary_statistics(aggregated, COVERAGE, output_dir)
+
+    # Percentage improvement table
+    dfs = list(load_csvs(Path(results_dir), COVERAGE))
+    if dfs:
+        csv_methods = list(METHODS_MAPPING.keys())
+        detail_df = collect_improvements(dfs, csv_methods)
+        summary_df = summarise(detail_df)
+        pivot_df = pivot_summary(summary_df)
+        generate_percentage_table(
+            pivot_df, COVERAGE, output_dir,
+            metrics=['PICP', 'NIW', 'NCIW', 'QuantileLoss'],
+        )
 
 
 # ── Standard PCS / CQR tables ─────────────────────────────────────────────────

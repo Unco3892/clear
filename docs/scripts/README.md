@@ -20,16 +20,26 @@ Run from the **project root**:
 
 On Windows (PowerShell), use backslashes: `python docs\scripts\generate_tables.py --plots`
 
+### Standalone: CLEAR percentage improvement table
+
+```
+python docs/scripts/combine_improved_de_sqr_percentage.py \
+  --results_dir results/de_sqr --output_dir docs/tex_tbls/de_sqr --coverage 95
+```
+
+Options: `--metrics all` for every metric (default: PICP,NIW,NCIW,QuantileLoss), `--save_csv` to also write detail/summary CSVs.
+
 ## Output
 
-### Tables (72 files)
+### Tables (73 files)
 
 ```
 docs/tex_tbls/
 ├── table-combined-dataset-stats.tex
 ├── de_sqr/
 │   ├── table-de-sqr-95-{metric}.tex              (8 metrics)
-│   └── table-sqr-de-calibration-95.tex
+│   ├── table-sqr-de-calibration-95.tex
+│   └── table-clear-percentage-improvement-95.tex
 └── pcs_cqr/
     ├── standard/
     │   ├── table-clear-vs-uacqr-improvement-95_standard.tex
@@ -72,6 +82,7 @@ docs/figures/uacqr/                         # UACQR comparison plots
 | `plot_real_benchmark_results.py` | Real benchmark bar plots |
 | `plot_simulation_results.py` | Simulation distance metric plots |
 | `generate_uacqr_csv_plots.py` | UACQR comparison plots |
+| `combine_improved_de_sqr_percentage.py` | CLEAR % improvement over DE/SQR (Table \ref{tab:clear_percentage_improvement}) |
 
 ## Data Dependencies
 
