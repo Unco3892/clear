@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{Conformalized Variant (c) CRPS at 95\% prediction intervals, aggregated across 10 seeds. Methods with suffix `-c' denote conformalized variants obtained using the validation set divided into two parts, one for validation and one for calibration.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\infty$; the superscript denotes the number of affected seeds out of the total.}
+\caption{Conformalized Variant (c) CRPS at 95\% prediction intervals, aggregated across 10 seeds. Methods with suffix `-c' denote conformalized variants obtained using the validation set divided into two parts, one for validation and one for calibration.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result. $+\infty$ indicates UACQR-P produced infinitely wide intervals; superscripts show affected/total seeds, subscripts the finite-seed mean.}
 \label{tab:combined_crps_95_final_conformalized_variant_c}
 \small
 \resizebox{\columnwidth}{!}{%
@@ -15,7 +15,7 @@ ca\textunderscore housing & \underline{2.3e+04 $\pm$ 3.0e+02} & 2.4e+04 $\pm$ 4.
 computer & \textbf{1.202 $\pm$ 0.040} & 1.226 $\pm$ 0.050 & 1.240 $\pm$ 0.028 & \underline{1.218 $\pm$ 0.061} & 1.373 $\pm$ 0.033 & 1.517 $\pm$ 0.029 \\
 concrete & 3.321 $\pm$ 0.317 & 3.282 $\pm$ 0.290 & \textbf{2.850 $\pm$ 0.249} & \underline{3.227 $\pm$ 0.280} & \textcolor{red}{4.040 $\pm$ 0.189} & \textcolor{red}{4.232 $\pm$ 0.159} \\
 elevator & \textbf{1.2e-03 $\pm$ 7.7e-06} & 1.3e-03 $\pm$ 2.1e-05 & 1.2e-03 $\pm$ 1.7e-05 & \underline{1.2e-03 $\pm$ 1.1e-05} & \textcolor{red}{1.7e-03 $\pm$ 2.6e-05} & \textcolor{red}{1.9e-03 $\pm$ 2.3e-05} \\
-energy\textunderscore efficiency & 0.277 $\pm$ 0.032 & 0.275 $\pm$ 0.037 & \textbf{0.246 $\pm$ 0.030} & \underline{0.249 $\pm$ 0.030} & $+\infty$\textsuperscript{1/10} & \textcolor{red}{0.926 $\pm$ 0.070} \\
+energy\textunderscore efficiency & 0.277 $\pm$ 0.032 & 0.275 $\pm$ 0.037 & \textbf{0.246 $\pm$ 0.030} & \underline{0.249 $\pm$ 0.030} & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny 0.884}}$ & \textcolor{red}{0.926 $\pm$ 0.070} \\
 insurance & 4.1e+03 $\pm$ 7.2e+02 & \textbf{3.3e+03 $\pm$ 6.7e+02} & 4.4e+03 $\pm$ 9.4e+02 & \underline{3.8e+03 $\pm$ 6.1e+02} & 4.0e+03 $\pm$ 3.0e+02 & 4.2e+03 $\pm$ 3.0e+02 \\
 kin8nm & 0.067 $\pm$ 0.002 & \underline{0.067 $\pm$ 0.001} & 0.067 $\pm$ 0.002 & \textbf{0.067 $\pm$ 0.001} & \textcolor{red}{0.097 $\pm$ 0.002} & \textcolor{red}{0.099 $\pm$ 0.002} \\
 miami\textunderscore housing & \underline{3.4e+04 $\pm$ 1.0e+03} & 3.5e+04 $\pm$ 1.8e+03 & 4.1e+04 $\pm$ 3.1e+03 & \textbf{3.4e+04 $\pm$ 8.1e+02} & 4.0e+04 $\pm$ 8.8e+02 & 4.4e+04 $\pm$ 9.0e+02 \\

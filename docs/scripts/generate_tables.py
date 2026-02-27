@@ -230,17 +230,23 @@ def load_uacqr_data_for_metric(uacqr_csv, metric, methods, coverage=95):
                 # std of inf values is undefined (inf-inf=nan), set to nan directly
                 if n_inf > 0:
                     std_val = np.nan
+                    # Compute mean of remaining finite seeds for subscript
+                    finite_vals = [v for v in vals if np.isfinite(v)]
+                    finite_mean = float(np.mean(finite_vals)) if finite_vals else np.nan
                 else:
                     std_val = float(np.std(vals))
+                    finite_mean = None  # not needed when all seeds are finite
                 data[dataset][method]['mean'] = mean_val
                 data[dataset][method]['std'] = std_val
                 data[dataset][method]['n_inf'] = n_inf
                 data[dataset][method]['n_total'] = len(vals)
+                data[dataset][method]['finite_mean'] = finite_mean
             else:
                 data[dataset][method]['mean'] = np.nan
                 data[dataset][method]['std'] = np.nan
                 data[dataset][method]['n_inf'] = 0
                 data[dataset][method]['n_total'] = 0
+                data[dataset][method]['finite_mean'] = None
 
     return data
 
@@ -382,8 +388,8 @@ def _generate_conformalized_metric_table(
             "with 1 decimal place. "
         )
         inf_note = (
-            " UACQR-P can sometimes yield infinitely wide intervals resulting in $+\\infty$; the superscript "
-            "denotes the number of affected seeds out of the total."
+            " $+\\infty$ indicates UACQR-P produced infinitely wide intervals; "
+            "superscripts show affected/total seeds, subscripts the finite-seed mean."
         ) if has_inf else ""
         if higher_is_better:
             caption += (
@@ -442,8 +448,20 @@ def _generate_conformalized_metric_table(
                     if np.isinf(mean_val):
                         n_inf = combined_data[dataset][display_name].get('n_inf', 0)
                         n_total = combined_data[dataset][display_name].get('n_total', 0)
+                        finite_mean = combined_data[dataset][display_name].get('finite_mean')
                         if n_inf > 0 and n_total > 0:
-                            row.append(f"$+\\infty$\\textsuperscript{{{n_inf}/{n_total}}}")
+                            # Add subscript with mean of remaining finite seeds
+                            if finite_mean is not None and np.isfinite(finite_mean):
+                                if metric == "picp":
+                                    fmt_fm = f"{finite_mean:.{decimals}f}"
+                                elif abs(finite_mean) >= 100 or abs(finite_mean) < 0.01:
+                                    fmt_fm = f"{finite_mean:.1e}"
+                                else:
+                                    fmt_fm = f"{finite_mean:.{decimals}f}"
+                                cell_str = f"$+\\infty^{{\\text{{\\tiny {n_inf}/{n_total}}}}}_{{\\text{{\\tiny {fmt_fm}}}}}$"
+                            else:
+                                cell_str = f"$+\\infty^{{\\text{{\\tiny {n_inf}/{n_total}}}}}$"
+                            row.append(cell_str)
                         else:
                             row.append("$+\\infty$")
                     else:
@@ -911,9 +929,21 @@ def generate_uacqr_improvement_table(setting="standard"):
                 n_inf = sum(1 for v in bl_vals if np.isinf(v))
                 n_total = len(bl_vals)
 
+                # Compute improvement using only the finite baseline seeds
+                # (matched: same seeds used for both CLEAR and baseline)
+                finite_pct = np.nan
+                if n_inf > 0:
+                    finite_bl_mask = np.isfinite(bl[uacqr_col])
+                    finite_bl_seeds = bl.loc[finite_bl_mask, 'seed_int'].values
+                    finite_bl_mean = bl.loc[finite_bl_mask, uacqr_col].mean()
+                    finite_cl_mean = cl[cl['seed_int'].isin(finite_bl_seeds)][uacqr_col].mean()
+                    if np.isfinite(finite_bl_mean) and abs(finite_bl_mean) > 1e-12 and np.isfinite(finite_cl_mean):
+                        finite_pct = (finite_bl_mean - finite_cl_mean) / abs(finite_bl_mean) * 100
+
                 table_data[dataset][(baseline, display_name)] = pct
                 table_data[dataset][(baseline, display_name, 'n_inf')] = n_inf
                 table_data[dataset][(baseline, display_name, 'n_total')] = n_total
+                table_data[dataset][(baseline, display_name, 'finite_pct')] = finite_pct
 
     # Build LaTeX table
     setting_label = "standard" if setting == "standard" else "conformalized"
@@ -928,13 +958,13 @@ def generate_uacqr_improvement_table(setting="standard"):
     caption = (
         f"Improvement (\\%) of {setting_label} {clear_label} variant (c) over UACQR-S "
         f"and UACQR-P at {COVERAGE}\\% coverage across {len(datasets)} datasets. "
-        f"\\textbf{{Bold values with +}} indicate {clear_label} outperforms the baseline. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\\infty$."
+        f"\\textbf{{Bold values with +}} indicate {clear_label} outperforms the baseline."
     )
-    if has_inf and setting == "conformalized":
+    if has_inf:
         caption += (
-            f" UACQR-P can sometimes yield infinitely wide intervals resulting in $+\\infty$; the superscript "
-            f"denotes the number of affected seeds out of the total."
-    )
+            " $+\\infty$ indicates UACQR-P produced infinitely wide intervals; "
+            "superscripts show affected/total seeds, subscripts the finite-seed improvement."
+        )
 
     metric_headers = " & ".join(d for _, d, _ in metrics)
     n_metrics = len(metrics)
@@ -964,13 +994,20 @@ def generate_uacqr_improvement_table(setting="standard"):
             for _, display_name, _ in metrics:
                 pct = table_data[dataset].get((baseline, display_name), np.nan)
                 if not np.isfinite(pct):
-                    if setting == "conformalized":
-                        n_inf = table_data[dataset].get((baseline, display_name, 'n_inf'), 0)
-                        n_total = table_data[dataset].get((baseline, display_name, 'n_total'), 0)
-                        if n_inf > 0 and n_total > 0:
-                            cells.append(f"$+\\infty$\\textsuperscript{{{n_inf}/{n_total}}}")
+                    n_inf = table_data[dataset].get((baseline, display_name, 'n_inf'), 0)
+                    n_total = table_data[dataset].get((baseline, display_name, 'n_total'), 0)
+                    finite_pct = table_data[dataset].get((baseline, display_name, 'finite_pct'), np.nan)
+                    if n_inf > 0 and n_total > 0:
+                        # Add subscript with improvement from remaining finite seeds
+                        if np.isfinite(finite_pct):
+                            if finite_pct > 0:
+                                fmt_fp = f"\\textbf{{+{finite_pct:.1f}\\%}}"
+                            else:
+                                fmt_fp = f"{finite_pct:.1f}\\%"
+                            cell_str = f"$+\\infty^{{\\text{{\\tiny {n_inf}/{n_total}}}}}_{{\\text{{\\tiny {fmt_fp}}}}}$"
                         else:
-                            cells.append("$+\\infty$")
+                            cell_str = f"$+\\infty^{{\\text{{\\tiny {n_inf}/{n_total}}}}}$"
+                        cells.append(cell_str)
                     else:
                         cells.append("$+\\infty$")
                 else:

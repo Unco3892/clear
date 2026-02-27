@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{Improvement (\%) of standard CLEAR variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR outperforms the baseline. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\infty$.}
+\caption{Improvement (\%) of standard CLEAR variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR outperforms the baseline. $+\infty$ indicates UACQR-P produced infinitely wide intervals; superscripts show affected/total seeds, subscripts the finite-seed improvement.}
 \label{tab:clear_vs_uacqr_detailed_standard}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lcccccccc}
@@ -16,7 +16,7 @@ ca\_housing & \textbf{+23.4\%} & \textbf{+8.8\%} & \textbf{+22.4\%} & \textbf{+0
 computer & \textbf{+20.4\%} & \textbf{+9.5\%} & \textbf{+21.1\%} & \textbf{+2.5\%} & \textbf{+6.7\%} & \textbf{+6.6\%} & \textbf{+3.4\%} & \textbf{+0.5\%} \\
 concrete & \textbf{+21.3\%} & \textbf{+21.0\%} & \textbf{+31.4\%} & \textbf{+1.0\%} & \textbf{+22.0\%} & \textbf{+18.1\%} & \textbf{+26.4\%} & \textbf{+0.4\%} \\
 elevator & \textbf{+36.5\%} & \textbf{+29.1\%} & \textbf{+36.1\%} & \textbf{+2.1\%} & \textbf{+24.5\%} & \textbf{+27.6\%} & \textbf{+19.2\%} & -0.2\% \\
-energy\_efficiency & \textbf{+69.6\%} & \textbf{+62.4\%} & \textbf{+72.4\%} & \textbf{+0.7\%} & $+\infty$ & $+\infty$ & $+\infty$ & \textbf{+1.1\%} \\
+energy\_efficiency & \textbf{+69.6\%} & \textbf{+62.4\%} & \textbf{+72.4\%} & \textbf{+0.7\%} & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+70.9\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+63.1\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+72.8\%}}}$ & \textbf{+1.1\%} \\
 insurance & -15.5\% & -19.5\% & -29.1\% & \textbf{+0.6\%} & -18.6\% & -23.5\% & -32.5\% & \textbf{+0.6\%} \\
 kin8nm & \textbf{+27.1\%} & \textbf{+26.7\%} & \textbf{+28.2\%} & -0.2\% & \textbf{+25.8\%} & \textbf{+24.1\%} & \textbf{+26.8\%} & -0.1\% \\
 miami\_housing & \textbf{+19.6\%} & \textbf{+20.0\%} & \textbf{+23.0\%} & \textbf{+0.4\%} & \textbf{+13.4\%} & \textbf{+15.2\%} & \textbf{+15.5\%} & \textbf{+0.4\%} \\

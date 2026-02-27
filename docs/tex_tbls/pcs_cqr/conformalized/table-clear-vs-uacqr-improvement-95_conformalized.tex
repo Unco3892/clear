@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{Improvement (\%) of conformalized CLEAR-c variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR-c outperforms the baseline. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\infty$. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\infty$; the superscript denotes the number of affected seeds out of the total.}
+\caption{Improvement (\%) of conformalized CLEAR-c variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR-c outperforms the baseline. $+\infty$ indicates UACQR-P produced infinitely wide intervals; superscripts show affected/total seeds, subscripts the finite-seed improvement.}
 \label{tab:clear_vs_uacqr_detailed_conformalized}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lcccccccc}
@@ -16,7 +16,7 @@ ca\_housing & \textbf{+23.1\%} & \textbf{+8.7\%} & \textbf{+21.8\%} & \textbf{+0
 computer & \textbf{+21.9\%} & \textbf{+9.0\%} & \textbf{+22.1\%} & \textbf{+2.5\%} & \textbf{+8.4\%} & \textbf{+6.0\%} & \textbf{+4.6\%} & \textbf{+0.4\%} \\
 concrete & \textbf{+22.4\%} & \textbf{+19.6\%} & \textbf{+28.4\%} & \textbf{+1.1\%} & \textbf{+23.1\%} & \textbf{+16.7\%} & \textbf{+23.2\%} & \textbf{+0.5\%} \\
 elevator & \textbf{+36.5\%} & \textbf{+28.8\%} & \textbf{+36.6\%} & \textbf{+2.4\%} & \textbf{+24.5\%} & \textbf{+27.2\%} & \textbf{+19.9\%} & \textbf{+0.0\%} \\
-energy\_efficiency & \textbf{+68.4\%} & \textbf{+60.5\%} & \textbf{+66.7\%} & -1.3\% & $+\infty$\textsuperscript{1/10} & $+\infty$\textsuperscript{1/10} & $+\infty$\textsuperscript{1/10} & -0.9\% \\
+energy\_efficiency & \textbf{+68.4\%} & \textbf{+60.5\%} & \textbf{+66.7\%} & -1.3\% & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+69.4\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+61.0\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+66.8\%}}}$ & -0.9\% \\
 insurance & -19.0\% & -15.7\% & -32.9\% & \textbf{+0.4\%} & -22.2\% & -19.6\% & -36.4\% & \textbf{+0.4\%} \\
 kin8nm & \textbf{+27.3\%} & \textbf{+26.5\%} & \textbf{+27.5\%} & -0.5\% & \textbf{+26.0\%} & \textbf{+23.9\%} & \textbf{+26.1\%} & -0.4\% \\
 miami\_housing & \textbf{+20.7\%} & \textbf{+17.9\%} & \textbf{+22.8\%} & \textbf{+0.1\%} & \textbf{+14.6\%} & \textbf{+13.1\%} & \textbf{+15.2\%} & \textbf{+0.1\%} \\

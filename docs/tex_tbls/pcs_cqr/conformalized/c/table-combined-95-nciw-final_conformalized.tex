@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{Conformalized Variant (c) NCIW at 95\% prediction intervals, aggregated across 10 seeds. Methods with suffix `-c' denote conformalized variants obtained using the validation set divided into two parts, one for validation and one for calibration.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\infty$; the superscript denotes the number of affected seeds out of the total.}
+\caption{Conformalized Variant (c) NCIW at 95\% prediction intervals, aggregated across 10 seeds. Methods with suffix `-c' denote conformalized variants obtained using the validation set divided into two parts, one for validation and one for calibration.Values $\geq 100$ or $< 0.01$ are presented in scientific notation with 1 decimal place. \textbf{Bold} values (desirable) are the minimum for that dataset and metric, while the \underline{underlined} values indicate the second-best result. \textcolor{red}{Red} values are more than 33\% worse than the best result. $+\infty$ indicates UACQR-P produced infinitely wide intervals; superscripts show affected/total seeds, subscripts the finite-seed mean.}
 \label{tab:combined_nciw_95_final_conformalized_variant_c}
 \small
 \resizebox{\columnwidth}{!}{%
@@ -15,7 +15,7 @@ ca\textunderscore housing & \underline{0.312 $\pm$ 0.010} & 0.329 $\pm$ 0.009 & 
 computer & \textbf{0.080 $\pm$ 0.003} & 0.083 $\pm$ 0.003 & 0.090 $\pm$ 0.004 & \underline{0.081 $\pm$ 0.004} & 0.087 $\pm$ 0.004 & 0.102 $\pm$ 0.001 \\
 concrete & \textbf{0.255 $\pm$ 0.032} & \underline{0.257 $\pm$ 0.031} & 0.263 $\pm$ 0.028 & 0.259 $\pm$ 0.032 & 0.332 $\pm$ 0.051 & 0.329 $\pm$ 0.044 \\
 elevator & \textbf{0.126 $\pm$ 0.007} & 0.151 $\pm$ 0.011 & 0.138 $\pm$ 0.008 & \underline{0.126 $\pm$ 0.008} & 0.167 $\pm$ 0.013 & \textcolor{red}{0.199 $\pm$ 0.010} \\
-energy\textunderscore efficiency & \underline{0.043 $\pm$ 0.005} & 0.043 $\pm$ 0.005 & 0.048 $\pm$ 0.005 & \textbf{0.041 $\pm$ 0.006} & $+\infty$\textsuperscript{1/10} & \textcolor{red}{0.135 $\pm$ 0.015} \\
+energy\textunderscore efficiency & \underline{0.043 $\pm$ 0.005} & 0.043 $\pm$ 0.005 & 0.048 $\pm$ 0.005 & \textbf{0.041 $\pm$ 0.006} & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny 0.138}}$ & \textcolor{red}{0.135 $\pm$ 0.015} \\
 insurance & 0.356 $\pm$ 0.071 & 0.358 $\pm$ 0.078 & \textcolor{red}{0.400 $\pm$ 0.091} & 0.345 $\pm$ 0.078 & \textbf{0.291 $\pm$ 0.044} & \underline{0.299 $\pm$ 0.040} \\
 kin8nm & \textbf{0.323 $\pm$ 0.008} & 0.331 $\pm$ 0.010 & 0.327 $\pm$ 0.008 & \underline{0.323 $\pm$ 0.008} & \textcolor{red}{0.436 $\pm$ 0.014} & \textcolor{red}{0.444 $\pm$ 0.011} \\
 miami\textunderscore housing & \textbf{0.087 $\pm$ 0.003} & 0.096 $\pm$ 0.004 & 0.107 $\pm$ 0.013 & \underline{0.088 $\pm$ 0.002} & 0.101 $\pm$ 0.004 & 0.109 $\pm$ 0.004 \\
