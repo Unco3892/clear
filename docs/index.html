@@ -39,7 +39,7 @@
       --gold: #F0C33C;
       --light-cyan: #D2F5FA;
       --soft-cyan: #EBFAFC;
-      --epistemic: #E65050;
+      --epistemic: #D2691E;
       --aleatoric: #4682B4;
       --text: #2c2c3e;
       --text-muted: #6b7280;
@@ -1084,7 +1084,7 @@
           onclick="openFigModal(this.src, this.alt)">
         <p class="fig-caption-light">
           <strong>Left:</strong> Aleatoric uncertainty (blue) reflects irreducible data noise; epistemic uncertainty
-          (red) is large in extrapolation regions with limited training data.
+          (orange) is large in extrapolation regions with limited training data.
           <strong>Right:</strong> CLEAR combines both sources in a data-driven manner, yielding tighter and
           better-calibrated prediction intervals.
         </p>
@@ -1107,9 +1107,9 @@
 
       <div class="formula-card">
         $$C(x) = \left[\,\hat{f}(x)\;\pm\;\Bigl(\underbrace{\gamma_1}_{\substack{\text{coverage}\\\text{parameter}}}
-        \cdot \underbrace{\mathrm{ale}_{\pm}(x)}_{\text{\color{#3CD2E1}data noise}} \;+\;
+        \cdot \underbrace{\mathrm{ale}_{\pm}(x)}_{\text{\color{#7AAFDB}data noise}} \;+\;
         \underbrace{\lambda\gamma_1}_{\substack{\text{balance}\\\text{parameter}}} \cdot
-        \underbrace{\mathrm{epi}_{\pm}(x)}_{\text{\color{#3CD2E1}model unc.}}\Bigr)\,\right]$$
+        \underbrace{\mathrm{epi}_{\pm}(x)}_{\text{\color{#E8923C}model unc.}}\Bigr)\,\right]$$
       </div>
       <div class="formula-legend-panel">
         <div class="formula-legend">
@@ -1145,9 +1145,9 @@
 
       <h3 style="font-size:1rem; font-weight:600; color:var(--navy); margin:2rem 0 0.8rem;">Algorithm (4 steps)</h3>
       <ol class="algo-ol">
-        <li><strong>Estimate epistemic</strong> uncertainty on $\mathcal{D}_\text{train}$ — PCS ensembles yield
+        <li><strong>Estimate <span style="color:var(--epistemic);">epistemic</span></strong> uncertainty on $\mathcal{D}_\text{train}$ — PCS ensembles yield
           upper/lower bounds.</li>
-        <li><strong>Estimate aleatoric</strong> uncertainty on $\mathcal{D}_\text{train}$ — quantile regression on
+        <li><strong>Estimate <span style="color:var(--aleatoric);">aleatoric</span></strong> uncertainty on $\mathcal{D}_\text{train}$ — quantile regression on
           residuals.</li>
         <li><strong>Calibrate</strong> on $\mathcal{D}_\text{cal}$ — find smallest $\gamma_1$ for each $\lambda$
           achieving $\geq(1-\alpha)$ coverage.</li>
@@ -1187,8 +1187,8 @@
         We benchmark across <strong style="color:rgba(255,255,255,0.92);">17 real-world regression datasets</strong>,
         10 random splits (60%/20%/20%), and multiple model and estimator variants,
         at <strong style="color:rgba(255,255,255,0.92);">95% nominal coverage</strong>.
-        CLEAR is compared against two individually calibrated baselines: an aleatoric-only approach using
-        Conformalized Quantile Regression (CQR) and an epistemic-only PCS ensemble.
+        CLEAR is compared against two individually calibrated baselines: an <span style="color:#7AAFDB;">aleatoric</span>-only approach using
+        Conformalized Quantile Regression (CQR) and an <span style="color:var(--epistemic);">epistemic</span>-only PCS ensemble.
         Results are reported in <strong style="color:rgba(255,255,255,0.92);">Normalized Calibrated Interval Width (NCIW)</strong>
         and <strong style="color:rgba(255,255,255,0.92);">quantile loss</strong>; lower is better in both.
       </p>
@@ -1196,15 +1196,15 @@
       <div class="stats-row">
         <div class="stat-card">
           <div class="stat-num">+28.2%</div>
-          <div class="stat-desc">narrower intervals vs.<br>aleatoric-only baseline</div>
+          <div class="stat-desc">narrower intervals vs.<br><span style="color:#7AAFDB;">aleatoric</span>-only baseline</div>
         </div>
         <div class="stat-card">
           <div class="stat-num">+17.4%</div>
-          <div class="stat-desc">narrower intervals vs.<br>epistemic-only baseline</div>
+          <div class="stat-desc">narrower intervals vs.<br><span style="color:var(--epistemic);">epistemic</span>-only baseline</div>
         </div>
         <div class="stat-card">
           <div class="stat-num">15/17</div>
-          <div class="stat-desc">datasets where CLEAR<br>is the top method</div>
+          <div class="stat-desc">datasets where <span style="color:#6B8E23;">CLEAR</span><br>is the top method</div>
         </div>
       </div>
 
