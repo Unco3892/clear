@@ -458,7 +458,7 @@ def combine_metrics_tables(input_dir, output_dir, coverage=90, decimal_places=4,
             np.isinf(data[ds][m].get('mean', 0))
             for ds in data for m in data[ds]
         )
-        inf_note = " $+\\infty$ indicates diverged predictions; the superscript denotes the number of affected seeds out of the total." if has_inf else ""
+        inf_note = "UACQR-P can sometimes yield infinitely wide intervals resulting in $+\\infty$; the superscript denotes the number of affected seeds out of the total." if has_inf else ""
 
         # Add bold/underline explanation only if the metric is not PICP
         if metric != "picp":

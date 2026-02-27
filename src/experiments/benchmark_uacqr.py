@@ -19,11 +19,9 @@ import pickle
 import argparse
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split # UACQR helper uses this
+# from sklearn.model_selection import train_test_split # UACQR helper uses this
 from tqdm import tqdm
 import time
-import sys
-import os
 from datetime import datetime
 import logging
 from utils import setup_logging, StreamToLogger
@@ -51,7 +49,6 @@ else:
 # Add additional paths that may contain UACQR
 sys.path.append(os.path.join(script_dir))
 sys.path.append(os.path.join(script_dir, 'UACQR'))
-sys.path.append(script_dir) # Add script directory itself
 
 clear_module_path = os.path.join(project_root, "src", "clear")
 if clear_module_path not in sys.path:

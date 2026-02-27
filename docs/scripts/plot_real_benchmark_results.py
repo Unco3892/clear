@@ -348,8 +348,8 @@ def create_plot(df, output_file=None, metric_name="Quantile Loss", ordered_metho
     # Define color palette - ensure consistency
     if palette is None:
         current_palette = {
-            'CLEAR': '#6076A6', 'PCS-EPISTEMIC': '#F4A300', 
-            'ALEATORIC': '#D62728', 'ALEATORIC-R': '#9467BD',
+            'CLEAR': '#6B8E23', 'PCS-EPISTEMIC': '#D2691E',
+            'ALEATORIC': '#4682B4', 'ALEATORIC-R': '#7AAFDB',
         }
     else:
         current_palette = palette
@@ -572,7 +572,7 @@ def create_plot(df, output_file=None, metric_name="Quantile Loss", ordered_metho
                     #     'default': 85         # Fallback for clear_variants if metric not specified
                     # }
                     'clear_variants': {
-                        'quantile loss': 292,  # Default for quantile loss in variants, adjust as needed
+                        'quantile loss': 305,  # Pushed up to avoid overlap with boxplot whiskers
                         'nciw': 240,           # Default for nciw in variants, adjust as needed
                         'default': 85         # Fallback for clear_variants if metric not specified
                     }
@@ -1322,9 +1322,9 @@ def main():
         # Define a specific color palette for these variants
         # Using visually distinct colors
         variant_palette = {
-            'CLEAR (a)': '#1f77b4',  # Muted Blue
-            'CLEAR (b)': '#2ca02c',  # Cooked Asparagus Green
-            'CLEAR (c)': '#ff7f0e'   # Safety Orange
+            'CLEAR (a)': '#6B8E23',  # Sage green (same as main CLEAR)
+            'CLEAR (b)': '#C0392B',  # Brick red
+            'CLEAR (c)': '#8E44AD',  # Amethyst purple
         }
         
         # Baseline for normalization among variants
@@ -1435,9 +1435,8 @@ def main():
 
         # Define a common color palette for consistency if not using variants
         standard_palette = {
-            'CLEAR': '#6076A6', 'PCS-EPISTEMIC': '#F4A300',
-            'ALEATORIC': '#D62728', 'ALEATORIC-R': '#9467BD',
-            # Add other standard methods if they have specific colors
+            'CLEAR': '#6B8E23', 'PCS-EPISTEMIC': '#D2691E',
+            'ALEATORIC': '#4682B4', 'ALEATORIC-R': '#7AAFDB',
         }
 
         for subdir_name in target_subdirectories:

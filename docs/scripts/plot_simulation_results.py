@@ -54,7 +54,7 @@ def plot_1d_simulation_results_symmetric_from_csv(
     
     # Define original order, colors, and display names
     all_method_keys_original_order = ['CLEAR', 'PCS', 'CQR', 'S-Naive']
-    colors_map = {'CLEAR': 'red', 'PCS': 'blue', 'CQR': 'green', 'S-Naive': 'purple'}
+    colors_map = {'CLEAR': '#6B8E23', 'PCS': '#D2691E', 'CQR': '#4682B4', 'S-Naive': 'purple'}
     display_names_map = {'CLEAR': 'CLEAR', 'PCS': 'PCS-EPISTEMIC', 'CQR': 'ALEATORIC-R', 'S-Naive': 'Naive'}
 
     # Start with all methods and their data
@@ -136,7 +136,7 @@ def plot_multivariate_results_from_csv(
     Takes data prepared from CSV files.
     """
     all_method_keys_original_order = ['CLEAR', 'PCS', 'CQR', 'S-Naive']
-    original_colors_map = {'CLEAR': 'red', 'PCS': 'blue', 'CQR': 'green', 'S-Naive': 'purple'}
+    original_colors_map = {'CLEAR': '#6B8E23', 'PCS': '#D2691E', 'CQR': '#4682B4', 'S-Naive': 'purple'}
     original_display_names_map = {'CLEAR': 'CLEAR', 'PCS': 'PCS-EPISTEMIC', 'CQR': 'ALEATORIC-R', 'S-Naive': 'Naive'}
 
     methods_to_plot_final = [m for m in all_method_keys_original_order if m in avg_coverage_metrics_dict]

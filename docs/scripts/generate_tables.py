@@ -382,7 +382,7 @@ def _generate_conformalized_metric_table(
             "with 1 decimal place. "
         )
         inf_note = (
-            " $+\\infty$ indicates diverged predictions; the superscript "
+            " UACQR-P can sometimes yield infinitely wide intervals resulting in $+\\infty$; the superscript "
             "denotes the number of affected seeds out of the total."
         ) if has_inf else ""
         if higher_is_better:
@@ -928,11 +928,11 @@ def generate_uacqr_improvement_table(setting="standard"):
     caption = (
         f"Improvement (\\%) of {setting_label} {clear_label} variant (c) over UACQR-S "
         f"and UACQR-P at {COVERAGE}\\% coverage across {len(datasets)} datasets. "
-        f"\\textbf{{Bold values with +}} indicate {clear_label} outperforms the baseline."
+        f"\\textbf{{Bold values with +}} indicate {clear_label} outperforms the baseline. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\\infty$."
     )
     if has_inf and setting == "conformalized":
         caption += (
-            f" $+\\infty$ indicates diverged baseline predictions; the superscript "
+            f" UACQR-P can sometimes yield infinitely wide intervals resulting in $+\\infty$; the superscript "
             f"denotes the number of affected seeds out of the total."
     )
 
