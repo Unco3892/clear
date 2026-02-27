@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{Improvement (\%) of standard CLEAR variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR outperforms the baseline.}
+\caption{Improvement (\%) of standard CLEAR variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR outperforms the baseline. UACQR-P can sometimes yield infinitely wide intervals resulting in $+\infty$.}
 \label{tab:clear_vs_uacqr_detailed_standard}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lcccccccc}
@@ -9,23 +9,23 @@ Dataset & \multicolumn{4}{c}{UACQR-S} & \multicolumn{4}{c}{UACQR-P} \\
 \cmidrule(lr){2-5} \cmidrule(lr){6-9}
  & NCIW & AISL & Width & Coverage & NCIW & AISL & Width & Coverage \\
 \midrule
-ailerons & -1.5\% & \textbf{+3.2\%} & -0.4\% & \textbf{+1.8\%} & -10.1\% & \textbf{+2.6\%} & -17.5\% & \textbf{+0.2\%} \\
-airfoil & \textbf{+41.0\%} & \textbf{+44.4\%} & \textbf{+49.2\%} & \textbf{+0.1\%} & \textbf{+38.7\%} & \textbf{+43.4\%} & \textbf{+45.8\%} & -0.5\% \\
-allstate & \textbf{+6.9\%} & \textbf{+1.3\%} & \textbf{+9.1\%} & \textbf{+0.5\%} & \textbf{+0.9\%} & -2.9\% & \textbf{+2.5\%} & \textbf{+0.4\%} \\
-ca\_housing & \textbf{+23.4\%} & \textbf{+8.8\%} & \textbf{+22.4\%} & \textbf{+0.9\%} & \textbf{+15.1\%} & \textbf{+5.8\%} & \textbf{+13.9\%} & \textbf{+0.1\%} \\
-computer & \textbf{+20.4\%} & \textbf{+9.5\%} & \textbf{+21.1\%} & \textbf{+2.5\%} & \textbf{+6.7\%} & \textbf{+6.8\%} & \textbf{+3.7\%} & \textbf{+0.5\%} \\
-concrete & \textbf{+21.6\%} & \textbf{+21.1\%} & \textbf{+31.4\%} & \textbf{+0.9\%} & \textbf{+21.7\%} & \textbf{+18.5\%} & \textbf{+26.0\%} & \textbf{+0.3\%} \\
-elevator & \textbf{+36.5\%} & \textbf{+29.1\%} & \textbf{+36.1\%} & \textbf{+2.1\%} & \textbf{+23.7\%} & \textbf{+27.5\%} & \textbf{+19.4\%} & -0.1\% \\
-energy\_efficiency & \textbf{+69.5\%} & \textbf{+63.3\%} & \textbf{+73.1\%} & \textbf{+0.9\%} & $+\infty$ & $+\infty$ & $+\infty$ & \textbf{+1.0\%} \\
-insurance & -15.3\% & -19.8\% & -28.4\% & \textbf{+0.5\%} & -18.7\% & -26.1\% & -31.5\% & \textbf{+0.8\%} \\
-kin8nm & \textbf{+27.0\%} & \textbf{+26.7\%} & \textbf{+28.3\%} & -0.3\% & \textbf{+25.7\%} & \textbf{+24.1\%} & \textbf{+26.8\%} & -0.1\% \\
-miami\_housing & \textbf{+19.9\%} & \textbf{+20.0\%} & \textbf{+22.9\%} & \textbf{+0.4\%} & \textbf{+13.5\%} & \textbf{+15.2\%} & \textbf{+15.4\%} & \textbf{+0.4\%} \\
-naval\_propulsion & \textbf{+55.8\%} & \textbf{+52.0\%} & \textbf{+55.4\%} & \textbf{+4.3\%} & \textbf{+6.8\%} & \textbf{+58.3\%} & \textbf{+5.8\%} & \textbf{+0.1\%} \\
-parkinsons & \textbf{+20.5\%} & \textbf{+5.1\%} & \textbf{+20.6\%} & \textbf{+1.7\%} & \textbf{+8.5\%} & -5.1\% & \textbf{+7.5\%} & \textbf{+0.1\%} \\
-powerplant & \textbf{+20.0\%} & \textbf{+13.5\%} & \textbf{+22.9\%} & \textbf{+0.9\%} & \textbf{+15.8\%} & \textbf{+10.0\%} & \textbf{+19.1\%} & \textbf{+0.8\%} \\
-qsar & \textbf{+21.5\%} & \textbf{+10.4\%} & \textbf{+23.2\%} & \textbf{+1.2\%} & \textbf{+14.9\%} & \textbf{+5.5\%} & \textbf{+16.1\%} & \textbf{+0.9\%} \\
-sulfur & \textbf{+13.5\%} & \textbf{+11.3\%} & \textbf{+11.9\%} & -0.4\% & \textbf{+4.5\%} & \textbf{+7.5\%} & \textbf{+2.8\%} & -0.2\% \\
-superconductor & \textbf{+17.6\%} & \textbf{+6.4\%} & \textbf{+16.5\%} & -0.1\% & \textbf{+12.8\%} & \textbf{+3.7\%} & \textbf{+11.4\%} & -0.2\% \\
+ailerons & -1.5\% & \textbf{+3.2\%} & -0.4\% & \textbf{+1.8\%} & -9.3\% & \textbf{+2.7\%} & -18.3\% & \textbf{+0.1\%} \\
+airfoil & \textbf{+40.3\%} & \textbf{+44.5\%} & \textbf{+49.4\%} & \textbf{+0.2\%} & \textbf{+40.7\%} & \textbf{+43.3\%} & \textbf{+45.7\%} & -0.6\% \\
+allstate & \textbf{+6.8\%} & \textbf{+1.2\%} & \textbf{+8.8\%} & \textbf{+0.5\%} & \textbf{+0.4\%} & -3.2\% & \textbf{+1.9\%} & \textbf{+0.2\%} \\
+ca\_housing & \textbf{+23.4\%} & \textbf{+8.8\%} & \textbf{+22.4\%} & \textbf{+0.9\%} & \textbf{+15.0\%} & \textbf{+5.7\%} & \textbf{+13.9\%} & \textbf{+0.1\%} \\
+computer & \textbf{+20.4\%} & \textbf{+9.5\%} & \textbf{+21.1\%} & \textbf{+2.5\%} & \textbf{+6.7\%} & \textbf{+6.6\%} & \textbf{+3.4\%} & \textbf{+0.5\%} \\
+concrete & \textbf{+21.3\%} & \textbf{+21.0\%} & \textbf{+31.4\%} & \textbf{+1.0\%} & \textbf{+22.0\%} & \textbf{+18.1\%} & \textbf{+26.4\%} & \textbf{+0.4\%} \\
+elevator & \textbf{+36.5\%} & \textbf{+29.1\%} & \textbf{+36.1\%} & \textbf{+2.1\%} & \textbf{+24.5\%} & \textbf{+27.6\%} & \textbf{+19.2\%} & -0.2\% \\
+energy\_efficiency & \textbf{+69.6\%} & \textbf{+62.4\%} & \textbf{+72.4\%} & \textbf{+0.7\%} & $+\infty$ & $+\infty$ & $+\infty$ & \textbf{+1.1\%} \\
+insurance & -15.5\% & -19.5\% & -29.1\% & \textbf{+0.6\%} & -18.6\% & -23.5\% & -32.5\% & \textbf{+0.6\%} \\
+kin8nm & \textbf{+27.1\%} & \textbf{+26.7\%} & \textbf{+28.2\%} & -0.2\% & \textbf{+25.8\%} & \textbf{+24.1\%} & \textbf{+26.8\%} & -0.1\% \\
+miami\_housing & \textbf{+19.6\%} & \textbf{+20.0\%} & \textbf{+23.0\%} & \textbf{+0.4\%} & \textbf{+13.4\%} & \textbf{+15.2\%} & \textbf{+15.5\%} & \textbf{+0.4\%} \\
+naval\_propulsion & \textbf{+55.8\%} & \textbf{+52.0\%} & \textbf{+55.4\%} & \textbf{+4.3\%} & \textbf{+7.4\%} & \textbf{+59.2\%} & \textbf{+6.4\%} & \textbf{+0.0\%} \\
+parkinsons & \textbf{+20.5\%} & \textbf{+5.1\%} & \textbf{+20.6\%} & \textbf{+1.7\%} & \textbf{+8.8\%} & -4.6\% & \textbf{+7.7\%} & \textbf{+0.0\%} \\
+powerplant & \textbf{+19.9\%} & \textbf{+13.5\%} & \textbf{+22.7\%} & \textbf{+0.8\%} & \textbf{+15.6\%} & \textbf{+10.1\%} & \textbf{+18.8\%} & \textbf{+0.8\%} \\
+qsar & \textbf{+21.5\%} & \textbf{+10.3\%} & \textbf{+23.1\%} & \textbf{+1.2\%} & \textbf{+15.0\%} & \textbf{+5.5\%} & \textbf{+16.1\%} & \textbf{+0.8\%} \\
+sulfur & \textbf{+13.5\%} & \textbf{+11.3\%} & \textbf{+11.8\%} & -0.4\% & \textbf{+5.0\%} & \textbf{+7.0\%} & \textbf{+3.2\%} & -0.3\% \\
+superconductor & \textbf{+17.7\%} & \textbf{+6.4\%} & \textbf{+16.6\%} & -0.1\% & \textbf{+12.6\%} & \textbf{+3.8\%} & \textbf{+11.1\%} & -0.2\% \\
 \bottomrule
 \end{tabular}%
 }

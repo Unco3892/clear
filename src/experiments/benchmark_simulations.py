@@ -544,7 +544,7 @@ def run_simulation(
     # Plot final results
     # Original method keys and their desired plotting order, colors, and display names
     all_method_keys_original_order = ['CLEAR', 'PCS', 'CQR', 'S-Naive']
-    original_colors_map = {'CLEAR': 'red', 'PCS': 'blue', 'CQR': 'green', 'S-Naive': 'purple'}
+    original_colors_map = {'CLEAR': '#6B8E23', 'PCS': '#D2691E', 'CQR': '#7AAFDB', 'S-Naive': 'purple'}
     original_display_names_map = {'CLEAR': 'CLEAR', 'PCS': 'PCS', 'CQR': 'CQR-R+', 'S-Naive': 'S-Naive'}
 
     # Start with all methods and their data
@@ -675,7 +675,7 @@ def plot_1d_simulation_results_symmetric(
     # Ensure methods_order matches the keys present in the dicts
     methods_order = [m for m in ['CLEAR', 'PCS', 'CQR', 'S-Naive'] if m in avg_coverage_metrics_dict]
 
-    colors = {'CLEAR': 'red', 'PCS': 'blue', 'CQR': 'green', 'S-Naive': 'purple'}
+    colors = {'CLEAR': '#6B8E23', 'PCS': '#D2691E', 'CQR': '#7AAFDB', 'S-Naive': 'purple'}
     # Labels as in the user-provided image, with CQR updated
     plot_labels = {'CLEAR': 'CLEAR', 'PCS': 'PCS', 'CQR': 'CQR-R+', 'S-Naive': 'S-Naive'}
 

@@ -572,7 +572,7 @@ def create_plot(df, output_file=None, metric_name="Quantile Loss", ordered_metho
                     #     'default': 85         # Fallback for clear_variants if metric not specified
                     # }
                     'clear_variants': {
-                        'quantile loss': 305,  # Pushed up to avoid overlap with boxplot whiskers
+                        'quantile loss': 292,  # Slightly above boxplot whiskers
                         'nciw': 240,           # Default for nciw in variants, adjust as needed
                         'default': 85         # Fallback for clear_variants if metric not specified
                     }
@@ -607,8 +607,8 @@ def create_plot(df, output_file=None, metric_name="Quantile Loss", ordered_metho
                             i_m, y_position_for_labels, f"{avg_improvements[meth_disp_name]:.1f}%", 
                             ha='center', va='top', fontsize=font_size_inset_percentage,
                             weight='bold', color='black',
-                            bbox=dict(facecolor='white', alpha=0.9, edgecolor='lightgray', 
-                                      pad=2.0, boxstyle="round,pad=0.5")
+                            bbox=dict(facecolor='white', alpha=0.9, edgecolor='lightgray',
+                                      pad=1.0, boxstyle="round,pad=0.3")
                         )
                 
                 # Set final y-axis limits to ensure labels are visible
@@ -1323,8 +1323,8 @@ def main():
         # Using visually distinct colors
         variant_palette = {
             'CLEAR (a)': '#6B8E23',  # Sage green (same as main CLEAR)
-            'CLEAR (b)': '#C0392B',  # Brick red
-            'CLEAR (c)': '#8E44AD',  # Amethyst purple
+            'CLEAR (b)': '#56B4E9',  # Sky blue (Wong colorblind-safe)
+            'CLEAR (c)': '#CC79A7',  # Reddish purple/pink (Wong colorblind-safe)
         }
         
         # Baseline for normalization among variants

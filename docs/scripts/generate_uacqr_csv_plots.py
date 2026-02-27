@@ -292,30 +292,35 @@ def create_plot(df, metric_name, ordered_methods_display, palette, baseline_meth
             min_val_in_plot = improvement_df_for_boxplot['relative_improvement'].min()
             max_val_in_plot = improvement_df_for_boxplot['relative_improvement'].max()
             y_min_inset = min_val_in_plot - 5
-            y_max_inset_initial = max(max_val_in_plot + 20, 85)
+            # Metric-specific headroom above whiskers
+            if metric_name.lower() == "quantile loss":
+                y_max_inset_initial = max(max_val_in_plot + 160, 85)
+            elif metric_name.lower() == "nciw":
+                y_max_inset_initial = max(max_val_in_plot + 40, 85)
+            else:
+                y_max_inset_initial = max(max_val_in_plot + 40, 85)
             ax_inset.set_ylim(y_min_inset, y_max_inset_initial)
-            
+
             sns.boxplot(
                 data=improvement_df_for_boxplot, x='Method_Display', y='relative_improvement',
                 hue='Method_Display', ax=ax_inset, palette=palette, width=0.6, fliersize=0,
                 order=methods_for_boxplot_display, hue_order=methods_for_boxplot_display,
                 showmeans=False, whis=[0, 100], legend=False
             )
-            
-            # Simplified inset label positioning
-            label_y_pos = y_max_inset_initial * 0.95 # Position near top of inset
-            if metric_name.lower() == "quantile loss": label_y_pos = y_max_inset_initial * 0.97 
-            if metric_name.lower() == "nciw": label_y_pos = y_max_inset_initial * 0.98
+
+            # Inset label positioning - place well above whiskers
+            label_y_pos = y_max_inset_initial * 0.99
 
 
             font_size_inset_percentage = 12 if not current_inset_placement.get('is_part_of_combined') else 10.5
             for i_m, meth_disp_name in enumerate(methods_for_boxplot_display):
                 if meth_disp_name in avg_improvements:
                     ax_inset.text(
-                        i_m, label_y_pos, f"{avg_improvements[meth_disp_name]:.1f}%", 
+                        i_m, label_y_pos, f"{avg_improvements[meth_disp_name]:.1f}%",
                         ha='center', va='top', fontsize=font_size_inset_percentage,
                         weight='bold', color='black',
-                        bbox=dict(facecolor='white', alpha=0.9, edgecolor='lightgray', pad=2.0, boxstyle="round,pad=0.3")
+                        bbox=dict(facecolor='white', alpha=0.9, edgecolor='lightgray',
+                                  pad=1.0, boxstyle="round,pad=0.3")
                     )
             ax_inset.set_ylim(y_min_inset, y_max_inset_initial) # Re-apply ylim after text
 
@@ -331,15 +336,15 @@ def create_plot(df, metric_name, ordered_methods_display, palette, baseline_meth
             ax_inset.set_xticks(range(len(methods_for_boxplot_display)))
             ax_inset.set_xticklabels(methods_for_boxplot_display, fontsize=font_size_inset_ticks)
             
-            note_text = f"Relative increase over    {baseline_method_display_name} (%)"
-            ax_inset.text(0.5, -0.02, note_text, ha='center', va='top', fontsize=font_size_inset_note,
+            note_text = f"Values show the average increase over    {baseline_method_display_name}"
+            ax_inset.text(0.46, -0.02, note_text, ha='center', va='top', fontsize=font_size_inset_note,
                           style='italic', transform=ax_inset.transAxes)
             baseline_color_for_note = palette.get(baseline_method_display_name, 'grey')
-            ax_inset.plot(0.592, -0.045, marker='s', markersize=7, color=baseline_color_for_note, 
+            ax_inset.plot(0.7, -0.045, marker='s', markersize=7, color=baseline_color_for_note,
                           transform=ax_inset.transAxes, clip_on=False, linestyle='None')
 
             ax_inset.tick_params(axis='x', which='both', bottom=False, labelbottom=False)
-            ax_inset.set_ylabel("Relative Improvement (%)", fontsize=font_size_inset_label, labelpad=2)
+            ax_inset.set_ylabel("Relative increase (%)", fontsize=font_size_inset_label, labelpad=2)
             ax_inset.set_xlabel("")
             ax_inset.tick_params(axis='both', which='major', labelsize=font_size_inset_ticks, pad=2)
             ax_inset.grid(axis='y', linestyle='--', alpha=0.3)
@@ -565,14 +570,14 @@ def main():
     # And ensure lowercase versions are used for map keys if normalize_data uses lowercase
     ordered_methods_internal = ['clear', 'UACQR-P', 'UACQR-S']
     method_display_map = {
-        'clear': 'CLEAR',            # Baseline (CSV Method column: 'clear')
+        'clear': 'CLEAR (c)',        # Baseline is variant (c) (CSV Method column: 'clear')
         'uacqr-p': 'UACQR-P',       # Note: CSV has 'UACQR-P', normalize_data converts to 'uacqr-p' for map key
         'uacqr-s': 'UACQR-S'        # Note: CSV has 'UACQR-S', normalize_data converts to 'uacqr-s' for map key
     }
     palette = {
-        'CLEAR': '#4C72B0',      # Seaborn Blue
-        'UACQR-P': '#D62728',     # Tableau Red
-        'UACQR-S': '#009E73'    # Bluish Green
+        'CLEAR (c)': '#CC79A7',  # Reddish pink (Wong, matches CLEAR (c) in variants plot)
+        'UACQR-P': '#D62728',    # Tableau Red (unique across all plots)
+        'UACQR-S': '#E69F00'     # Wong amber/gold (unique, colorblind-safe)
     }
     baseline_method_internal = 'clear' # Matches the Method column in the CSV
 
