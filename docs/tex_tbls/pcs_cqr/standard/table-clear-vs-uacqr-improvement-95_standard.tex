@@ -1,31 +1,31 @@
 \begin{table}[!htbp]
 \centering
-\caption{Improvement (\%) of standard CLEAR variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR outperforms the baseline. $+\infty$ indicates UACQR-P produced infinitely wide intervals; superscripts show affected/total seeds, subscripts the finite-seed improvement.}
+\caption{Improvement (\%) of standard CLEAR variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR outperforms the baseline. $+\infty^{1/10}_{v}$ denotes that UACQR-P produced infinitely wide intervals for $1$ out of the $10$ seeds, and the mean improvement on the remaining $9$ seeds was $v$.}
 \label{tab:clear_vs_uacqr_detailed_standard}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lcccccccc}
+\begin{tabular}{lcccccc}
 \toprule
-Dataset & \multicolumn{4}{c}{UACQR-S} & \multicolumn{4}{c}{UACQR-P} \\
-\cmidrule(lr){2-5} \cmidrule(lr){6-9}
- & NCIW & AISL & Width & Coverage & NCIW & AISL & Width & Coverage \\
+Dataset & \multicolumn{3}{c}{UACQR-S} & \multicolumn{3}{c}{UACQR-P} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+ & NCIW & AISL & Width & NCIW & AISL & Width \\
 \midrule
-ailerons & -1.5\% & \textbf{+3.2\%} & -0.4\% & \textbf{+1.8\%} & -9.3\% & \textbf{+2.7\%} & -18.3\% & \textbf{+0.1\%} \\
-airfoil & \textbf{+40.3\%} & \textbf{+44.5\%} & \textbf{+49.4\%} & \textbf{+0.2\%} & \textbf{+40.7\%} & \textbf{+43.3\%} & \textbf{+45.7\%} & -0.6\% \\
-allstate & \textbf{+6.8\%} & \textbf{+1.2\%} & \textbf{+8.8\%} & \textbf{+0.5\%} & \textbf{+0.4\%} & -3.2\% & \textbf{+1.9\%} & \textbf{+0.2\%} \\
-ca\_housing & \textbf{+23.4\%} & \textbf{+8.8\%} & \textbf{+22.4\%} & \textbf{+0.9\%} & \textbf{+15.0\%} & \textbf{+5.7\%} & \textbf{+13.9\%} & \textbf{+0.1\%} \\
-computer & \textbf{+20.4\%} & \textbf{+9.5\%} & \textbf{+21.1\%} & \textbf{+2.5\%} & \textbf{+6.7\%} & \textbf{+6.6\%} & \textbf{+3.4\%} & \textbf{+0.5\%} \\
-concrete & \textbf{+21.3\%} & \textbf{+21.0\%} & \textbf{+31.4\%} & \textbf{+1.0\%} & \textbf{+22.0\%} & \textbf{+18.1\%} & \textbf{+26.4\%} & \textbf{+0.4\%} \\
-elevator & \textbf{+36.5\%} & \textbf{+29.1\%} & \textbf{+36.1\%} & \textbf{+2.1\%} & \textbf{+24.5\%} & \textbf{+27.6\%} & \textbf{+19.2\%} & -0.2\% \\
-energy\_efficiency & \textbf{+69.6\%} & \textbf{+62.4\%} & \textbf{+72.4\%} & \textbf{+0.7\%} & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+70.9\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+63.1\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+72.8\%}}}$ & \textbf{+1.1\%} \\
-insurance & -15.5\% & -19.5\% & -29.1\% & \textbf{+0.6\%} & -18.6\% & -23.5\% & -32.5\% & \textbf{+0.6\%} \\
-kin8nm & \textbf{+27.1\%} & \textbf{+26.7\%} & \textbf{+28.2\%} & -0.2\% & \textbf{+25.8\%} & \textbf{+24.1\%} & \textbf{+26.8\%} & -0.1\% \\
-miami\_housing & \textbf{+19.6\%} & \textbf{+20.0\%} & \textbf{+23.0\%} & \textbf{+0.4\%} & \textbf{+13.4\%} & \textbf{+15.2\%} & \textbf{+15.5\%} & \textbf{+0.4\%} \\
-naval\_propulsion & \textbf{+55.8\%} & \textbf{+52.0\%} & \textbf{+55.4\%} & \textbf{+4.3\%} & \textbf{+7.4\%} & \textbf{+59.2\%} & \textbf{+6.4\%} & \textbf{+0.0\%} \\
-parkinsons & \textbf{+20.5\%} & \textbf{+5.1\%} & \textbf{+20.6\%} & \textbf{+1.7\%} & \textbf{+8.8\%} & -4.6\% & \textbf{+7.7\%} & \textbf{+0.0\%} \\
-powerplant & \textbf{+19.9\%} & \textbf{+13.5\%} & \textbf{+22.7\%} & \textbf{+0.8\%} & \textbf{+15.6\%} & \textbf{+10.1\%} & \textbf{+18.8\%} & \textbf{+0.8\%} \\
-qsar & \textbf{+21.5\%} & \textbf{+10.3\%} & \textbf{+23.1\%} & \textbf{+1.2\%} & \textbf{+15.0\%} & \textbf{+5.5\%} & \textbf{+16.1\%} & \textbf{+0.8\%} \\
-sulfur & \textbf{+13.5\%} & \textbf{+11.3\%} & \textbf{+11.8\%} & -0.4\% & \textbf{+5.0\%} & \textbf{+7.0\%} & \textbf{+3.2\%} & -0.3\% \\
-superconductor & \textbf{+17.7\%} & \textbf{+6.4\%} & \textbf{+16.6\%} & -0.1\% & \textbf{+12.6\%} & \textbf{+3.8\%} & \textbf{+11.1\%} & -0.2\% \\
+ailerons & -1.5\% & \textbf{+3.2\%} & -0.4\% & -9.3\% & \textbf{+2.7\%} & -18.3\% \\
+airfoil & \textbf{+40.3\%} & \textbf{+44.5\%} & \textbf{+49.4\%} & \textbf{+40.7\%} & \textbf{+43.3\%} & \textbf{+45.7\%} \\
+allstate & \textbf{+6.8\%} & \textbf{+1.2\%} & \textbf{+8.8\%} & \textbf{+0.4\%} & -3.2\% & \textbf{+1.9\%} \\
+ca\_housing & \textbf{+23.4\%} & \textbf{+8.8\%} & \textbf{+22.4\%} & \textbf{+15.0\%} & \textbf{+5.7\%} & \textbf{+13.9\%} \\
+computer & \textbf{+20.4\%} & \textbf{+9.5\%} & \textbf{+21.1\%} & \textbf{+6.7\%} & \textbf{+6.6\%} & \textbf{+3.4\%} \\
+concrete & \textbf{+21.3\%} & \textbf{+21.0\%} & \textbf{+31.4\%} & \textbf{+22.0\%} & \textbf{+18.1\%} & \textbf{+26.4\%} \\
+elevator & \textbf{+36.5\%} & \textbf{+29.1\%} & \textbf{+36.1\%} & \textbf{+24.5\%} & \textbf{+27.6\%} & \textbf{+19.2\%} \\
+energy\_efficiency & \textbf{+69.6\%} & \textbf{+62.4\%} & \textbf{+72.4\%} & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+70.9\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+63.1\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+72.8\%}}}$ \\
+insurance & -15.5\% & -19.5\% & -29.1\% & -18.6\% & -23.5\% & -32.5\% \\
+kin8nm & \textbf{+27.1\%} & \textbf{+26.7\%} & \textbf{+28.2\%} & \textbf{+25.8\%} & \textbf{+24.1\%} & \textbf{+26.8\%} \\
+miami\_housing & \textbf{+19.6\%} & \textbf{+20.0\%} & \textbf{+23.0\%} & \textbf{+13.4\%} & \textbf{+15.2\%} & \textbf{+15.5\%} \\
+naval\_propulsion & \textbf{+55.8\%} & \textbf{+52.0\%} & \textbf{+55.4\%} & \textbf{+7.4\%} & \textbf{+59.2\%} & \textbf{+6.4\%} \\
+parkinsons & \textbf{+20.5\%} & \textbf{+5.1\%} & \textbf{+20.6\%} & \textbf{+8.8\%} & -4.6\% & \textbf{+7.7\%} \\
+powerplant & \textbf{+19.9\%} & \textbf{+13.5\%} & \textbf{+22.7\%} & \textbf{+15.6\%} & \textbf{+10.1\%} & \textbf{+18.8\%} \\
+qsar & \textbf{+21.5\%} & \textbf{+10.3\%} & \textbf{+23.1\%} & \textbf{+15.0\%} & \textbf{+5.5\%} & \textbf{+16.1\%} \\
+sulfur & \textbf{+13.5\%} & \textbf{+11.3\%} & \textbf{+11.8\%} & \textbf{+5.0\%} & \textbf{+7.0\%} & \textbf{+3.2\%} \\
+superconductor & \textbf{+17.7\%} & \textbf{+6.4\%} & \textbf{+16.6\%} & \textbf{+12.6\%} & \textbf{+3.8\%} & \textbf{+11.1\%} \\
 \bottomrule
 \end{tabular}%
 }

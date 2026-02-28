@@ -878,7 +878,6 @@ def generate_uacqr_improvement_table(setting="standard"):
         ('NCIW', 'NCIW', 'nciw'),
         ('IntervalScoreLoss', 'AISL', 'intervalscoreloss'),
         ('MPIW', 'Width', 'mpiw'),
-        ('PICP', 'Coverage', 'picp'),
     ]
 
     datasets = sorted(uacqr_df[uacqr_df['Method'] == 'clear']['Dataset'].unique())
@@ -961,9 +960,25 @@ def generate_uacqr_improvement_table(setting="standard"):
         f"\\textbf{{Bold values with +}} indicate {clear_label} outperforms the baseline."
     )
     if has_inf:
+        # Find a concrete example of inf values for the caption
+        ex_ninf, ex_ntotal = 1, 10  # fallback
+        for ds in table_data:
+            for bl in baselines:
+                for _, dn, _ in metrics:
+                    ni = table_data[ds].get((bl, dn, 'n_inf'), 0)
+                    nt = table_data[ds].get((bl, dn, 'n_total'), 0)
+                    if ni > 0:
+                        ex_ninf, ex_ntotal = ni, nt
+                        break
+                if ex_ninf != 1 or ex_ntotal != 10:
+                    break
+            if ex_ninf != 1 or ex_ntotal != 10:
+                break
+        ex_nfinite = ex_ntotal - ex_ninf
         caption += (
-            " $+\\infty$ indicates UACQR-P produced infinitely wide intervals; "
-            "superscripts show affected/total seeds, subscripts the finite-seed improvement."
+            f" $+\\infty^{{{ex_ninf}/{ex_ntotal}}}_{{v}}$ denotes that UACQR-P produced infinitely wide "
+            f"intervals for ${ex_ninf}$ out of the ${ex_ntotal}$ seeds, and the mean improvement on "
+            f"the remaining ${ex_nfinite}$ seeds was $v$."
         )
 
     metric_headers = " & ".join(d for _, d, _ in metrics)

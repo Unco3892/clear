@@ -1,31 +1,31 @@
 \begin{table}[!htbp]
 \centering
-\caption{Improvement (\%) of conformalized CLEAR-c variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR-c outperforms the baseline. $+\infty$ indicates UACQR-P produced infinitely wide intervals; superscripts show affected/total seeds, subscripts the finite-seed improvement.}
+\caption{Improvement (\%) of conformalized CLEAR-c variant (c) over UACQR-S and UACQR-P at 95\% coverage across 17 datasets. \textbf{Bold values with +} indicate CLEAR-c outperforms the baseline. $+\infty^{1/10}_{v}$ denotes that UACQR-P produced infinitely wide intervals for $1$ out of the $10$ seeds, and the mean improvement on the remaining $9$ seeds was $v$.}
 \label{tab:clear_vs_uacqr_detailed_conformalized}
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lcccccccc}
+\begin{tabular}{lcccccc}
 \toprule
-Dataset & \multicolumn{4}{c}{UACQR-S} & \multicolumn{4}{c}{UACQR-P} \\
-\cmidrule(lr){2-5} \cmidrule(lr){6-9}
- & NCIW & AISL & Width & Coverage & NCIW & AISL & Width & Coverage \\
+Dataset & \multicolumn{3}{c}{UACQR-S} & \multicolumn{3}{c}{UACQR-P} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+ & NCIW & AISL & Width & NCIW & AISL & Width \\
 \midrule
-ailerons & -0.9\% & \textbf{+3.3\%} & -0.2\% & \textbf{+1.8\%} & -8.7\% & \textbf{+2.8\%} & -18.0\% & \textbf{+0.1\%} \\
-airfoil & \textbf{+39.9\%} & \textbf{+43.2\%} & \textbf{+46.8\%} & -0.4\% & \textbf{+40.3\%} & \textbf{+41.9\%} & \textbf{+42.9\%} & -1.3\% \\
-allstate & \textbf{+8.0\%} & -0.2\% & \textbf{+8.0\%} & \textbf{+0.1\%} & \textbf{+1.7\%} & -4.7\% & \textbf{+1.0\%} & -0.2\% \\
-ca\_housing & \textbf{+23.1\%} & \textbf{+8.7\%} & \textbf{+21.8\%} & \textbf{+0.9\%} & \textbf{+14.7\%} & \textbf{+5.6\%} & \textbf{+13.2\%} & \textbf{+0.0\%} \\
-computer & \textbf{+21.9\%} & \textbf{+9.0\%} & \textbf{+22.1\%} & \textbf{+2.5\%} & \textbf{+8.4\%} & \textbf{+6.0\%} & \textbf{+4.6\%} & \textbf{+0.4\%} \\
-concrete & \textbf{+22.4\%} & \textbf{+19.6\%} & \textbf{+28.4\%} & \textbf{+1.1\%} & \textbf{+23.1\%} & \textbf{+16.7\%} & \textbf{+23.2\%} & \textbf{+0.5\%} \\
-elevator & \textbf{+36.5\%} & \textbf{+28.8\%} & \textbf{+36.6\%} & \textbf{+2.4\%} & \textbf{+24.5\%} & \textbf{+27.2\%} & \textbf{+19.9\%} & \textbf{+0.0\%} \\
-energy\_efficiency & \textbf{+68.4\%} & \textbf{+60.5\%} & \textbf{+66.7\%} & -1.3\% & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+69.4\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+61.0\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+66.8\%}}}$ & -0.9\% \\
-insurance & -19.0\% & -15.7\% & -32.9\% & \textbf{+0.4\%} & -22.2\% & -19.6\% & -36.4\% & \textbf{+0.4\%} \\
-kin8nm & \textbf{+27.3\%} & \textbf{+26.5\%} & \textbf{+27.5\%} & -0.5\% & \textbf{+26.0\%} & \textbf{+23.9\%} & \textbf{+26.1\%} & -0.4\% \\
-miami\_housing & \textbf{+20.7\%} & \textbf{+17.9\%} & \textbf{+22.8\%} & \textbf{+0.1\%} & \textbf{+14.6\%} & \textbf{+13.1\%} & \textbf{+15.2\%} & \textbf{+0.1\%} \\
-naval\_propulsion & \textbf{+55.9\%} & \textbf{+51.8\%} & \textbf{+55.3\%} & \textbf{+4.3\%} & \textbf{+7.4\%} & \textbf{+59.1\%} & \textbf{+6.2\%} & \textbf{+0.0\%} \\
-parkinsons & \textbf{+20.6\%} & \textbf{+4.6\%} & \textbf{+20.6\%} & \textbf{+1.7\%} & \textbf{+8.9\%} & -5.1\% & \textbf{+7.7\%} & \textbf{+0.1\%} \\
-powerplant & \textbf{+19.2\%} & \textbf{+13.2\%} & \textbf{+22.4\%} & \textbf{+0.8\%} & \textbf{+14.9\%} & \textbf{+9.8\%} & \textbf{+18.4\%} & \textbf{+0.7\%} \\
-qsar & \textbf{+21.0\%} & \textbf{+9.7\%} & \textbf{+21.2\%} & \textbf{+0.7\%} & \textbf{+14.5\%} & \textbf{+4.8\%} & \textbf{+13.9\%} & \textbf{+0.4\%} \\
-sulfur & \textbf{+12.2\%} & \textbf{+9.6\%} & \textbf{+11.1\%} & -0.2\% & \textbf{+3.6\%} & \textbf{+5.3\%} & \textbf{+2.4\%} & -0.1\% \\
-superconductor & \textbf{+16.6\%} & \textbf{+6.5\%} & \textbf{+15.9\%} & -0.1\% & \textbf{+11.4\%} & \textbf{+3.9\%} & \textbf{+10.4\%} & -0.2\% \\
+ailerons & -0.9\% & \textbf{+3.3\%} & -0.2\% & -8.7\% & \textbf{+2.8\%} & -18.0\% \\
+airfoil & \textbf{+39.9\%} & \textbf{+43.2\%} & \textbf{+46.8\%} & \textbf{+40.3\%} & \textbf{+41.9\%} & \textbf{+42.9\%} \\
+allstate & \textbf{+8.0\%} & -0.2\% & \textbf{+8.0\%} & \textbf{+1.7\%} & -4.7\% & \textbf{+1.0\%} \\
+ca\_housing & \textbf{+23.1\%} & \textbf{+8.7\%} & \textbf{+21.8\%} & \textbf{+14.7\%} & \textbf{+5.6\%} & \textbf{+13.2\%} \\
+computer & \textbf{+21.9\%} & \textbf{+9.0\%} & \textbf{+22.1\%} & \textbf{+8.4\%} & \textbf{+6.0\%} & \textbf{+4.6\%} \\
+concrete & \textbf{+22.4\%} & \textbf{+19.6\%} & \textbf{+28.4\%} & \textbf{+23.1\%} & \textbf{+16.7\%} & \textbf{+23.2\%} \\
+elevator & \textbf{+36.5\%} & \textbf{+28.8\%} & \textbf{+36.6\%} & \textbf{+24.5\%} & \textbf{+27.2\%} & \textbf{+19.9\%} \\
+energy\_efficiency & \textbf{+68.4\%} & \textbf{+60.5\%} & \textbf{+66.7\%} & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+69.4\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+61.0\%}}}$ & $+\infty^{\text{\tiny 1/10}}_{\text{\tiny \textbf{+66.8\%}}}$ \\
+insurance & -19.0\% & -15.7\% & -32.9\% & -22.2\% & -19.6\% & -36.4\% \\
+kin8nm & \textbf{+27.3\%} & \textbf{+26.5\%} & \textbf{+27.5\%} & \textbf{+26.0\%} & \textbf{+23.9\%} & \textbf{+26.1\%} \\
+miami\_housing & \textbf{+20.7\%} & \textbf{+17.9\%} & \textbf{+22.8\%} & \textbf{+14.6\%} & \textbf{+13.1\%} & \textbf{+15.2\%} \\
+naval\_propulsion & \textbf{+55.9\%} & \textbf{+51.8\%} & \textbf{+55.3\%} & \textbf{+7.4\%} & \textbf{+59.1\%} & \textbf{+6.2\%} \\
+parkinsons & \textbf{+20.6\%} & \textbf{+4.6\%} & \textbf{+20.6\%} & \textbf{+8.9\%} & -5.1\% & \textbf{+7.7\%} \\
+powerplant & \textbf{+19.2\%} & \textbf{+13.2\%} & \textbf{+22.4\%} & \textbf{+14.9\%} & \textbf{+9.8\%} & \textbf{+18.4\%} \\
+qsar & \textbf{+21.0\%} & \textbf{+9.7\%} & \textbf{+21.2\%} & \textbf{+14.5\%} & \textbf{+4.8\%} & \textbf{+13.9\%} \\
+sulfur & \textbf{+12.2\%} & \textbf{+9.6\%} & \textbf{+11.1\%} & \textbf{+3.6\%} & \textbf{+5.3\%} & \textbf{+2.4\%} \\
+superconductor & \textbf{+16.6\%} & \textbf{+6.5\%} & \textbf{+15.9\%} & \textbf{+11.4\%} & \textbf{+3.9\%} & \textbf{+10.4\%} \\
 \bottomrule
 \end{tabular}%
 }
